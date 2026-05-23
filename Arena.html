@@ -1,2 +1,395 @@
 <!DOCTYPE html>
-<p>Next Update🥀</p>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokéhack - Online War Arena</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // CONFIG FIREBASE: Ganti pake data Firebase Project lu sendiri di sini bray!
+        const firebaseConfig = {
+            databaseURL: "https://multiplayer-5e98b-default-rtdb.firebaseio.com"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        window.db = db; window.dbRef = ref; window.dbSet = set; window.dbOnValue = onValue; window.dbUpdate = update; window.dbRemove = remove; window.dbGet = get;
+    </script>
+    <style>
+        body { background-color: #0b0f19; color: #f3f4f6; font-family: sans-serif; padding: 15px; margin: 0; }
+        .box { max-width: 500px; margin: 0 auto; background: #111827; padding: 20px; border-radius: 12px; border: 1px solid #1f2937; }
+        h2, h3 { text-align: center; color: #ffd700; margin-top: 0; }
+        .screen { display: none; }
+        .active { display: block; }
+        input, select { width: 100%; box-sizing: border-box; padding: 10px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 6px; margin-bottom: 12px; }
+        button { width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 5px; }
+        button:disabled { background: #4b5563; cursor: not-allowed; opacity: 0.6; }
+        .hp-bar-container { background: #374151; height: 20px; border-radius: 10px; overflow: hidden; margin: 5px 0 15px 0; border: 1px solid #4b5563; }
+        .hp-bar { height: 100%; width: 100%; transition: width 0.3s ease; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .btn-jurus { font-size: 11px; padding: 10px 5px; background: #b91c1c; text-align: center; }
+        .log-box { background: #070b12; height: 100px; overflow-y: auto; padding: 8px; font-size: 12px; border-radius: 6px; border: 1px solid #1f2937; font-family: monospace; }
+        .watermark { display: flex; justify-content: space-between; margin-top: 25px; font-size: 10px; color: #4b5563; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div id="scr-lobby" class="screen active">
+        <h2>⚔️ MULTIPLAYER LOBBY ⚔️</h2>
+        <input type="text" id="p-name" placeholder="Masukkan Nickname Lu...">
+        
+        <div style="background: #1f2937; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+            <button onclick="buatRoom()" style="background: #059669;">🔥 BUAT ROOM BARU</button>
+        </div>
+        
+        <div style="background: #1f2937; padding: 12px; border-radius: 8px;">
+            <input type="text" id="room-id-input" placeholder="Masukkan Kode Room Lawan...">
+            <button onclick="joinRoom()" style="background: #4f46e5;">🔍 JOIN ROOM BATTLE</button>
+        </div>
+    </div>
+
+    <div id="scr-select" class="screen">
+        <h2>🛡️ PERSIAPAN PERANG</h2>
+        <p style="text-align: center; font-size: 13px; color: #9ca3af;" id="txt-status-waiting">Menunggu lawan terhubung...</p>
+        
+        <div id="selection-area" style="display: none;">
+            <h3 style="font-size: 14px; color: #f59e0b;">PILIH AMUNISI ANDALAN LU:</h3>
+            <select id="inv-select" onchange="previewItemStats()"></select>
+            <div id="item-preview" style="font-size: 12px; text-align: center; color: #cbd5e1; margin-bottom: 10px;"></div>
+            <button onclick="readyBertarung()" id="btn-ready" style="background: #d97706;">KUNCI ITEM & READY! 🔥</button>
+        </div>
+    </div>
+
+    <div id="scr-arena" class="screen">
+        <h3>⚔️ MEDAN PERTEMPURAN ⚔️</h3>
+        <p style="text-align: center; font-size: 12px; margin: 0;" id="ui-room-code"></p>
+
+        <div style="margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span id="ui-my-name" style="font-weight: bold; color: #3b82f6;">Lu</span>
+                <span id="ui-my-hp-txt">100/100 HP</span>
+            </div>
+            <div class="hp-bar-container">
+                <div id="ui-my-hp-bar" class="hp-bar" style="background: #10b981;"></div>
+            </div>
+        </div>
+
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span id="ui-enemy-name" style="font-weight: bold; color: #ef4444;">Lawan</span>
+                <span id="ui-enemy-hp-txt">100/100 HP</span>
+            </div>
+            <div class="hp-bar-container">
+                <div id="ui-enemy-bar" class="hp-bar" style="background: #ef4444;"></div>
+            </div>
+        </div>
+
+        <div id="battle-log" class="log-box"></div>
+
+        <div class="grid-3">
+            <button id="btn-atk-0" class="btn-jurus" onclick="eksekusiSerang(0)">Jurus 1</button>
+            <button id="btn-atk-1" class="btn-jurus" onclick="eksekusiSerang(1)">Jurus 2</button>
+            <button id="btn-atk-2" class="btn-jurus" onclick="eksekusiSerang(2)">Jurus 3</button>
+        </div>
+    </div>
+
+    <div class="watermark">
+        <div>©Faqihdulu</div>
+        <div>©LORD EL</div>
+    </div>
+</div>
+
+<script>
+    // System Global Variable
+    let myName = "";
+    let myRole = ""; // 'player1' atau 'player2'
+    let enemyRole = "";
+    let currentRoomCode = "";
+    let inventoryGacha = {};
+    let chosenItemData = null;
+    let battleActive = false;
+
+    // Otomatis Generator Sistem Serangan Berdasarkan Kasta Rarity (Mengakali Batasan Clipboard 300 data)
+    const RARITY_MULTIPLIERS = {
+        common: { hp: 1000, dmg: 50, namaAtk: ["Pukul", "Tepok", "SERUDUK!"] },
+        uncommon: { hp: 2000, dmg: 110, namaAtk: ["Sabet", "Tendang", "TABRAK!"] },
+        rare: { hp: 4000, dmg: 250, namaAtk: ["Tusuk Silang", "Bola Energi", "HANTAMAN BADAI!"] },
+        epic: { hp: 8000, dmg: 550, namaAtk: ["Ledakan Jiwa", "Bilah Hitam", "METEOR FALL!"] },
+        legendary: { hp: 15000, dmg: 1200, namaAtk: ["Kilat Kuning", "Gerhana Darah", "MURKA NAGA DEWA!"] },
+        mythic: { hp: 30000, dmg: 2600, namaAtk: ["Dimensi Sobek", "Hujan Pedang Aura", "KATASTROFE ALAM!"] },
+        godly: { hp: 70000, dmg: 6500, namaAtk: ["Hukum Karma", "Hancurnya Kosmos", "PENGHAKIMAN AKHIR DEWA!"] },
+        impossible: { hp: 150000, dmg: 15000, namaAtk: ["Paradoks Waktu", "Sapu Bersih Realita", "KREASI ULANG SEMESTA GAGAL!"] }
+    };
+
+    // Fungsi ganti layar
+    function gantiScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // Load data gacha dari file Pokéhack.html lu
+    function loadInventoryDariGacha() {
+        let saveGame = localStorage.getItem('poke_clicker_save');
+        if (saveGame) {
+            try {
+                inventoryGacha = JSON.parse(saveGame).inventory || {};
+            } catch(e) { console.log("Gagal parsing inventory"); }
+        }
+    }
+
+    // Mengisi pilihan dropdown item berdasarkan kasta
+    function renderDropdownItem() {
+        let select = document.getElementById('inv-select');
+        select.innerHTML = "";
+        let count = 0;
+
+        // Loop manual atau deteksi otomatis kasta (Lu bisa sesuaikan ID item lu di sini bray)
+        for(let itemId in inventoryGacha) {
+            if(inventoryGacha[itemId] > 0) {
+                let opt = document.createElement('option');
+                opt.value = itemId;
+                // Tebak kasta dari kata kunci atau default ke common
+                let kasta = "common";
+                if(itemId.toLowerCase().includes("uncommon")) kasta = "uncommon";
+                else if(itemId.toLowerCase().includes("rare")) kasta = "rare";
+                else if(itemId.toLowerCase().includes("epic")) kasta = "epic";
+                else if(itemId.toLowerCase().includes("legendary")) kasta = "legendary";
+                else if(itemId.toLowerCase().includes("mythic")) kasta = "mythic";
+                else if(itemId.toLowerCase().includes("godly")) kasta = "godly";
+                else if(itemId.toLowerCase().includes("impossible")) kasta = "impossible";
+
+                opt.innerText = `${itemId} [${kasta.toUpperCase()}]`;
+                opt.setAttribute('data-rarity', kasta);
+                select.appendChild(opt);
+                count++;
+            }
+        }
+        if(count === 0) {
+            let opt = document.createElement('option');
+            opt.innerText = "Koleksi Gacha Kosong! (Gunakan Dummy Common)";
+            opt.value = "Dummy_Pet";
+            opt.setAttribute('data-rarity', "common");
+            select.appendChild(opt);
+        }
+        previewItemStats();
+    }
+
+    function previewItemStats() {
+        let select = document.getElementById('inv-select');
+        if(!select.selectedOptions[0]) return;
+        let rarity = select.selectedOptions[0].getAttribute('data-rarity');
+        let config = RARITY_MULTIPLIERS[rarity];
+        
+        chosenItemData = {
+            idName: select.value,
+            rarity: rarity,
+            maxHp: config.hp,
+            moves: [
+                { name: config.namaAtk[0], dmg: Math.floor(config.dmg * 0.4), cd: 1000 },  // Jurus 1: Fast
+                { name: config.namaAtk[1], dmg: Math.floor(config.dmg * 1.0), cd: 3000 },  // Jurus 2: Medium
+                { name: config.namaAtk[2], dmg: Math.floor(config.dmg * 2.5), cd: 8000 }   // Jurus 3: ULTIMATE
+            ]
+        };
+
+        document.getElementById('item-preview').innerHTML = `
+            ❤️ Max HP: <b>${chosenItemData.maxHp}</b><br>
+            ⚔️ Estimasi Base DMG: <b>${config.dmg}</b>
+        `;
+    }
+
+    // JARINGAN FIREBASE LOBBY ENGINE
+    function buatRoom() {
+        myName = document.getElementById('p-name').value.trim() || "Player1";
+        currentRoomCode = "ROOM-" + Math.floor(1000 + Math.random() * 9000);
+        myRole = "player1"; enemyRole = "player2";
+
+        loadInventoryDariGacha();
+        renderDropdownItem();
+        gantiScreen('scr-select');
+
+        // Bikin struktur data room di Firebase
+        window.dbSet(window.dbRef(window.db, 'rooms/' + currentRoomCode), {
+            status: "waiting",
+            player1: { nama: myName, hp: 100, maxHp: 100, ready: false, lastAction: "" },
+            player2: { nama: "Menunggu...", hp: 100, maxHp: 100, ready: false, lastAction: "" }
+        });
+
+        listenRoomChange();
+    }
+
+    function joinRoom() {
+        let code = document.getElementById('room-id-input').value.trim().toUpperCase();
+        if(!code) return alert("Isi kode room-nya dulu kontol wkwk!");
+        myName = document.getElementById('p-name').value.trim() || "Player2";
+        currentRoomCode = code;
+        myRole = "player2"; enemyRole = "player1";
+
+        loadInventoryDariGacha();
+        renderDropdownItem();
+
+        window.dbGet(window.dbRef(window.db, 'rooms/' + currentRoomCode)).then((snapshot) => {
+            if(snapshot.exists()) {
+                // Update data player 2 di room tersebut
+                window.dbUpdate(window.dbRef(window.db, 'rooms/' + currentRoomCode + '/player2'), {
+                    nama: myName
+                });
+                window.dbUpdate(window.dbRef(window.db, 'rooms/' + currentRoomCode), {
+                    status: "selection"
+                });
+                gantiScreen('scr-select');
+                listenRoomChange();
+            } else {
+                alert("Room gak ketemu bray! Periksa kodenya lagi.");
+            }
+        });
+    }
+
+    function listenRoomChange() {
+        window.dbOnValue(window.dbRef(window.db, 'rooms/' + currentRoomCode), (snapshot) => {
+            const data = snapshot.val();
+            if(!data) return;
+
+            // Update Teks Status di screen persiapan
+            if(data.status === "selection") {
+                document.getElementById('txt-status-waiting').innerText = `Lawan terhubung! Masukkan Kode ini ke Temen Lu: ${currentRoomCode}`;
+                document.getElementById('selection-area').style.display = "block";
+            } else if (data.status === "waiting") {
+                document.getElementById('txt-status-waiting').innerText = `Room Berhasil Dibuat! Kode Room Anda: ${currentRoomCode}. Bagikan ke lawan!`;
+            }
+
+            // Pindah Ke Arena Pertempuran jika dua-duanya sudah ready
+            if(data.status === "playing") {
+                if(!battleActive) startBattleArena(data);
+                updateLiveBattleStats(data);
+            }
+        });
+    }
+
+    function readyBertarung() {
+        document.getElementById('btn-ready').disabled = true;
+        document.getElementById('btn-ready').innerText = "MENUNGGU LAWAN READY...";
+        
+        window.dbUpdate(window.dbRef(window.db, 'rooms/' + currentRoomCode + '/' + myRole), {
+            ready: true,
+            hp: chosenItemData.maxHp,
+            maxHp: chosenItemData.maxHp,
+            item: chosenItemData.idName
+        });
+
+        // Cek apakah lawan udah ready juga lewat database sekilas
+        window.dbGet(window.dbRef(window.db, 'rooms/' + currentRoomCode)).then((snapshot) => {
+            let data = snapshot.val();
+            if(data[enemyRole] && data[enemyRole].ready === true) {
+                // Dua-duanya ready, ganti status room ke "playing"
+                window.dbUpdate(window.dbRef(window.db, 'rooms/' + currentRoomCode), { status: "playing" });
+            }
+        });
+    }
+
+    // REALTIME ACTION ARENA ENGINE
+    function startBattleArena(data) {
+        battleActive = true;
+        gantiScreen('scr-arena');
+        document.getElementById('ui-room-code').innerText = `LOBBY SERVER: ${currentRoomCode}`;
+        
+        document.getElementById('ui-my-name').innerText = data[myRole].nama + ` (${data[myRole].item})`;
+        document.getElementById('ui-enemy-name').innerText = data[enemyRole].nama + ` (${data[enemyRole].item})`;
+
+        // Set nama text di 3 tombol serangan milik item lu
+        for(let i=0; i<3; i++) {
+            let move = chosenItemData.moves[i];
+            document.getElementById(`btn-atk-0`).innerText = `${chosenItemData.moves[0].name}\n(Dmg: ${chosenItemData.moves[0].dmg})`;
+            document.getElementById(`btn-atk-1`).innerText = `${chosenItemData.moves[1].name}\n(Dmg: ${chosenItemData.moves[1].dmg})`;
+            document.getElementById(`btn-atk-2`).innerText = `${chosenItemData.moves[2].name}\n(Dmg: ${chosenItemData.moves[2].dmg})`;
+        }
+        tulisLog("⚔️ Pertempuran Dimulai! Ayo adu tap secepatnya!");
+    }
+
+    function updateLiveBattleStats(data) {
+        let me = data[myRole];
+        let enemy = data[enemyRole];
+
+        // Hitung persentase darah bar
+        let pctMe = (me.hp / me.maxHp) * 100;
+        let pctEnemy = (enemy.hp / enemy.maxHp) * 100;
+
+        document.getElementById('ui-my-hp-txt').innerText = `${me.hp}/${me.maxHp} HP`;
+        document.getElementById('ui-my-hp-bar').style.width = `${pctMe}%`;
+
+        document.getElementById('ui-enemy-hp-txt').innerText = `${enemy.hp}/${enemy.maxHp} HP`;
+        document.getElementById('ui-enemy-bar').style.width = `${pctEnemy}%`;
+
+        // Tampilkan log aksi serangan terakhir dari database
+        if(enemy.lastAction && enemy.lastAction !== window.lastLoggedEnemyAction) {
+            tulisLog(`💥 Lawan menggunakan [${enemy.lastAction}]!`);
+            window.lastLoggedEnemyAction = enemy.lastAction;
+        }
+
+        // Deteksi pemenang mutlak real-time
+        if(me.hp <= 0 && battleActive) {
+            battleActive = false;
+            alert("💀 LU KALAH TELAK! Item lu remuk jadi debu.");
+            selesaiPerang();
+        } else if (enemy.hp <= 0 && battleActive) {
+            battleActive = false;
+            alert("🏆 LU MENANG! Pasukan lu berhasil membantai musuh online!");
+            selesaiPerang();
+        }
+    }
+
+    function eksekusiSerang(indexJurus) {
+        if(!battleActive) return;
+        let jurus = chosenItemData.moves[indexJurus];
+
+        // SISTEM COOLDOWN JEDA ADIL (Kunci tombol sekian detik)
+        let btn = document.getElementById(`btn-atk-${indexJurus}`);
+        btn.disabled = true;
+        let sisaWaktu = jurus.cd / 1000;
+        let timer = setInterval(() => {
+            sisaWaktu--;
+            if(sisaWaktu <= 0) {
+                clearInterval(timer);
+                btn.disabled = false;
+                btn.innerText = `${jurus.name}\n(Dmg: ${jurus.dmg})`;
+            } else {
+                btn.innerText = `JEDA (${sisaWaktu}s)`;
+            }
+        }, 1000);
+
+        // Ambil data HP musuh terupdate dari Firebase untuk dikurangi langsung
+        window.dbGet(window.dbRef(window.db, 'rooms/' + currentRoomCode + '/' + enemyRole + '/hp')).then((snapshot) => {
+            let enemyHpCurrent = snapshot.val();
+            let hpBaruLawan = enemyHpCurrent - jurus.dmg;
+            if(hpBaruLawan < 0) hpBaruLawan = 0;
+
+            // Tembakkan update serangan lu ke server Firebase cloud
+            let updates = {};
+            updates[`rooms/${currentRoomCode}/${enemyRole}/hp`] = hpBaruLawan;
+            updates[`rooms/${currentRoomCode}/${myRole}/lastAction`] = jurus.name;
+            
+            window.dbUpdate(window.dbRef(window.db), updates);
+            tulisLog(`🔥 Lu melancarkan [${jurus.name}]! Gacor dapet -${jurus.dmg} DMG.`);
+        });
+    }
+
+    function tulisLog(text) {
+        let lb = document.getElementById('battle-log');
+        lb.innerHTML += `<div>${text}</div>`;
+        lb.scrollTop = lb.scrollHeight;
+    }
+
+    function selesaiPerang() {
+        window.dbRemove(window.dbRef(window.db, 'rooms/' + currentRoomCode));
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }
+</script>
+
+</body>
+              </html>
+  
