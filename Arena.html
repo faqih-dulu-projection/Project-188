@@ -253,7 +253,9 @@
                 // Jangan tampilkan room yang sudah penuh
                 if (room.p1 && room.p2) continue;
 
-                const hasPass = room.password && room.password !== "";
+                // FIX BUG JOIN: Pastikan hasPass bernilai boolean true/false (bukan string kosong)
+                const hasPass = (room.password && room.password.trim() !== "") ? true : false;
+                const safePass = room.password ? room.password.replace(/'/g, "\\'") : "";
                 const isLockedTxt = hasPass ? "🔒 Private" : "🌍 Publik";
                 
                 const roomHTML = `
@@ -262,7 +264,7 @@
                             <span class="room-name">${room.name}</span>
                             <span class="room-status">${isLockedTxt} - Menunggu Lawan</span>
                         </div>
-                        <button class="btn-join" onclick="joinRoom('${id}', ${hasPass}, '${room.password}')">Join</button>
+                        <button class="btn-join" onclick="joinRoom('${id}', ${hasPass}, '${safePass}')">Join</button>
                     </div>
                 `;
                 container.innerHTML += roomHTML;
