@@ -3,235 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poké Collect - Arena Perang Quick Scope</title>
+    <title>Poké Collect - Arena</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121212;
-            color: white;
-            text-align: center;
+            background: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             overflow: hidden;
             height: 100vh;
-        }
-        #setup-screen, #game-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .btn {
-            background: #ff5722;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            cursor: pointer;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        .btn:hover { background: #e64a19; }
-        .btn-back { background: #555; margin-top: 20px; }
-        .btn-back:hover { background: #444; }
-        
-        /* HP Bar Arena */
-        .arena-status {
-            display: flex;
-            justify-content: space-around;
-            width: 80%;
-            margin-bottom: 20px;
-            position: absolute;
-            top: 20px;
-        }
-        .player-box {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 10px;
-            width: 40%;
-            border: 2px solid #333;
-        }
-        .hp-bar {
-            background: #444;
-            height: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .hp-fill {
-            background: #4caf50;
-            height: 100%;
-            width: 100%;
-            transition: width 0.1s ease-in-out;
         }
 
-        /* Target Quick Scope */
+        /* Lobby Styles */
+        #lobby-screen {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 5vh;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 { margin: 0 0 15px 0; font-weight: 600; }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input {
+            background: #0f172a;
+            color: white;
+            border: 1px solid #334155;
+        }
+
+        input:focus { outline: 1px solid var(--primary); }
+
+        button {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover { background: var(--primary-hover); }
+
+        .btn-back { background: #475569; margin-top: 10px; }
+        .btn-back:hover { background: #334155; }
+
+        /* Room List */
+        #room-list-container {
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .room-item {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+
+        .room-info { display: flex; flex-direction: column; text-align: left; }
+        .room-name { font-weight: bold; }
+        .room-status { font-size: 12px; color: var(--text-muted); }
+
+        .btn-join {
+            width: auto;
+            padding: 8px 16px;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Game Screen Styles */
+        #game-screen {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .player-card {
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 10px;
+            width: 45%;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .hp-bar-bg {
+            background: #334155;
+            height: 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .hp-fill {
+            background: #22c55e;
+            height: 100%;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        #status-msg {
+            position: absolute;
+            top: 120px;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #facc15;
+            z-index: 10;
+        }
+
         #target-btn {
             position: absolute;
-            background: #e53935;
+            background: var(--danger);
             color: white;
             border: 3px solid #fff;
             border-radius: 50%;
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             font-weight: bold;
-            font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 15px #e53935;
+            box-shadow: 0 0 15px var(--danger);
             display: none;
             align-items: center;
             justify-content: center;
             user-select: none;
+            transform: translate(-50%, -50%);
         }
-        #target-btn:active { transform: scale(0.9); }
-        #status-msg { font-size: 24px; font-weight: bold; color: #ffeb3b; margin-top: 50px;}
+
+        #target-btn:active { transform: translate(-50%, -50%) scale(0.9); }
     </style>
 </head>
 <body>
 
-    <div id="setup-screen">
-        <h2>Selamat Datang di Arena Quick Scope!</h2>
-        <p>Pilih peran lu buat tanding langsung tanpa ribet input kode:</p>
-        <div style="margin-bottom: 15px;">
-            <button class="btn" style="background:#2196f3;" onclick="pilihRole('Player1')">Join sebagai Player 1</button>
-            <button class="btn" style="background:#e91e63;" onclick="pilihRole('Player2')">Join sebagai Player 2</button>
+    <div id="lobby-screen">
+        <div class="panel">
+            <h2>Buat Room</h2>
+            <input type="text" id="input-room-name" placeholder="Nama Room (Cth: Mabar 1)">
+            <input type="password" id="input-room-pass" placeholder="Kata Sandi (Kosongkan jika publik)">
+            <button onclick="buatRoom()">Buat Room</button>
         </div>
-        <button class="btn btn-back" onclick="kembaliKeUtama()">⬅ Kembali ke Poké Collect</button>
+
+        <div class="panel">
+            <h3>Daftar Room</h3>
+            <div id="room-list-container">
+                <div style="text-align:center; color:#94a3b8;">Mencari room...</div>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="window.location.href='index.html'">Kembali ke Menu Utama</button>
     </div>
 
-    <div id="game-screen" style="display: none;">
-        <div class="arena-status">
-            <div class="player-box" id="box-p1">
-                <h3>Player 1</h3>
-                <div class="hp-bar"><div id="hp-p1" class="hp-fill"></div></div>
+    <div id="game-screen">
+        <div class="hud">
+            <div class="player-card">
+                <div>Player 1</div>
+                <div class="hp-bar-bg"><div id="hp-p1" class="hp-fill"></div></div>
             </div>
-            <div class="player-box" id="box-p2">
-                <h3>Player 2</h3>
-                <div class="hp-bar"><div id="hp-p2" class="hp-fill"></div></div>
+            <div class="player-card">
+                <div>Player 2</div>
+                <div class="hp-bar-bg"><div id="hp-p2" class="hp-fill"></div></div>
             </div>
         </div>
 
-        <div id="status-msg">Menunggu Pemain Lain...</div>
+        <div id="status-msg">Menyiapkan Arena...</div>
         
-        <button id="target-btn" onclick="tembakMusuh()">HIT!</button>
+        <button id="target-btn" onclick="tembak()">HIT</button>
     </div>
 
     <script>
-        // Konfigurasi Firebase langsung pakai URL lu, Bray
         const firebaseConfig = {
             databaseURL: "https://multiplayer-5e98b-default-rtdb.firebaseio.com/"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const roomRef = db.ref("quick_scope_room");
+        const roomsRef = db.ref("arena_rooms");
 
-        let myRole = ""; 
-        let gameAktif = false;
+        let currentRoomId = null;
+        let myRole = null; 
+        let gameActive = false;
+        let roomListener = null;
 
-        // Fungsi kembali ke index.html (Poké Collect biasa)
-        function kembaliKeUtama() {
-            window.location.href = "index.html"; 
-        }
-
-        // Memilih Role & Reset room kalau masuk awal
-        function pilihRole(role) {
-            myRole = role;
-            document.getElementById("setup-screen").style.display = "none";
-            document.getElementById("game-screen").style.display = "flex";
+        // Render Daftar Room di Lobby
+        roomsRef.on("value", (snapshot) => {
+            if (currentRoomId) return; // Jika sedang dalam game, abaikan update lobby
             
-            // Tandai di Firebase kalau role ini sudah terisi
-            roomRef.child(role).set(true);
+            const container = document.getElementById("room-list-container");
+            container.innerHTML = "";
+            const rooms = snapshot.val();
 
-            // Jika pilih Player 1, sekalian reset darah game ke 100 global
-            if (role === "Player1") {
-                roomRef.child("status").set({
+            if (!rooms) {
+                container.innerHTML = "<div style='text-align:center; color:#94a3b8;'>Belum ada room tersedia.</div>";
+                return;
+            }
+
+            for (let id in rooms) {
+                const room = rooms[id];
+                // Jangan tampilkan room yang sudah penuh
+                if (room.p1 && room.p2) continue;
+
+                const hasPass = room.password && room.password !== "";
+                const isLockedTxt = hasPass ? "🔒 Private" : "🌍 Publik";
+                
+                const roomHTML = `
+                    <div class="room-item">
+                        <div class="room-info">
+                            <span class="room-name">${room.name}</span>
+                            <span class="room-status">${isLockedTxt} - Menunggu Lawan</span>
+                        </div>
+                        <button class="btn-join" onclick="joinRoom('${id}', ${hasPass}, '${room.password}')">Join</button>
+                    </div>
+                `;
+                container.innerHTML += roomHTML;
+            }
+
+            if(container.innerHTML === "") {
+                container.innerHTML = "<div style='text-align:center; color:#94a3b8;'>Semua room penuh. Buat room baru!</div>";
+            }
+        });
+
+        function buatRoom() {
+            let nama = document.getElementById("input-room-name").value.trim();
+            let pass = document.getElementById("input-room-pass").value;
+            if (!nama) nama = "Room " + Math.floor(Math.random() * 1000);
+
+            const newRoomRef = roomsRef.push();
+            currentRoomId = newRoomRef.key;
+            myRole = "p1";
+
+            newRoomRef.set({
+                name: nama,
+                password: pass,
+                p1: true,
+                p2: false,
+                status: {
                     p1_hp: 100,
                     p2_hp: 100,
                     targetX: 50,
-                    targetY: 50,
-                    spawnTime: 0
-                });
-            }
-            mulaiMendengarkanDatabase();
+                    targetY: 50
+                }
+            });
+
+            masukArena();
         }
 
-        // Sinkronisasi data real-time Firebase
-        function mulaiMendengarkanDatabase() {
-            roomRef.on("value", (snapshot) => {
+        function joinRoom(id, hasPass, actualPass) {
+            if (hasPass) {
+                let inputPass = prompt("Room ini dikunci. Masukkan Kata Sandi:");
+                if (inputPass !== actualPass) {
+                    alert("Kata sandi salah!");
+                    return;
+                }
+            }
+
+            currentRoomId = id;
+            myRole = "p2";
+            
+            roomsRef.child(currentRoomId).update({ p2: true });
+            masukArena();
+        }
+
+        function masukArena() {
+            document.getElementById("lobby-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "block";
+            document.getElementById("status-msg").innerText = "Menunggu lawan bergabung...";
+
+            mulaiSyncGame();
+        }
+
+        function mulaiSyncGame() {
+            const currentRoomRef = roomsRef.child(currentRoomId);
+            
+            roomListener = currentRoomRef.on("value", (snapshot) => {
                 const data = snapshot.val();
-                if (!data || !data.status) return;
+                
+                // Jika room terhapus (selesai/host keluar)
+                if (!data) {
+                    kembaliKeLobby("Room ditutup atau game telah selesai.");
+                    return;
+                }
 
                 const status = data.status;
                 
-                // Update tampilan darah (HP)
                 document.getElementById("hp-p1").style.width = status.p1_hp + "%";
                 document.getElementById("hp-p2").style.width = status.p2_hp + "%";
 
-                // Cek status game apakah player 1 & 2 udah ready
-                if (data.Player1 && data.Player2 && status.p1_hp > 0 && status.p2_hp > 0) {
-                    gameAktif = true;
-                    document.getElementById("status-msg").innerText = "TEMBAK TARGETNYA BRAY!";
+                // Game dimulai ketika P2 masuk
+                if (data.p1 && data.p2 && status.p1_hp > 0 && status.p2_hp > 0) {
+                    gameActive = true;
+                    document.getElementById("status-msg").innerText = "";
                     
-                    // Posisikan tombol target sesuai koordinat di Firebase
                     const targetBtn = document.getElementById("target-btn");
                     targetBtn.style.display = "flex";
                     targetBtn.style.left = status.targetX + "vw";
                     targetBtn.style.top = status.targetY + "vh";
-                } else if (status.p1_hp <= 0 || status.p2_hp <= 0) {
-                    gameAktif = false;
+                } 
+                // Kondisi Menang/Kalah
+                else if (status.p1_hp <= 0 || status.p2_hp <= 0) {
+                    gameActive = false;
                     document.getElementById("target-btn").style.display = "none";
-                    if (status.p1_hp <= 0) {
-                        document.getElementById("status-msg").innerText = "PLAYER 2 MENANG! 🎉";
-                    } else {
-                        document.getElementById("status-msg").innerText = "PLAYER 1 MENANG! 🎉";
-                    }
+                    
+                    let winnerText = (status.p1_hp <= 0) ? "PLAYER 2 MENANG!" : "PLAYER 1 MENANG!";
+                    document.getElementById("status-msg").innerText = winnerText;
+
+                    // Hapus room otomatis setelah 3 detik biar balik ke lobby
+                    setTimeout(() => {
+                        if (myRole === "p1") {
+                            currentRoomRef.remove();
+                        }
+                    }, 3000);
                 }
             });
         }
 
-        // Aksi ketika berhasil nembak/klik tombol target
-        function tembakMusuh() {
-            if (!gameAktif) return;
+        function tembak() {
+            if (!gameActive) return;
 
-            roomRef.child("status").get().then((snapshot) => {
+            const roomStatusRef = roomsRef.child(currentRoomId).child("status");
+            roomStatusRef.get().then((snapshot) => {
                 if (snapshot.exists()) {
-                    const status = snapshot.val();
-                    let p1_hp = status.p1_hp;
-                    let p2_hp = status.p2_hp;
+                    let status = snapshot.val();
+                    if(status.p1_hp <= 0 || status.p2_hp <= 0) return;
 
-                    // Kurangi darah lawan berdasarkan siapa yang ngeklik duluan
-                    if (myRole === "Player1") {
-                        p2_hp -= 10; // Kurangi darah Player 2
-                    } else if (myRole === "Player2") {
-                        p1_hp -= 10; // Kurangi darah Player 1
-                    }
+                    if (myRole === "p1") status.p2_hp -= 10;
+                    if (myRole === "p2") status.p1_hp -= 10;
 
-                    // Acak posisi baru buat target berikutnya (biar gak muncul di luar layar, dibatasin 10-80%)
-                    const xAcak = Math.floor(Math.random() * 70) + 10;
-                    const yAcak = Math.floor(Math.random() * 60) + 20;
+                    // Random koordinat aman di layar
+                    status.targetX = Math.floor(Math.random() * 80) + 10;
+                    status.targetY = Math.floor(Math.random() * 60) + 20;
 
-                    // Update balik ke Firebase
-                    roomRef.child("status").update({
-                        p1_hp: Math.max(0, p1_hp),
-                        p2_hp: Math.max(0, p2_hp),
-                        targetX: xAcak,
-                        targetY: yAcak,
-                        spawnTime: Date.now()
-                    });
+                    roomStatusRef.update(status);
                 }
             });
         }
 
-        // Reset room otomatis kalau tab ditutup biar gak ngegantung
-        window.addEventListener("beforeunload", function () {
-            if (myRole) {
-                roomRef.child(myRole).remove();
+        function kembaliKeLobby(pesan) {
+            if(roomListener) {
+                roomsRef.child(currentRoomId).off("value", roomListener);
+                roomListener = null;
+            }
+            
+            gameActive = false;
+            currentRoomId = null;
+            myRole = null;
+
+            document.getElementById("game-screen").style.display = "none";
+            document.getElementById("lobby-screen").style.display = "flex";
+            
+            // Reset UI Game
+            document.getElementById("hp-p1").style.width = "100%";
+            document.getElementById("hp-p2").style.width = "100%";
+            document.getElementById("target-btn").style.display = "none";
+
+            if (pesan) alert(pesan);
+        }
+
+        // Handle keluar mendadak
+        window.addEventListener("beforeunload", () => {
+            if (currentRoomId && myRole === "p1") {
+                roomsRef.child(currentRoomId).remove();
+            } else if (currentRoomId && myRole === "p2") {
+                roomsRef.child(currentRoomId).update({ p2: false });
             }
         });
     </script>
 </body>
-                                                                              </html>
-                                        
+</html>
