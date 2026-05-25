@@ -909,11 +909,12 @@ function tukarHackKeImpossible() {
     gameData.inventory[itemImpossibleAcak.id] = (gameData.inventory[itemImpossibleAcak.id] || 0) + 1;
     
     // 7. Save progress dan update tampilan layar
-    gameData.inventory[finalAsset.id] = (gameData.inventory[finalAsset.id] || 0) + 1; 
+    // POTONG BARIS YANG SALAH, GANTI JADI INI:
 gameData.inventory[itemImpossibleAcak.id] = (gameData.inventory[itemImpossibleAcak.id] || 0) + 1;
 saveProgress();
-saveInventoryToCloud(); // <-- Tambahkan ini
+saveInventoryToCloud(); 
 renderStats();
+
 
     if(document.getElementById('tab-inventory').classList.contains('active')) populateInventoryMesh();
 
