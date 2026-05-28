@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Chat Room</title>
     <style>
+            /* Pembungkus Kiri Header */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden; /* Menjaga teks judul tetap bisa terpotong rapi */
+        }
+
+        /* Tombol Kembali di Chat */
+        .btn-back-chat {
+            background: #3f3f46;
+            color: #e4e4e7;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-back-chat:hover {
+            background: #52525b;
+            color: #fff;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -21,7 +50,7 @@
             height: 100vh;
         }
 
-        /* Tampilan 1: Landing Page / Tombol Pintasan */
+        /* Tampilan 1: Landing Page */
         .landing-container {
             background: #1e1e1f;
             padding: 30px;
@@ -90,7 +119,6 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
 
-        /* PERBAIKAN DI SINI: Pake flexbox biar sejajar dan gak tabrakan */
         .chat-header {
             background: #27272a;
             padding: 15px 20px;
@@ -110,7 +138,6 @@
             padding-right: 10px;
         }
 
-        /* Tombol Ganti Nama (Udah gak absolute lagi) */
         .btn-logout {
             background: #ef4444;
             color: white;
@@ -120,7 +147,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            flex-shrink: 0; /* Menolak ciut biar tulisan tombol tetep jelas */
+            flex-shrink: 0;
             transition: background 0.2s;
         }
         .btn-logout:hover { background: #dc2626; }
@@ -141,9 +168,10 @@
             font-size: 15px;
             line-height: 1.4;
             word-break: break-word;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Chat dari diri sendiri */
         .msg-me {
             background: #4f46e5;
             color: white;
@@ -151,7 +179,6 @@
             border-bottom-right-radius: 1px;
         }
 
-        /* Chat dari orang lain */
         .msg-other {
             background: #27272a;
             color: #e1e1e1;
@@ -165,6 +192,27 @@
             margin-bottom: 4px;
             font-weight: bold;
             display: block;
+        }
+
+        .msg-me .msg-sender {
+            color: #c7d2fe;
+        }
+
+        /* Tombol Hapus Chat */
+        .btn-delete {
+            align-self: flex-end;
+            background: transparent;
+            border: none;
+            color: #fca5a5;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 6px;
+            opacity: 0.7;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .btn-delete:hover {
+            opacity: 1;
         }
 
         .chat-input-area {
@@ -197,11 +245,35 @@
         .chat-input-area button:hover {
             background: #4338ca;
         }
+
+        /* Notifikasi Toast Masuk */
+        #mentionToast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #312e81;
+            color: #e0e7ff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid #4338ca;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { top: -50px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="landing-container" id="landingPage">
+    <div id="mentionToast"></div>
+
+    <div class="landing-container" id="landingPage" style="display: none;">
         <h1>GAME GLOBAL CHAT</h1>
         <p style="color: #a1a1aa; margin-bottom: 20px; font-size: 14px;">Silakan masukkan nama kamu untuk bergabung ke obrolan global.</p>
         <div class="input-group">
@@ -211,10 +283,14 @@
     </div>
 
     <div class="chat-container" id="chatPage">
-        <div class="chat-header">
-            <div id="chatHeaderTitle">Global Room</div>
+                <div class="chat-header">
+            <div class="header-left">
+                <button class="btn-back-chat" onclick="window.location.href='index.html'" title="Kembali ke Game">◀</button>
+                <div id="chatHeaderTitle"></div>
+            </div>
             <button class="btn-logout" id="btnGantiNama">Ganti Nama</button>
         </div>
+
         <div class="chat-messages" id="chatMessages"></div>
         <form class="chat-input-area" id="chatForm">
             <input type="text" id="msgInput" placeholder="Ketik pesan di sini..." autocomplete="off" required>
@@ -224,8 +300,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // FIX: Import remove ditambahkan ke SDK biar fungsi hapus gak bikin crash
+        import { getDatabase, ref, push, set, onValue, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // Konfigurasi Database Sesuai File Terbaru Lu
         const firebaseConfig = {
             apiKey: "AIzaSyCUdkLCzMWrn7X6nw6IXRXuqJODbYmrWx4",
             authDomain: "database-leatherboard-b4493.firebaseapp.com",
@@ -252,6 +330,7 @@
         const msgInput = document.getElementById('msgInput');
         const chatHeaderTitle = document.getElementById('chatHeaderTitle');
         const btnGantiNama = document.getElementById('btnGantiNama');
+        const toast = document.getElementById('mentionToast');
 
         // ==== FITUR INGAT NAMA (AUTO LOGIN) ====
         const namaTersimpan = localStorage.getItem('globalChatUsername');
@@ -278,9 +357,11 @@
         function bukaRoomChat() {
             landingPage.style.display = "none";
             chatPage.style.display = "flex";
-            chatHeaderTitle.innerText = `Global Room (${namaUser})`;
-            chatHeaderTitle.title = `Global Room (${namaUser})`; // Tooltip pas kursor diarahkan ke nama
-            loadMessages();
+            chatHeaderTitle.innerText = `Back (${namaUser})`;
+            chatHeaderTitle.title = `Back (${namaUser})`; 
+            
+            loadMessagesAndCleanUp();
+            pantauMention();
         }
 
         btnGantiNama.addEventListener('click', () => {
@@ -291,42 +372,43 @@
             }
         });
 
-        // Fungsi Mengirim Pesan
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const textText = msgInput.value.trim();
-            if (textText === "") return;
-
-            try {
-                const newChatRef = push(chatRef);
-                await set(newChatRef, {
-                    sender: namaUser,
-                    text: textText,
-                    timestamp: serverTimestamp()
-                });
-                msgInput.value = "";
-            } catch (error) {
-                console.error("Gagal mengirim pesan: ", error);
-            }
-        });
-
-        // Fungsi Memuat Pesan Live
-        function loadMessages() {
+        // ==========================================
+        // AMBIL CHAT + AUTO-HAPUS YANG BERUMUR > 3 HARI
+        // ==========================================
+        function loadMessagesAndCleanUp() {
             onValue(chatRef, (snapshot) => {
                 chatMessages.innerHTML = "";
-                
+                const sekarang = Date.now();
+                const batasWaktu = 3 * 24 * 60 * 60 * 1000; // 3 Hari dalam milidetik
+
                 if (snapshot.exists()) {
                     snapshot.forEach((childSnapshot) => {
                         const data = childSnapshot.val();
+                        const msgId = childSnapshot.key;
+
+                        // Pengecekan otomatis umur chat
+                        if (data.timestamp && (sekarang - data.timestamp > batasWaktu)) {
+                            const hapusRef = ref(db, "global_chats/" + msgId);
+                            remove(hapusRef);
+                            return; // Lewati chat lama agar tidak di-render
+                        }
+
                         const msgDiv = document.createElement('div');
                         msgDiv.classList.add('msg-box');
 
                         if (data.sender === namaUser) {
                             msgDiv.classList.add('msg-me');
-                            msgDiv.innerHTML = `<span class="msg-sender">Anda</span>${data.text}`;
+                            msgDiv.innerHTML = `
+                                <span class="msg-sender">Anda</span>
+                                <span>${data.text}</span>
+                                <button class="btn-delete" onclick="hapusPesanSaya('${msgId}')">🗑️ Hapus</button>
+                            `;
                         } else {
                             msgDiv.classList.add('msg-other');
-                            msgDiv.innerHTML = `<span class="msg-sender">${data.sender}</span>${data.text}`;
+                            msgDiv.innerHTML = `
+                                <span class="msg-sender">${data.sender}</span>
+                                <span>${data.text}</span>
+                            `;
                         }
                         chatMessages.appendChild(msgDiv);
                     });
@@ -334,6 +416,81 @@
                 }
             });
         }
+
+        // ==========================================
+        // FITUR BARU: HAPUS CHAT SAYA MANDIRI
+        // ==========================================
+        window.hapusPesanSaya = function(pesanId) {
+            if (confirm("Apakah Anda yakin ingin menghapus pesan ini secara permanen?")) {
+                const pesanSpesifikRef = ref(db, "global_chats/" + pesanId);
+                remove(pesanSpesifikRef).catch((error) => {
+                    alert("Gagal menghapus pesan: " + error.message);
+                });
+            }
+        }
+
+        // ==========================================
+        // FITUR PANTAU @MENTION (SENSITIF HURUF KAPITAL FIXED)
+        // ==========================================
+        function pantauMention() {
+            const mentionRef = ref(db, 'mentions/' + namaUser.toLowerCase());
+            onValue(mentionRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // Munculkan Toast Notifikasi
+                    toast.innerHTML = `<strong>${data.from}:</strong> ${data.text}`;
+                    toast.style.display = "block";
+
+                    // Sembunyikan notifikasi setelah 5 detik dan bersihkan dari DB biar gak spam
+                    setTimeout(() => {
+                        toast.style.display = "none";
+                        remove(mentionRef); 
+                    }, 5000);
+                }
+            });
+        }
+// Fungsi Mengirim Pesan + Deteksi Mention Lebih Akurat
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const textText = msgInput.value.trim();
+
+    if (!textText) return;
+
+    try {
+        const newChatRef = push(chatRef);
+        await set(newChatRef, {
+            sender: namaUser,
+            text: textText,
+            timestamp: serverTimestamp()
+        });
+
+        // Deteksi Nge-@ Mention
+        if (textText.includes('@')) {
+            const kata = textText.split(' ');
+            const targetKata = kata.find(k => k.startsWith('@'));
+            
+            if (targetKata) {
+                const targetUser = targetKata.replace('@', '');
+                
+                if (targetUser.toLowerCase() !== namaUser.toLowerCase()) {
+                    // Kirim ke database target dengan huruf kecil semua biar sinkron
+                    const targetMentionRef = ref(db, 'mentions/' + targetUser.toLowerCase());
+                    await set(targetMentionRef, {
+                        from: namaUser,
+                        text: textText,
+                        timestamp: serverTimestamp()
+                    });
+                }
+            }
+        }
+
+        msgInput.value = "";
+    } catch (error) {
+        console.error("Gagal mengirim pesan: ", error);
+        alert("Error saat mengirim pesan!");
+    }
+});
     </script>
 </body>
 </html>
