@@ -479,4 +479,377 @@
         }
 
         if(localStorage.getItem("poke_username")) {
-            document.getElementById("input-username").value = localStorage.ge
+            document.getElementById("input-username").value = localStorage.getItem("poke_username");
+        }
+
+        function verifikasiPemain() {
+            let savedUser = localStorage.getItem("arena_username");
+            
+            if (!savedUser) {
+                savedUser = prompt("Masukkan Username Anda:");
+                if (!savedUser) {
+                    alert("Username wajib diisi!");
+                    window.location.reload();
+                    return;
+                }
+                savedUser = savedUser.trim();
+            }
+
+            let myDeviceToken = localStorage.getItem("user_device_token");
+            if (!myDeviceToken) {
+                myDeviceToken = "DEV-" + Math.floor(100000 + Math.random() * 900000) + "-" + Date.now().toString(36);
+                localStorage.setItem("user_device_token", myDeviceToken);
+            }
+
+            const lockRef = db.ref("account_locks/" + savedUser.toLowerCase());
+            
+            lockRef.once("value").then((snapshot) => {
+                if (snapshot.exists()) {
+                    if (snapshot.val() !== myDeviceToken) {
+                        alert("❌ Username ini sudah dipakai oleh device lain, bre! Silakan pakai nama lain.");
+                        localStorage.removeItem("arena_username");
+                        window.location.reload();
+                        return;
+                    }
+                } else {
+                    lockRef.set(myDeviceToken);
+                }
+
+                username = savedUser;
+                localStorage.setItem("arena_username", username);
+                document.getElementById("txt-p1-name").innerText = username; // Perbaikan agar ID cocok 
+
+                aktifkanStatusOnline(username);
+                
+                loadLoadoutOptions();
+                aktifkanLobbyListener();
+                
+                // Pindah Layar
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("lobby-screen").style.display = "flex";
+            });
+        }
+
+        function loadLoadoutOptions() {
+            // Baca Inventory Player dari Database Utama
+            db.ref("players/" + username + "/inventory").once("value").then(snapshot => {
+                const myInv = snapshot.val() || {};
+                ownedItems = [];
+                
+                ITEMS_REF.forEach(item => {
+                    if (myInv[item.id] > 0) {
+                        ownedItems.push(item);
+                    }
+                });
+                
+                renderLoadoutSelector();
+            });
+        }
+
+        function renderLoadoutSelector() {
+            const container = document.getElementById("loadout-list");
+            container.innerHTML = "";
+
+            if (ownedItems.length === 0) {
+                container.innerHTML = "<div style='color:#94a3b8; grid-column: span 2; padding: 10px;'>Gacha di game utama dulu untuk membuka item!</div>";
+                return;
+            }
+
+            ownedItems.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "item-card";
+                card.innerText = `${item.name}\n(${item.rarity.toUpperCase()})`;
+                card.onclick = () => toggleSelectItem(item, card);
+                container.appendChild(card);
+            });
+        }
+
+        function toggleSelectItem(item, element) {
+            const idx = selectedLoadout.findIndex(i => i.id === item.id);
+            if (idx > -1) {
+                selectedLoadout.splice(idx, 1);
+                element.classList.remove("selected");
+            } else {
+                if (selectedLoadout.length >= 3) return alert("Maksimal memilih 3 item!");
+                selectedLoadout.push(item);
+                element.classList.add("selected");
+            }
+
+            totalMyHp = 100;
+            totalMyDmg = 10;
+            selectedLoadout.forEach(i => {
+                const stat = rarityStats[i.rarity] || { hp: 0, dmg: 0 };
+                totalMyHp += stat.hp;
+                totalMyDmg += stat.dmg;
+            });
+        }
+
+        function aktifkanLobbyListener() {
+            roomsRef.on("value", (snapshot) => {
+                if (currentRoomId) return;
+                const container = document.getElementById("room-list-container");
+                container.innerHTML = "";
+                currentActiveRoomsData = snapshot.val() || {};
+
+                if (Object.keys(currentActiveRoomsData).length === 0) {
+                    container.innerHTML = "<div style='text-align:center; color:#94a3b8;'>Tidak ada room aktif. Silakan buat baru!</div>";
+                    return;
+                }
+
+                for (let id in currentActiveRoomsData) {
+                    const room = currentActiveRoomsData[id];
+                    if (room.p1 && room.p2) continue;
+
+                    const hasPass = room.password && room.password.trim() !== "";
+                    const lockTxt = hasPass ? "🔒 Kunci" : "🌍 Publik";
+
+                    container.innerHTML += `
+                        <div class="room-item">
+                            <div class="room-info">
+                                <span class="room-name">${room.name}</span>
+                                <span class="room-status">${lockTxt} - Host: ${room.p1_name}</span>
+                            </div>
+                            <button class="btn-join" data-id="${id}" onclick="persiapanJoinRoom(this)">Join</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function persiapanJoinRoom(btnElement) {
+            const id = btnElement.getAttribute("data-id");
+            const room = currentActiveRoomsData[id];
+            if(!room) return;
+
+            const hasPass = room.password && room.password.trim() !== "";
+            joinRoom(id, hasPass, room.password);
+        }
+
+        function buatRoom() {
+            let roomName = document.getElementById("input-room-name").value.trim() || username + "-Room";
+            let roomPass = document.getElementById("input-room-pass").value;
+
+            const newRoomRef = roomsRef.push();
+            currentRoomId = newRoomRef.key;
+            myRole = "p1";
+
+            newRoomRef.set({
+                name: roomName,
+                password: roomPass,
+                p1: true, p2: false,
+                p1_name: username, p2_name: "Menunggu...",
+                max_p1_hp: totalMyHp, max_p2_hp: 100,
+                status: { p1_hp: totalMyHp, p2_hp: 100, targetX: 50, targetY: 50 }
+            });
+            masukArena();
+        }
+
+        function joinRoom(id, hasPass, actualPass) {
+            if (hasPass) {
+                let check = prompt("Masukkan kata sandi room:");
+                if (check !== actualPass) return alert("Kata sandi salah!");
+            }
+            currentRoomId = id;
+            myRole = "p2";
+
+            roomsRef.child(currentRoomId).update({
+                p2: true,
+                p2_name: username,
+                max_p2_hp: totalMyHp,
+                "status/p2_hp": totalMyHp
+            });
+            masukArena();
+        }
+
+        function masukArena() {
+            document.body.classList.add("ingame");
+            document.getElementById("lobby-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "block";
+            document.getElementById("btn-emergency-exit").style.display = "block"; 
+            mulaiSyncPertandingan();
+            ubahStatusOnline("Bertarung");
+        }
+
+        function mulaiSyncPertandingan() {
+            const currentRoomRef = roomsRef.child(currentRoomId);
+            
+            if (myRole === "p1") {
+                let sisaWaktu = 60;
+                clearInterval(countdownInterval);
+                countdownInterval = setInterval(() => {
+                    if (gameActive) {
+                        clearInterval(countdownInterval);
+                        return;
+                    }
+                    sisaWaktu--;
+                    document.getElementById("status-msg").innerText = `Menunggu lawan bergabung... (${sisaWaktu}s)`;
+                    
+                    if (sisaWaktu <= 0) {
+                        clearInterval(countdownInterval);
+                        currentRoomRef.remove();
+                        kembaliKeLobby("Batas waktu habis. Room dihapus karena tidak ada lawan yang bergabung.");
+                    }
+                }, 1000);
+            }
+
+            roomListener = currentRoomRef.on("value", (snapshot) => {
+                const data = snapshot.val();
+                
+                if (!data) {
+                    clearInterval(countdownInterval);
+                    kembaliKeLobby("Room telah ditutup atau dibubarkan.");
+                    return;
+                }
+
+                const status = data.status;
+                document.getElementById("txt-p1-name").innerText = data.p1_name;
+                document.getElementById("txt-p2-name").innerText = data.p2_name;
+
+                document.getElementById("hp-p1").style.width = ((status.p1_hp / data.max_p1_hp) * 100) + "%";
+                document.getElementById("hp-p2").style.width = ((status.p2_hp / data.max_p2_hp) * 100) + "%";
+
+                if (data.p1 && data.p2 && status.p1_hp > 0 && status.p2_hp > 0) {
+                    gameActive = true;
+                    clearInterval(countdownInterval); 
+                    
+                    document.getElementById("status-msg").innerText = "";
+                    document.getElementById("btn-emergency-exit").style.display = "none"; 
+                    
+                    const btn = document.getElementById("target-btn");
+                    btn.style.display = "flex";
+                    btn.style.left = status.targetX + "vw";
+                    btn.style.top = status.targetY + "vh";
+                } else if (status.p1_hp <= 0 || status.p2_hp <= 0) {
+                    gameActive = false;
+                    document.getElementById("target-btn").style.display = "none";
+                    document.getElementById("status-msg").innerText = (status.p1_hp <= 0) ? `${data.p2_name} MENANG!` : `${data.p1_name} MENANG!`;
+
+                    setTimeout(() => { if (myRole === "p1") currentRoomRef.remove(); }, 3000);
+                }
+            });
+        }
+
+        function tembak() {
+            if (!gameActive) return;
+            const statusRef = roomsRef.child(currentRoomId).child("status");
+
+            statusRef.get().then((snapshot) => {
+                if (!snapshot.exists()) return;
+                let status = snapshot.val();
+
+                if (myRole === "p1") status.p2_hp = Math.max(0, status.p2_hp - totalMyDmg);
+                if (myRole === "p2") status.p1_hp = Math.max(0, status.p1_hp - totalMyDmg);
+
+                status.targetX = Math.floor(Math.random() * 70) + 15;
+                status.targetY = Math.floor(Math.random() * 55) + 25;
+                statusRef.update(status);
+            });
+        }
+
+        function kembaliKeLobby(msg) {
+            ubahStatusOnline("Lobby");
+            clearInterval(countdownInterval);
+            
+            const roomIdTarget = currentRoomId; 
+
+            if (roomIdTarget) {
+                if(roomListener) { 
+                    roomsRef.child(roomIdTarget).off("value", roomListener); 
+                    roomListener = null; 
+                }
+
+                if (myRole === "p1") {
+                    roomsRef.child(roomIdTarget).remove().catch(e => console.log("Gagal hapus room:", e));
+                } else if (myRole === "p2") {
+                    roomsRef.child(roomIdTarget).update({ p2: false, p2_name: "Menunggu..." }).catch(e => console.log("Gagal update P2:", e));
+                }
+            }
+            
+            gameActive = false; 
+            currentRoomId = null; 
+            myRole = null;
+            
+            document.body.classList.remove("ingame");
+            document.getElementById("game-screen").style.display = "none";
+            document.getElementById("lobby-screen").style.display = "flex";
+            if (msg) alert(msg);
+        }
+
+        function keluarKeGameUtama() {
+            if (currentRoomId) {
+                if (myRole === "p1") roomsRef.child(currentRoomId).remove();
+            }
+            // Tambahkan ini biar kalau kembali ke menu utama dari lobi juga disconnect dari daftar online Arena
+            if (myOnlineRef) myOnlineRef.remove();
+            window.location.href = 'index.html'; // atau Poké collect.html sesuai nama asli lu
+        }
+
+        window.addEventListener("beforeunload", () => {
+            if (currentRoomId) {
+                if (myRole === "p1") roomsRef.child(currentRoomId).remove();
+                else roomsRef.child(currentRoomId).update({ p2: false, p2_name: "Menunggu..." });
+            }
+        });
+
+        // ========================================================
+        // FITUR LIVE MONITOR: NOTIFIKASI @MENTION CHAT DI ARENA
+        // ========================================================
+        const chatConfigArena = {
+            databaseURL: "https://database-leatherboard-b4493-default-rtdb.firebaseio.com/"
+        };
+
+        let chatDbArena;
+        try {
+            const appChatArena = firebase.initializeApp(chatConfigArena, "ChatAppArena");
+            chatDbArena = appChatArena.database();
+        } catch (error) {
+            chatDbArena = firebase.app("ChatAppArena").database();
+        }
+
+        function pantauMentionDiArena(usernamePemain) {
+            if (!usernamePemain) return;
+            
+            var mentionRef = chatDbArena.ref('mentions/' + usernamePemain.toLowerCase());
+            
+            mentionRef.on('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    var data = snapshot.val();
+                    var toastElemen = document.getElementById('gameMentionToast');
+                    
+                    if (toastElemen) {
+                        toastElemen.innerHTML = `
+                            <div style="font-size: 11px; color: #ffd700; font-weight: bold; margin-bottom: 2px; letter-spacing: 1px;">💬 PANGGILAN GLOBAL CHAT</div>
+                            <span style="font-weight: bold; color: #fff;">@${data.from}:</span> 
+                            <span style="color: #cbd5e1;">${data.text}</span>
+                            <div style="font-size: 10px; color: #a78bfa; margin-top: 5px; text-align: right; font-style: italic;">Klik untuk membalas ↗️</div>
+                        `;
+                        
+                        toastElemen.onclick = function() {
+                            window.open('chat.html', '_blank'); 
+                            toastElemen.style.display = "none";
+                        };
+                        
+                        toastElemen.style.display = "block";
+
+                        setTimeout(function() {
+                            if (toastElemen.style.display === "block") {
+                                toastElemen.style.display = "none";
+                                mentionRef.remove();
+                            }
+                        }, 8000);
+                    }
+                }
+            });
+        }
+
+        // Jalankan berdasarkan username arena yang dipakai 
+        setTimeout(() => {
+            var namaChatUser = localStorage.getItem('arena_username') || localStorage.getItem('poke_username') || localStorage.getItem('globalChatUsername') || localStorage.getItem('game_username');
+            if (namaChatUser) {
+                pantauMentionDiArena(namaChatUser);
+            }
+        }, 1500);
+
+    </script>
+</body>
+</html>
