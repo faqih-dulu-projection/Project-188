@@ -193,9 +193,35 @@
             user-select: none;
             transform: translate(-50%, -50%);
         }
+
+        /* FITUR BARU: Style untuk Toast Notification Chat Global di Arena */
+        #gameMentionToast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: #e0e7ff;
+            padding: 14px 28px;
+            border-radius: 10px;
+            border: 2px solid #4f46e5;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(79, 70, 229, 0.4);
+            z-index: 999999;
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+            min-width: 300px;
+            animation: gameSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        @keyframes gameSlideDown {
+            from { top: -80px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
     </style>
 </head>
 <body>
+
+    <div id="gameMentionToast" title="Klik untuk membalas chat"></div>
 
     <div id="login-screen" class="screen">
         <div class="panel">
@@ -207,6 +233,12 @@
     </div>
 
     <div id="lobby-screen" class="screen" style="display: none;">
+      <div class="panel" style="margin-top: 15px;">
+    <h2>🟢 Player Online</h2>
+    <div id="online-players-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; padding: 5px;">
+        <span style="color: var(--text-muted);">Memuat player online...</span>
+    </div>
+
         <div class="panel">
             <h3>Pilih Amunisi Bertarung (Maksimal 3)</h3>
             <div class="loadout-grid" id="loadout-list">
@@ -220,8 +252,6 @@
             <button onclick="buatRoom()">Buat & Masuk</button>
         </div>
 
-        <div class="panel">
-            <h3>Daftar Room Tersedia</h3>
             <div class="room-container" id="room-list-container">
                 <div style="text-align:center; color:#94a3b8;">Memuat daftar room...</div>
             </div>
@@ -267,7 +297,6 @@
             impossible:{ hp: 50000,dmg: 12000 }
         };
 
-        // KUNCI UTAMA: SINKRONISASI 100% ITEM GAME UTAMA KE ARENA
         const ITEMS_REF = [
             // common
             { id: 10, name: "MBG (My Bini Gwh)", rarity: "common" },
@@ -393,263 +422,61 @@
         let totalMyDmg = 10;
         let currentActiveRoomsData = {};
 
-        if(localStorage.getItem("poke_username")) {
-            document.getElementById("input-username").value = localStorage.getItem("poke_username");
-        }
+        // =======================================================
+        // SYSTEM LIVE ONLINE PLAYERS (DENGAN FIREBASE)
+        // =======================================================
+        const onlineRef = firebase.database().ref("online_users");
+        let myOnlineRef = null;
 
-        function verifikasiPemain() {
-            username = document.getElementById("input-username").value.trim().replace(/[^a-zA-Z0-9]/g, "");
-            if (!username) return alert("Username valid diperlukan.");
+        function aktifkanStatusOnline(myName) {
+            if (!username) return;
 
-            db.ref("players/" + username + "/inventory").once("value").then((snapshot) => {
-                const cloudInv = snapshot.val() || {};
+            myOnlineRef = onlineRef.push();
+            myOnlineRef.set({
+                username: username,
+                status: "Lobby",
+                last_active: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            myOnlineRef.onDisconnect().remove();
+
+            onlineRef.on("value", (snapshot) => {
+                const listContainer = document.getElementById("online-players-list");
+                if (!listContainer) return;
                 
-                // FIXED: Mencocokkan data Firebase dengan 100 item baru
-                ownedItems = ITEMS_REF.filter(item => cloudInv[item.id] >= 1);
+                listContainer.innerHTML = ""; 
 
-                document.getElementById("login-screen").style.display = "none";
-                document.getElementById("lobby-screen").style.display = "flex";
-
-                renderLoadoutSelector();
-                aktifkanLobbyListener();
-            });
-        }
-
-        function renderLoadoutSelector() {
-            const container = document.getElementById("loadout-list");
-            container.innerHTML = "";
-
-            if (ownedItems.length === 0) {
-                container.innerHTML = "<div style='color:#94a3b8; grid-column: span 2; padding: 10px;'>Gacha di game utama dulu untuk membuka item!</div>";
-                return;
-            }
-
-            ownedItems.forEach(item => {
-                const card = document.createElement("div");
-                card.className = "item-card";
-                card.innerText = `${item.name}\n(${item.rarity.toUpperCase()})`;
-                card.onclick = () => toggleSelectItem(item, card);
-                container.appendChild(card);
-            });
-        }
-
-        function toggleSelectItem(item, element) {
-            const idx = selectedLoadout.findIndex(i => i.id === item.id);
-            if (idx > -1) {
-                selectedLoadout.splice(idx, 1);
-                element.classList.remove("selected");
-            } else {
-                if (selectedLoadout.length >= 3) return alert("Maksimal memilih 3 item!");
-                selectedLoadout.push(item);
-                element.classList.add("selected");
-            }
-
-            totalMyHp = 100;
-            totalMyDmg = 10;
-            selectedLoadout.forEach(i => {
-                const stat = rarityStats[i.rarity] || { hp: 0, dmg: 0 };
-                totalMyHp += stat.hp;
-                totalMyDmg += stat.dmg;
-            });
-        }
-
-        function aktifkanLobbyListener() {
-            roomsRef.on("value", (snapshot) => {
-                if (currentRoomId) return;
-                const container = document.getElementById("room-list-container");
-                container.innerHTML = "";
-                currentActiveRoomsData = snapshot.val() || {};
-
-                if (Object.keys(currentActiveRoomsData).length === 0) {
-                    container.innerHTML = "<div style='text-align:center; color:#94a3b8;'>Tidak ada room aktif. Silakan buat baru!</div>";
+                if (!snapshot.exists()) {
+                    listContainer.innerHTML = `<span style="color: var(--text-muted);">Sepi banget, gak ada orang...</span>`;
                     return;
                 }
 
-                for (let id in currentActiveRoomsData) {
-                    const room = currentActiveRoomsData[id];
-                    if (room.p1 && room.p2) continue;
+                let totalOnline = 0;
+                snapshot.forEach((childSnapshot) => {
+                    const player = childSnapshot.val();
+                    totalOnline++;
 
-                    const hasPass = room.password && room.password.trim() !== "";
-                    const lockTxt = hasPass ? "🔒 Kunci" : "🌍 Publik";
-
-                    container.innerHTML += `
-                        <div class="room-item">
-                            <div class="room-info">
-                                <span class="room-name">${room.name}</span>
-                                <span class="room-status">${lockTxt} - Host: ${room.p1_name}</span>
-                            </div>
-                            <button class="btn-join" data-id="${id}" onclick="persiapanJoinRoom(this)">Join</button>
-                        </div>
+                    const playerRow = document.createElement("div");
+                    playerRow.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px;";
+                    
+                    const isMe = player.username === username ? " (Anda)" : "";
+                    
+                    playerRow.innerHTML = `
+                        <span style="font-weight: bold; color: ${isMe ? '#22c55e' : '#f8fafc'}">👤 ${player.username}${isMe}</span>
+                        <span class="badge" style="background: ${player.status === 'Bertarung' ? 'var(--danger)' : 'var(--success)'}; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
+                            ${player.status}
+                        </span>
                     `;
-                }
+                    listContainer.appendChild(playerRow);
+                });
             });
         }
 
-        function persiapanJoinRoom(btnElement) {
-            const id = btnElement.getAttribute("data-id");
-            const room = currentActiveRoomsData[id];
-            if(!room) return;
-
-            const hasPass = room.password && room.password.trim() !== "";
-            joinRoom(id, hasPass, room.password);
-        }
-
-        function buatRoom() {
-            let roomName = document.getElementById("input-room-name").value.trim() || username + "-Room";
-            let roomPass = document.getElementById("input-room-pass").value;
-
-            const newRoomRef = roomsRef.push();
-            currentRoomId = newRoomRef.key;
-            myRole = "p1";
-
-            newRoomRef.set({
-                name: roomName,
-                password: roomPass,
-                p1: true, p2: false,
-                p1_name: username, p2_name: "Menunggu...",
-                max_p1_hp: totalMyHp, max_p2_hp: 100,
-                status: { p1_hp: totalMyHp, p2_hp: 100, targetX: 50, targetY: 50 }
-            });
-            masukArena();
-        }
-
-        function joinRoom(id, hasPass, actualPass) {
-            if (hasPass) {
-                let check = prompt("Masukkan kata sandi room:");
-                if (check !== actualPass) return alert("Kata sandi salah!");
+        function ubahStatusOnline(statusBaru) {
+            if (myOnlineRef) {
+                myOnlineRef.update({ status: statusBaru });
             }
-            currentRoomId = id;
-            myRole = "p2";
-
-            roomsRef.child(currentRoomId).update({
-                p2: true,
-                p2_name: username,
-                max_p2_hp: totalMyHp,
-                "status/p2_hp": totalMyHp
-            });
-            masukArena();
         }
 
-        function masukArena() {
-            document.body.classList.add("ingame");
-            document.getElementById("lobby-screen").style.display = "none";
-            document.getElementById("game-screen").style.display = "block";
-            document.getElementById("btn-emergency-exit").style.display = "block"; 
-            mulaiSyncPertandingan();
-        }
-
-        function mulaiSyncPertandingan() {
-            const currentRoomRef = roomsRef.child(currentRoomId);
-            
-            if (myRole === "p1") {
-                let sisaWaktu = 60;
-                clearInterval(countdownInterval);
-                countdownInterval = setInterval(() => {
-                    if (gameActive) {
-                        clearInterval(countdownInterval);
-                        return;
-                    }
-                    sisaWaktu--;
-                    document.getElementById("status-msg").innerText = `Menunggu lawan bergabung... (${sisaWaktu}s)`;
-                    
-                    if (sisaWaktu <= 0) {
-                        clearInterval(countdownInterval);
-                        currentRoomRef.remove();
-                        kembaliKeLobby("Batas waktu habis. Room dihapus karena tidak ada lawan yang bergabung.");
-                    }
-                }, 1000);
-            }
-
-            roomListener = currentRoomRef.on("value", (snapshot) => {
-                const data = snapshot.val();
-                
-                if (!data) {
-                    clearInterval(countdownInterval);
-                    kembaliKeLobby("Room telah ditutup atau dibubarkan.");
-                    return;
-                }
-
-                const status = data.status;
-                document.getElementById("txt-p1-name").innerText = data.p1_name;
-                document.getElementById("txt-p2-name").innerText = data.p2_name;
-
-                document.getElementById("hp-p1").style.width = ((status.p1_hp / data.max_p1_hp) * 100) + "%";
-                document.getElementById("hp-p2").style.width = ((status.p2_hp / data.max_p2_hp) * 100) + "%";
-
-                if (data.p1 && data.p2 && status.p1_hp > 0 && status.p2_hp > 0) {
-                    gameActive = true;
-                    clearInterval(countdownInterval); 
-                    
-                    document.getElementById("status-msg").innerText = "";
-                    document.getElementById("btn-emergency-exit").style.display = "none"; 
-                    
-                    const btn = document.getElementById("target-btn");
-                    btn.style.display = "flex";
-                    btn.style.left = status.targetX + "vw";
-                    btn.style.top = status.targetY + "vh";
-                } else if (status.p1_hp <= 0 || status.p2_hp <= 0) {
-                    gameActive = false;
-                    document.getElementById("target-btn").style.display = "none";
-                    document.getElementById("status-msg").innerText = (status.p1_hp <= 0) ? `${data.p2_name} MENANG!` : `${data.p1_name} MENANG!`;
-
-                    setTimeout(() => { if (myRole === "p1") currentRoomRef.remove(); }, 3000);
-                }
-            });
-        }
-
-        function tembak() {
-            if (!gameActive) return;
-            const statusRef = roomsRef.child(currentRoomId).child("status");
-
-            statusRef.get().then((snapshot) => {
-                if (!snapshot.exists()) return;
-                let status = snapshot.val();
-
-                if (myRole === "p1") status.p2_hp = Math.max(0, status.p2_hp - totalMyDmg);
-                if (myRole === "p2") status.p1_hp = Math.max(0, status.p1_hp - totalMyDmg);
-
-                status.targetX = Math.floor(Math.random() * 70) + 15;
-                status.targetY = Math.floor(Math.random() * 55) + 25;
-                statusRef.update(status);
-            });
-        }
-
-        function kembaliKeLobby(msg) {
-            clearInterval(countdownInterval);
-            
-            if (currentRoomId) {
-                if (myRole === "p1") {
-                    roomsRef.child(currentRoomId).remove();
-                } else if (myRole === "p2") {
-                    roomsRef.child(currentRoomId).update({ p2: false, p2_name: "Menunggu..." });
-                }
-            }
-
-            if(roomListener) { roomsRef.child(currentRoomId).off("value", roomListener); roomListener = null; }
-            
-            gameActive = false; 
-            currentRoomId = null; 
-            myRole = null;
-            
-            document.body.classList.remove("ingame");
-            document.getElementById("game-screen").style.display = "none";
-            document.getElementById("lobby-screen").style.display = "flex";
-            if (msg) alert(msg);
-        }
-
-        function keluarKeGameUtama() {
-            if (currentRoomId) {
-                if (myRole === "p1") roomsRef.child(currentRoomId).remove();
-            }
-            window.location.href = 'index.html';
-        }
-
-        window.addEventListener("beforeunload", () => {
-            if (currentRoomId) {
-                if (myRole === "p1") roomsRef.child(currentRoomId).remove();
-                else roomsRef.child(currentRoomId).update({ p2: false, p2_name: "Menunggu..." });
-            }
-        });
-    </script>
-</body>
-</html>
+        if(localStorage.getItem("poke_username")) {
+            document.getElementById("input-username").value = localStorage.ge
