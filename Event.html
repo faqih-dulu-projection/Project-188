@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Perpisahan - XP Hunt Fix</title>
+    <title>Event Perpisahan</title>
     
     <style>
         body {
@@ -70,7 +70,7 @@
             justify-content: center;
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
             -webkit-tap-highlight-color: transparent;
-            z-index: 10 !important; /* Mastiin selalu di atas layer manapun */
+            z-index: 10 !important;
         }
         .target-bulb::after {
             content: "";
@@ -80,7 +80,7 @@
             box-shadow: 0 0 10px #f59e0b;
         }
 
-        /* OVERLAY LOCK SCREEN JIKA BELUM JAMNYA */
+        /* OVERLAY LOCK SCREEN */
         .lock-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -90,19 +90,13 @@
             z-index: 20; border-radius: 12px;
         }
 
-        /* TIMER REALTIME DI POJOK KANAN ATAS PAS MAIN (BIAR GAK NGEDISTRAKSI DI TENGAH) */
         .floating-timer {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 10px; right: 10px;
             background: rgba(0, 0, 0, 0.7);
-            padding: 5px 10px;
-            border-radius: 6px;
-            border: 1px solid #ef4444;
-            font-family: monospace;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #ef4444;
+            padding: 5px 10px; border-radius: 6px;
+            border: 1px solid #ef4444; font-family: monospace;
+            font-size: 0.9rem; font-weight: bold; color: #ef4444;
             z-index: 30;
         }
         .timer-countdown {
@@ -110,15 +104,35 @@
             margin-top: 10px; font-family: monospace;
         }
 
+        /* PESAN AMBANG / POP-UP ANNOUNCEMENT BY ADMIN (FIX DI ATAS GAME) */
+        .admin-toast {
+            position: absolute;
+            top: 15px; /* Pindah ke atas */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px); /* Munculnya meluncur dari atas luar layar */
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #38bdf8;
+            padding: 12px 16px;
+            border-radius: 10px;
+            width: 85%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            z-index: 100 !important; /* Mastiin kastanya paling tinggi, gak bakal ketutup apa pun */
+            text-align: center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .admin-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast-msg { font-size: 0.95rem; color: #f1f5f9; font-weight: 500; line-height: 1.4; }
+        .toast-by { font-size: 0.7rem; color: #38bdf8; font-weight: bold; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
         /* PANEL INFO DI BAWAH */
         .bottom-panel {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #0b0f19;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #233554;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid #233554;
         }
         .info-block { text-align: left; }
         .info-label { font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase; }
@@ -137,10 +151,8 @@
             font-size: 1rem; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%;
         }
 
-        /* SCREEN BLANK HITAM TOTAL JIKA TAMAT */
         #tamat-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #000000; color: #ffffff;
             display: none; justify-content: center; align-items: center;
             font-size: 1.5rem; font-weight: bold; z-index: 9999; letter-spacing: 1px;
@@ -156,8 +168,12 @@
         <canvas id="xp-canvas"></canvas>
         
         <div class="target-bulb" id="bulb-obj" style="display: none;"></div>
-        
         <div id="mini-timer" class="floating-timer" style="display: none;">00:00</div>
+        
+        <div id="popup-admin" class="admin-toast">
+            <div id="popup-text" class="toast-msg">Mencoba memuat pesan...</div>
+            <div class="toast-by">by Admin</div>
+        </div>
         
         <div id="lock-screen" class="lock-overlay" style="display: none;">
             <div style="font-size: 1rem; color: #94a3b8; font-weight: bold;">GAME DIBUKA DALAM:</div>
@@ -209,6 +225,7 @@
     const ctx = canvas.getContext("2d");
     let xpOrbs = [];
     let isGameOpen = false;
+    let dataPengumuman = null;
 
     function resizeCanvas() {
         canvas.width = canvas.parentElement.clientWidth;
@@ -243,10 +260,12 @@
         requestAnimationFrame(urusAnimasiXp);
     }
 
-    // TIME-GATE DENGAN FIX TIMER DIPINDAH KE POJOK ATAS
+    // LOGIKA SCHEDULER WAKTU GAME & BROADCAST PESAN ADMIN
     function updateTimeGate() {
         const sekarang = new Date();
-        let targetBuka = new Date(2026, 5, 20, 5, 55, 0); 
+        
+        // PENGATURAN TARGET MULAI EVENT: MINGGU, 21 JUNI 2026 JAM 05:55 SUBOH
+        let targetBuka = new Date(2026, 6, 21, 5, 55, 0); 
         
         while (sekarang >= new Date(targetBuka.getTime() + 5 * 60 * 1000)) {
             targetBuka.setDate(targetBuka.getDate() + 1);
@@ -259,29 +278,43 @@
         const bulbObj = document.getElementById("bulb-obj");
 
         if (sekarang < targetBuka) {
-            // Fase Terkunci (Belum jam 4 subuh)
             isGameOpen = false;
             lockScreen.style.display = "flex";
             miniTimerKananAtas.style.display = "none";
             bulbObj.style.display = "none";
-            
             let selisih = targetBuka - sekarang;
             timerTengah.innerText = formatSisaWaktu(selisih);
         } 
         else if (sekarang >= targetBuka && sekarang < targetTutup) {
-            // Fase Main (5 Menit Sesi Berjalan)
-            lockScreen.style.display = "none"; // Hilangkan layar pengunci tengah
-            miniTimerKananAtas.style.display = "block"; // Munculkan teks kecil di pojok kanan atas
-            
+            lockScreen.style.display = "none";
+            miniTimerKananAtas.style.display = "block";
             isGameOpen = true;
             
             if (currentPlayer && bulbObj.style.display === "none") {
                 bulbObj.style.display = "flex";
                 pindahBohlam();
             }
-            
             let selisih = targetTutup - sekarang;
             miniTimerKananAtas.innerText = "Sesi: " + formatSisaWaktuMenitDetik(selisih);
+        }
+
+        // COCOKKAN WAKTU UNTUK TAMPILKAN PESAN AMBANG DARI FIREBASE
+        if (dataPengumuman) {
+            // Format waktu target pengumuman dari data Firebase (Tahun, Bulan-1, Tanggal, Jam, Menit, Detik)
+            const waktuNotif = new Date(dataPengumuman.tahun, dataPengumuman.bulan - 1, dataPengumuman.tanggal, dataPengumuman.jam, dataPengumuman.menit, 0);
+            const waktuSelesaiNotif = new Date(waktuNotif.getTime() + (dataPengumuman.durasi_detik * 1000));
+            
+            const popUp = document.getElementById("popup-admin");
+            const popUpText = document.getElementById("popup-text");
+
+            if (sekarang >= waktuNotif && sekarang < waktuSelesaiNotif) {
+                if (!popUp.classList.contains("show")) {
+                    popUpText.innerText = dataPengumuman.pesan;
+                    popUp.classList.add("show");
+                }
+            } else {
+                popUp.classList.remove("show");
+            }
         }
     }
 
@@ -323,62 +356,53 @@
         if (sisaPoinGlobal <= 0) { document.getElementById("tamat-screen").style.display = "flex"; }
     });
 
-    // FUNGSI UTAMA SAAT BERHASIL VALIDASI TOKEN (DIPAKAI LOGIN MANUAL & AUTO-LOGIN)
+    // AMBIL DATA PENGUMUMAN SECARA REALTIME DARI FIREBASE
+    const pengumumanRef = ref(db, "pengumuman");
+    onValue(pengumumanRef, (snapshot) => {
+        if (snapshot.exists()) {
+            dataPengumuman = snapshot.val();
+        }
+    });
+
     function inisialisasiPemain(namaPemain) {
         currentPlayer = namaPemain;
-        
         document.getElementById("login-section").style.display = "none";
         document.getElementById("score-section").style.display = "flex";
         document.getElementById("display-player-name").innerText = "Poin " + currentPlayer;
-        
         resizeCanvas();
         updateTimeGate();
         urusAnimasiXp();
 
-        // Pantau skor personal
         const pesertaRef = ref(db, "peserta/" + currentPlayer);
         onValue(pesertaRef, (snapshot) => {
             document.getElementById("my-coins").innerText = snapshot.val() || 0;
         });
     }
 
-    // CEK AUTO-LOGIN (FITUR MEMORI TOKEN AGAR TIDAK HILANG SAAT REFRESH)
+    // Auto-Login Check
     const tokenTersimpan = localStorage.getItem("xp_game_token");
     if (tokenTersimpan) {
         const autoTokenRef = ref(db, "daftar_token/" + tokenTersimpan);
         get(autoTokenRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                inisialisasiPemain(snapshot.val());
-            } else {
-                localStorage.removeItem("xp_game_token"); // Hapus memori kalau di firebase kodenya diubah
-            }
+            if (snapshot.exists()) { inisialisasiPemain(snapshot.val()); } 
+            else { localStorage.removeItem("xp_game_token"); }
         });
     }
 
-    // LOGIN MANUAL TOMBOL
+    // Login Manual
     document.getElementById("btn-login").onclick = function() {
         if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         const tokenInput = document.getElementById("player-token").value.trim();
-        
-        if (!tokenInput) {
-            alert("Token tidak boleh kosong!");
-            return;
-        }
+        if (!tokenInput) { alert("Token tidak boleh kosong!"); return; }
 
         const tokenRef = ref(db, "daftar_token/" + tokenInput);
         get(tokenRef).then((snapshot) => {
             const namaTerdeteksi = snapshot.val();
-            
             if (namaTerdeteksi) {
-                // SIMPAN TOKEN KE MEMORI BROWSER HP (localStorage)
                 localStorage.setItem("xp_game_token", tokenInput);
                 inisialisasiPemain(namaTerdeteksi);
-            } else {
-                alert("Token SALAH atau Tidak Terdaftar!");
-            }
-        }).catch(() => {
-            alert("Error menghubungkan ke Database!");
-        });
+            } else { alert("Token SALAH!"); }
+        }).catch(() => { alert("Error database!"); });
     };
 
     function pindahBohlam() {
@@ -387,27 +411,20 @@
         const bulb = document.getElementById("bulb-obj");
         const maxX = canvasArea.clientWidth - 55;
         const maxY = canvasArea.clientHeight - 55;
-        
         bulb.style.left = Math.floor(Math.random() * maxX) + "px";
         bulb.style.top = Math.floor(Math.random() * maxY) + "px";
     }
 
-    // AKSI KLIK CLICKER BOHLAM
     document.getElementById("bulb-obj").onclick = function() {
         if (sisaPoinGlobal <= 0 || !currentPlayer || !isGameOpen) return;
-        
         let koinDidapat = Math.floor(Math.random() * 10) + 1;
         if (koinDidapat > sisaPoinGlobal) { koinDidapat = sisaPoinGlobal; }
 
         if (koinDidapat > 0) {
             playSound('success');
             const bulb = document.getElementById("bulb-obj");
-            const startX = bulb.offsetLeft + 27;
-            const startY = bulb.offsetTop + 27;
-            
-            for (let i = 0; i < koinDidapat * 2; i++) {
-                xpOrbs.push(new XpOrb(startX, startY, koinDidapat));
-            }
+            const startX = bulb.offsetLeft + 27; const startY = bulb.offsetTop + 27;
+            for (let i = 0; i < koinDidapat * 2; i++) { xpOrbs.push(new XpOrb(startX, startY, koinDidapat)); }
 
             runTransaction(poolRef, (currentPool) => {
                 if (currentPool === null) currentPool = MAX_POOL;
@@ -415,10 +432,7 @@
             });
 
             const myRef = ref(db, "peserta/" + currentPlayer);
-            runTransaction(myRef, (currentPoin) => {
-                return (currentPoin || 0) + koinDidapat;
-            });
-
+            runTransaction(myRef, (currentPoin) => { return (currentPoin || 0) + koinDidapat; });
             pindahBohlam();
         }
     };
