@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Perpisahan</title>
+    <title>Event Perpisahan - XP Hunt Ultimate Fix</title>
     
     <style>
         body {
@@ -107,16 +107,16 @@
         /* PESAN AMBANG / POP-UP ANNOUNCEMENT BY ADMIN (FIX DI ATAS GAME) */
         .admin-toast {
             position: absolute;
-            top: 15px; /* Pindah ke atas */
+            top: 15px;
             left: 50%;
-            transform: translateX(-50%) translateY(-100px); /* Munculnya meluncur dari atas luar layar */
+            transform: translateX(-50%) translateY(-100px);
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border: 1px solid #38bdf8;
             padding: 12px 16px;
             border-radius: 10px;
             width: 85%;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-            z-index: 100 !important; /* Mastiin kastanya paling tinggi, gak bakal ketutup apa pun */
+            z-index: 100 !important;
             text-align: center;
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
             opacity: 0;
@@ -196,6 +196,14 @@
             <div id="my-coins" class="info-value">0</div>
         </div>
     </div>
+
+    <div id="voucher-section" class="bottom-panel" style="display: none; flex-direction: column; gap: 8px;">
+        <div class="info-label" style="text-align: center;">Klaim Voucher Bonus</div>
+        <div style="display: flex; gap: 8px; width: 100%;">
+            <input type="text" id="voucher-input" placeholder="Masukkan Kode Voucher" style="margin-bottom: 0; flex: 1; text-transform: uppercase;">
+            <button id="btn-claim-voucher" style="width: auto; padding: 0 20px;">KLAIM</button>
+        </div>
+    </div>
 </div>
 
 <script type="module">
@@ -226,6 +234,7 @@
     let xpOrbs = [];
     let isGameOpen = false;
     let dataPengumuman = null;
+    let jadwalServer = null; // Variabel penampung jadwal server otomatis
 
     function resizeCanvas() {
         canvas.width = canvas.parentElement.clientWidth;
@@ -260,63 +269,73 @@
         requestAnimationFrame(urusAnimasiXp);
     }
 
-    // LOGIKA SCHEDULER WAKTU GAME & BROADCAST PESAN ADMIN
-    function updateTimeGate() {
-        const sekarang = new Date();
-        
-        // PENGATURAN TARGET MULAI EVENT: MINGGU, 21 JUNI 2026 JAM 05:55 SUBOH
-        let targetBuka = new Date(2026, 5, 21, 5, 55, 0); 
-        
-        while (sekarang >= new Date(targetBuka.getTime() + 5 * 60 * 1000)) {
-            targetBuka.setDate(targetBuka.getDate() + 1);
+    // AMBIL DATA JADWAL SECARA REAL-TIME DARI FIREBASE (ANTI-HACK KODE)
+    const jadwalRef = ref(db, "jadwal_game");
+    onValue(jadwalRef, (snapshot) => {
+        if (snapshot.exists()) {
+            jadwalServer = snapshot.val();
         }
-        const targetTutup = new Date(targetBuka.getTime() + 5 * 60 * 1000); 
-        
-        const lockScreen = document.getElementById("lock-screen");
-        const timerTengah = document.getElementById("countdown-timer");
-        const miniTimerKananAtas = document.getElementById("mini-timer");
-        const bulbObj = document.getElementById("bulb-obj");
+    });
 
-        if (sekarang < targetBuka) {
-            isGameOpen = false;
-            lockScreen.style.display = "flex";
-            miniTimerKananAtas.style.display = "none";
-            bulbObj.style.display = "none";
-            let selisih = targetBuka - sekarang;
-            timerTengah.innerText = formatSisaWaktu(selisih);
-        } 
-        else if (sekarang >= targetBuka && sekarang < targetTutup) {
-            lockScreen.style.display = "none";
-            miniTimerKananAtas.style.display = "block";
-            isGameOpen = true;
-            
-            if (currentPlayer && bulbObj.style.display === "none") {
-                bulbObj.style.display = "flex";
-                pindahBohlam();
-            }
-            let selisih = targetTutup - sekarang;
-            miniTimerKananAtas.innerText = "Sesi: " + formatSisaWaktuMenitDetik(selisih);
-        }
+function updateTimeGate() {
+    const sekarang = new Date();
+    
+    // KUNCI JAM MULAI: Game otomatis buka tiap jam 04:00 Subuh tiap hari
+    let targetBuka = new Date(sekarang.getFullYear(), sekarang.getMonth(), sekarang.getDate(), 5, 55, 0); 
+    
+    // DURASI GAME: Set durasi berapa menit game boleh dimainin (misal: 5 menit)
+    const durasiMenit = 5; 
+    let targetTutup = new Date(targetBuka.getTime() + durasiMenit * 60 * 1000); 
 
-        // COCOKKAN WAKTU UNTUK TAMPILKAN PESAN AMBANG DARI FIREBASE
-        if (dataPengumuman) {
-            // Format waktu target pengumuman dari data Firebase (Tahun, Bulan-1, Tanggal, Jam, Menit, Detik)
-            const waktuNotif = new Date(dataPengumuman.tahun, dataPengumuman.bulan - 1, dataPengumuman.tanggal, dataPengumuman.jam, dataPengumuman.menit, 0);
-            const waktuSelesaiNotif = new Date(waktuNotif.getTime() + (dataPengumuman.durasi_detik * 1000));
-            
-            const popUp = document.getElementById("popup-admin");
-            const popUpText = document.getElementById("popup-text");
-
-            if (sekarang >= waktuNotif && sekarang < waktuSelesaiNotif) {
-                if (!popUp.classList.contains("show")) {
-                    popUpText.innerText = dataPengumuman.pesan;
-                    popUp.classList.add("show");
-                }
-            } else {
-                popUp.classList.remove("show");
-            }
-        }
+    // LOGIKA AUTO-LOOP: Kalau sesi hari ini udah lewat, target otomatis maju ke subuh besok
+    if (sekarang >= targetTutup) {
+        targetBuka.setDate(targetBuka.getDate() + 1);
+        targetTutup = new Date(targetBuka.getTime() + durasiMenit * 60 * 1000);
     }
+
+    const lockScreen = document.getElementById("lock-screen");
+    const timerTengah = document.getElementById("countdown-timer");
+    const miniTimerKananAtas = document.getElementById("mini-timer");
+    const bulbObj = document.getElementById("bulb-obj");
+    const tamatScreen = document.getElementById("tamat-screen");
+
+    // 1. CEK KUOTA POIN (Hanya kunci layar kalau poin Firebase beneran 0)
+    if (sisaPoinGlobal <= 0) {
+        isGameOpen = false;
+        bulbObj.style.display = "none";
+        miniTimerKananAtas.style.display = "none";
+        tamatScreen.style.display = "flex";
+        return; 
+    } else {
+        tamatScreen.style.display = "none"; // Buka kunci jika poin masih ada
+    }
+
+    // 2. LOGIKA FASE WAKTU GAME
+    if (sekarang < targetBuka) {
+        // FASE HITUNG MUNDUR (Belum jamnya atau sesi hari ini udah lewat dan nunggu besok)
+        isGameOpen = false;
+        lockScreen.style.display = "flex";
+        miniTimerKananAtas.style.display = "none";
+        bulbObj.style.display = "none";
+        
+        let selisih = targetBuka - sekarang;
+        timerTengah.innerText = formatSisaWaktu(selisih);
+    } 
+    else if (sekarang >= targetBuka && sekarang < targetTutup) {
+        // FASE GAMEPLAY BERJALAN (Bohlam muncul)
+        lockScreen.style.display = "none";
+        miniTimerKananAtas.style.display = "block";
+        isGameOpen = true;
+        
+        if (currentPlayer && bulbObj.style.display === "none") {
+            bulbObj.style.display = "flex";
+            pindahBohlam();
+        }
+        let selisihAsli = targetTutup - sekarang;
+        miniTimerKananAtas.innerText = "Sesi: " + formatSisaWaktuMenitDetik(selisihAsli);
+    }
+}
+
 
     function formatSisaWaktu(ms) {
         let totalDetik = Math.floor(ms / 1000);
@@ -347,14 +366,25 @@
         }
     }
 
-    // Sinkronisasi Pool Global
-    const poolRef = ref(db, "pool_global");
-    onValue(poolRef, (snapshot) => {
-        let data = snapshot.val();
-        if (data === null) { sisaPoinGlobal = MAX_POOL; } else { sisaPoinGlobal = data; }
-        document.getElementById("global-pool").innerText = sisaPoinGlobal.toLocaleString('id-ID');
-        if (sisaPoinGlobal <= 0) { document.getElementById("tamat-screen").style.display = "flex"; }
-    });
+// Sinkronisasi Pool Global (Versi Fix Anti-Lock Awal)
+const poolRef = ref(db, "pool_global");
+onValue(poolRef, (snapshot) => {
+    let data = snapshot.val();
+    if (data === null) { 
+        sisaPoinGlobal = MAX_POOL; 
+    } else { 
+        sisaPoinGlobal = Number(data); // Mastiin dibaca sebagai angka
+    }
+    
+    document.getElementById("global-pool").innerText = sisaPoinGlobal.toLocaleString('id-ID');
+    
+    // Hanya kunci layar kalau data emang beneran habis (0), bukan pas baru loading
+    if (data !== null && sisaPoinGlobal <= 0) { 
+        document.getElementById("tamat-screen").style.display = "flex"; 
+    } else {
+        document.getElementById("tamat-screen").style.display = "none"; // Buka kunci kalau poin masih ada
+    }
+});
 
     // AMBIL DATA PENGUMUMAN SECARA REALTIME DARI FIREBASE
     const pengumumanRef = ref(db, "pengumuman");
@@ -368,6 +398,7 @@
         currentPlayer = namaPemain;
         document.getElementById("login-section").style.display = "none";
         document.getElementById("score-section").style.display = "flex";
+        document.getElementById("voucher-section").style.display = "flex"; // Fix Typo Double Style
         document.getElementById("display-player-name").innerText = "Poin " + currentPlayer;
         resizeCanvas();
         updateTimeGate();
@@ -436,7 +467,69 @@
             pindahBohlam();
         }
     };
+
+    // Logika Klaim Kode Voucher
+    document.getElementById("btn-claim-voucher").onclick = function() {
+        if (!currentPlayer) return;
+        
+        const kodeInput = document.getElementById("voucher-input").value.trim().toUpperCase();
+        if (!kodeInput) { alert("Isi dulu kode vouchernya, Bre!"); return; }
+
+        const riwayatRef = ref(db, `peserta/${currentPlayer}/voucher_terklaim/${kodeInput}`);
+        
+        get(riwayatRef).then((riwayatSnapshot) => {
+            if (riwayatSnapshot.exists()) {
+                alert("Voucher ini sudah pernah lu klaim, Cok! Jangan maruk 😡");
+                return;
+            }
+
+            const voucherRef = ref(db, "vouchers/" + kodeInput);
+            get(voucherRef).then((snapshot) => {
+                if (!snapshot.exists()) {
+                    alert("Kode voucher SALAH atau tidak terdaftar! ❌");
+                    return;
+                }
+
+                const dataVoucher = snapshot.val();
+                const sekarang = new Date();
+
+                const waktuRilis = new Date(dataVoucher.tahun, dataVoucher.bulan - 1, dataVoucher.tanggal, dataVoucher.jam, dataVoucher.menit, 0);
+                const waktuKadaluwarsa = new Date(waktuRilis.getTime() + (dataVoucher.durasi_aktif_menit * 60 * 1000));
+
+                if (sekarang < waktuRilis) {
+                    alert("Sabar, Bre! Voucher ini belum rilis resmi. Masih disegel server! ⏳");
+                    return;
+                }
+                
+                if (sekarang >= waktuKadaluwarsa) {
+                    alert("Yah telat! Vouchernya udah HANGUS / Kadaluwarsa 😭⏰");
+                    return;
+                }
+
+                const bonus = dataVoucher.bonus_poin;
+                const myScoreRef = ref(db, "peserta/" + currentPlayer);
+                
+                runTransaction(myScoreRef, (currentData) => {
+                    let poinSekarang = 0;
+                    if (typeof currentData === 'number') {
+                        poinSekarang = currentData;
+                    } else if (currentData && currentData.poin) {
+                        poinSekarang = currentData.poin;
+                    }
+                    return poinSekarang + bonus;
+                }).then(() => {
+                    const logKlaimRef = ref(db, `peserta/${currentPlayer}/voucher_terklaim/${kodeInput}`);
+                    runTransaction(logKlaimRef, () => { return true; });
+
+                    alert(`🎉 MANTAP! Sukses klaim voucher, +${bonus} Poin masuk rekening lu!`);
+                    document.getElementById("voucher-input").value = "";
+                }).catch((err) => {
+                    alert("Gagal memproses voucher. Error database!");
+                    console.error(err);
+                });
+            });
+        });
+    };
 </script>
 </body>
 </html>
-
