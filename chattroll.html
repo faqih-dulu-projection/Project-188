@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2EE Chat Anarchy - YTTA</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Panel */
+        #header-panel {
+            background-color: #1e1e1e;
+            border-bottom: 2px solid #ff007f;
+            padding: 10px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .room-indicator { font-weight: bold; font-size: 0.9rem; }
+        #current-room-title { color: #00e5ff; }
+        #back-global-btn {
+            background-color: #ff9800; color: #121212; border: none;
+            padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;
+            font-weight: bold; cursor: pointer; display: none;
+        }
+
+        /* Pop-up Vote Mute Gaib (Hanya muncul saat event) */
+        #vote-popup {
+            background-color: #ff007f;
+            color: #121212;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Default sembunyi biar gak menuhin layar */
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 0, 127, 0.4);
+            z-index: 999;
+        }
+        .vote-btns { display: flex; justify-content: center; gap: 15px; }
+        .v-btn {
+            padding: 6px 14px; border: none; font-weight: bold;
+            border-radius: 4px; cursor: pointer;
+        }
+        #v-yes { background-color: #121212; color: #ff007f; }
+        #v-no { background-color: #fff; color: #121212; }
+
+        #online-bar { font-size: 0.75rem; color: #aaa; overflow-x: auto; white-space: nowrap; }
+        .online-dot { color: #00e5ff; }
+
+        /* Area Chat */
+        #chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #161616; }
+        .message { max-width: 80%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; word-wrap: break-word; font-size: 0.95rem; display: flex; flex-direction: column; }
+        .message .sender-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; cursor: pointer; text-decoration: underline; }
+        .message.sent { background-color: #004d40; color: #00e5ff; align-self: flex-end; border-bottom-right-radius: 2px; border-left: 4px solid #00e5ff; }
+        .message.received { background-color: #2d2d2d; color: #ffffff; align-self: flex-start; border-bottom-left-radius: 2px; border-left: 4px solid #ff9800; }
+        .message.received .sender-name { color: #ff9800; }
+
+        /* Area Input */
+        #input-area { background-color: #1e1e1e; padding: 12px; display: flex; gap: 8px; border-top: 1px solid #333; }
+        #message-input { flex: 1; padding: 10px; border: 2px solid #444; border-radius: 6px; background-color: #121212; color: #fff; font-size: 0.95rem; }
+        #message-input:disabled { background-color: #222; border-color: #ff007f; color: #ff007f; text-align: center; font-weight: bold; }
+        #send-btn { background-color: #ff007f; color: #121212; border: none; padding: 0 16px; font-size: 0.95rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="vote-popup">
+    <div id="vote-text">🚨 EMERGENCY VOTE: Mute Anon_X selama 2 Menit? (Waktu: <span id="v-timer">15</span>s)</div>
+    <div class="vote-btns">
+        <button id="v-yes" class="v-btn" onclick="submitVote('yes')">MUTE SIALAN!</button>
+        <button id="v-no" class="v-btn" onclick="submitVote('no')">BIARKAN HIDUP</button>
+    </div>
+</div>
+
+<div id="header-panel">
+    <div class="profile-row">
+        <div class="room-indicator">
+            Room: <span id="current-room-title">Grup Global</span>
+            <button id="back-global-btn" onclick="balikKeGlobal()">Grup Global ↩</button>
+        </div>
+        <div style="font-size:0.75rem; color:#ff007f; font-weight:bold;">ID Lu: <span id="my-id-val"></span></div>
+    </div>
+    <div id="online-bar">Online: Mendeteksi...</div>
+</div>
+
+<div id="chat-box"></div>
+
+<div id="input-area">
+    <input type="text" id="message-input" placeholder="Ketik pesan..." onkeypress="handleKeyPress(event)">
+    <button id="send-btn" onclick="sendMessage()">KIRIM</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getDatabase, ref, set, push, onValue, onChildAdded, off } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3tna4rUSr_FH0eb08aI3AX3Z-fVcqaj8",
+        authDomain: "fruitsmasmaster.firebaseapp.com",
+        databaseURL: "https://fruitsmasmaster-default-rtdb.firebaseio.com",
+        projectId: "fruitsmasmaster",
+        storageBucket: "fruitsmasmaster.firebasestorage.app",
+        messagingSenderId: "673530855742",
+        appId: "1:673530855742:web:0e580efc3a318efa4cac6f",
+        measurementId: "G-2CYKYD9M3S"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    if (!localStorage.getItem("e2ee_user_id")) {
+        localStorage.setItem("e2ee_user_id", "ID_" + Math.floor(1000 + Math.random() * 9000));
+    }
+    const myID = localStorage.getItem("e2ee_user_id");
+    document.getElementById("my-id-val").innerText = myID;
+
+    // Roulette Nama (Berubah tiap jam)
+    const namaKamus = ["Alpha", "Beta", "Omega", "Phantom", "Shadow", "Hacker", "Spy", "Ghost", "Rogue", "Cyber", "Viper", "Titan"];
+    function dapatkanNamaAcakJamIni(userID) {
+        const jamSekarang = new Date().getHours();
+        const infoAngka = parseInt(userID.split("_")[1]);
+        const index = (infoAngka + jamSekarang) % namaKamus.length;
+        return "Anon_" + namaKamus[index] + "_" + (infoAngka % 100);
+    }
+    let myName = dapatkanNamaAcakJamIni(myID);
+
+    // Sync online & status Mute
+    let amIMuted = false;
+    let muteUntil = 0;
+
+    function syncStatus() {
+        if (amIMuted && Date.now() > muteUntil) {
+            amIMuted = false;
+            bukaKunciKeyboard();
+        }
+        set(ref(db, "users_profile/" + myID), { id: myID, name: myName, isMuted: amIMuted, last_active: Date.now() });
+    }
+    syncStatus();
+    setInterval(syncStatus, 5000); // Cek status lebih sering buat lepas mute otomatis
+
+    window.addEventListener("beforeunload", () => { set(ref(db, "users_profile/" + myID), null); });
+
+    let semuaUserOnline = [];
+    onValue(ref(db, "users_profile"), (snapshot) => {
+        const data = snapshot.val();
+        const onlineBar = document.getElementById("online-bar");
+        semuaUserOnline = [];
+        let listTampilan = [];
+        for (let id in data) {
+            semuaUserOnline.push(id);
+            listTampilan.push(dapatkanNamaAcakJamIni(id) + (data[id].isMuted ? " 🤐[MUTED]" : "") + (id === myID ? " (Lu)" : ""));
+            
+            // Jika terdeteksi di database kita kena mute oleh sistem global
+            if (id === myID && data[id].isMuted && !amIMuted) {
+                amIMuted = true;
+                muteUntil = Date.now() + 120000; // Kunci 2 menit secara lokal
+                kunciKeyboardEjekan();
+            }
+        }
+        onlineBar.innerHTML = `Online: ` + listTampilan.map(n => `<span class="online-dot">●</span> ${n}`).join(" ");
+    });
+
+    function kunciKeyboardEjekan() {
+        const inputEl = document.getElementById("message-input");
+        inputEl.disabled = true;
+        inputEl.value = "";
+        inputEl.placeholder = "🤐 LU DI-MUTE WARGA! JANGAN BACOT DULU (2 MENIT)";
+    }
+    function bukaKunciKeyboard() {
+        const inputEl = document.getElementById("message-input");
+        inputEl.disabled = false;
+        inputEl.placeholder = "Ketik pesan...";
+    }
+
+    // ROOM CHAT ENGINE
+    let isPrivate = false;
+    let targetUserID = null;
+    let activeChatRef = null;
+
+    function listenRoom(roomPath) {
+        if (activeChatRef) off(activeChatRef);
+        document.getElementById("chat-box").innerHTML = "";
+        activeChatRef = ref(db, roomPath);
+        onChildAdded(activeChatRef, (snapshot) => { tampilkanBubbleChat(snapshot.val()); });
+    }
+    listenRoom("global_room");
+
+    window.bukaPrivateChat = function(hisID) {
+        if (hisID === myID) return;
+        isPrivate = true; targetUserID = hisID;
+        document.getElementById("current-room-title").innerText = "PM: " + dapatkanNamaAcakJamIni(hisID);
+        document.getElementById("back-global-btn").style.display = "inline-block";
+        listenRoom("private_rooms/" + [myID, hisID].sort().join("_vs_"));
+    };
+
+    window.balikKeGlobal = function() {
+        isPrivate = false; targetUserID = null;
+        document.getElementById("current-room-title").innerText = "Grup Global";
+        document.getElementById("back-global-btn").style.display = "none";
+        listenRoom("global_room");
+    };
+
+    // SYSTEM VOTE MUTE OTOMATIS TIAP 2 MENIT (SINKRON BERDASARKAN MENIT JAM)
+    let currentVoteID = null;
+    let targetVoteUser = null;
+    let voteTimerInterval = null;
+
+    function cekJadwalVoteMute() {
+        const menit = new Date().getMinutes();
+        const detik = new Date().getSeconds();
+        
+        // Pemicu otomatis: Setiap menit kelipatan 2 atau 3 pada detik ke 0
+        if (menit % 2 === 0 && detik === 0 && semuaUserOnline.length > 1) {
+            // Pick target acak dari user online selain diri sendiri (biar gak nembak diri sendiri)
+            const kandidat = semuaUserOnline.filter(id => id !== myID);
+            if (kandidat.length > 0) {
+                const targetAcak = kandidat[Math.floor(Math.random() * kandidat.length)];
+                mulaiEventVoteMute(targetAcak);
+            }
+        }
+    }
+    setInterval(cekJadwalVoteMute, 1000); // Pantau jam tiap detik
+
+    function mulaiEventVoteMute(targetID) {
+        targetVoteUser = targetID;
+        currentVoteID = "VOTE_" + Date.now();
+        
+        const popup = document.getElementById("vote-popup");
+        const timerText = document.getElementById("v-timer");
+        document.getElementById("vote-text").innerText = `🚨 EMERGENCY VOTE: Mute ${dapatkanNamaAcakJamIni(targetID)} selama 2 Menit? (Waktu: 15s)`;
+        
+        popup.style.display = "flex"; // Munculkan pop-up gaib
+        let sisaWaktu = 15;
+        timerText.innerText = sisaWaktu;
+
+        // Reset hitungan data vote di firebase room sementara
+        set(ref(db, "current_vote"), { id: currentVoteID, target: targetVoteUser, yes: 0, no: 0 });
+
+        clearInterval(voteTimerInterval);
+        voteTimerInterval = setInterval(() => {
+            sisaWaktu--;
+            timerText.innerText = sisaWaktu;
+            if (sisaWaktu <= 0) {
+                clearInterval(voteTimerInterval);
+                hitungHasilVoteAkhir();
+            }
+        }, 1000);
+    }
+
+    window.submitVote = function(pilihan) {
+        // Sembunyikan tombol biar gak pencet berkali-kali, tapi kotak tetep stay nunggu kelar
+        document.querySelector(".vote-btns").style.visibility = "hidden";
+        
+        // Tambah poin vote ke firebase secara real-time
+        const voteRef = ref(db, `current_vote/${pilihan}`);
+        onValue(voteRef, (snap) => {
+            let skor = snap.val() || 0;
+            off(voteRef); // Putus biar gak loop
+            set(ref(db, `current_vote/${pilihan}`), skor + 1);
+        }, {onlyOnce: true});
+    }
+
+    function hitungHasilVoteAkhir() {
+        onValue(ref(db, "current_vote"), (snap) => {
+            off(ref(db, "current_vote"));
+            const data = snap.val();
+            
+            // HILANGKAN BERSIH POP-UP DARI LAYAR
+            document.getElementById("vote-popup").style.display = "none";
+            document.querySelector(".vote-btns").style.visibility = "visible"; // Reset tombol untuk next round
+
+            if (data && data.yes > data.no) {
+                // Berhasil! Kirim perintah mute ke target via database
+                set(ref(db, `users_profile/${data.target}/isMuted`), true);
+                
+                // Siarkan pengumuman bot di grup global
+                push(ref(db, "global_room"), {
+                    senderID: "SYSTEM_BOT",
+                    senderName: "🤖 ALGO_BOT",
+                    message: `📢 KEPUTUSAN WARGA: ${dapatkanNamaAcakJamIni(data.target)} resmi di-mute selama 2 menit karena dituduh beban sirkel! 🤐`,
+                    timestamp: Date.now()
+                });
+            }
+        }, {onlyOnce: true});
+    }
+
+    // CORE SANDI WAKTU E2EE LOKAL
+    const MINGGU = 604800n, HARI = 86400n, JAM = 3600n, MENIT = 60n;
+    function enkripsiUltimate(input) {
+        let hasil = "";
+        const karakterArray = Array.from(input);
+        for (let char of karakterArray) {
+            const codePoint = char.codePointAt(0);
+            hasil += "0".repeat(String(String(codePoint).length).length) + String(String(codePoint).length) + String(codePoint);
+        }
+        return hasil;
+    }
+    function encodeKeWaktu(angkaString) {
+        if (!angkaString || angkaString === "-") return "-";
+        const totalDetik = BigInt("9" + angkaString);
+        const minggu = totalDetik / MINGGU; let sisa = totalDetik % MINGGU;
+        const hari = sisa / HARI; sisa %= HARI;
+        const jam = sisa / JAM; sisa %= JAM;
+        const menit = sisa / MENIT; const detik = sisa % MENIT;
+        return `${minggu}${String(hari).padStart(2,'0')}${String(jam).padStart(2,'0')}${String(menit).padStart(2,'0')}${String(detik).padStart(2,'0')}`;
+    }
+
+    // KIRIM & TAMPILKAN
+    window.sendMessage = function() {
+        const inputEl = document.getElementById("message-input");
+        const text = inputEl.value.trim();
+        if (!text || amIMuted) return;
+
+        push(activeChatRef, { senderID: myID, senderName: myName, message: text, timestamp: Date.now() });
+        inputEl.value = "";
+    };
+
+    window.handleKeyPress = function(e) { if (e.key === 'Enter') window.sendMessage(); };
+
+    function tampilkanBubbleChat(data) {
+        const chatBox = document.getElementById("chat-box");
+        const msgDiv = document.createElement("div");
+        const namaDisplay = dapatkanNamaAcakJamIni(data.senderID);
+        
+        let isiTeksFinal = data.message;
+        if (data.senderID === "SYSTEM_BOT") {
+            msgDiv.className = "message received";
+            msgDiv.style.backgroundColor = "#ff9800";
+            msgDiv.style.color = "#121212";
+            msgDiv.style.border = "none";
+            msgDiv.innerHTML = `<b>${data.senderName}:</b> <div>${data.message}</div>`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return;
+        }
+
+        // Enkripsi chat diri sendiri otomatis
+        if (data.senderID === myID) {
+            isiTeksFinal = "🔒 " + encodeKeWaktu(enkripsiUltimate(data.message));
+        }
+
+        if (data.senderID === myID) {
+            msgDiv.className = "message sent";
+            msgDiv.innerHTML = `<span class="sender-name">${namaDisplay} (Lu)</span><div>${isiTeksFinal}</div>`;
+        } else {
+            msgDiv.className = "message received";
+            msgDiv.innerHTML = `<span class="sender-name" onclick="bukaPrivateChat('${data.senderID}')">${namaDisplay}</span><div>${isiTeksFinal}</div>`;
+        }
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>
+</body>
+</html>
