@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pintasan Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Wadah utama dibuat flex vertikal terbalik (column-reverse) 
+           supaya urutan tombol & watermark berderet ke atas */
+        .menu-container {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 280px;
+        }
+
+        /* Gaya Umum Tombol */
+        .btn-shortcut {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-shortcut:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.2);
+        }
+
+        .btn-shortcut:active {
+            transform: translateY(-1px);
+        }
+
+        /* Perbedaan Warna Tiap Tombol (Gradasi Keren) */
+        .btn-1 { background: linear-gradient(135deg, #ff416c, #ff4b2b); } /* Merah/Pink */
+        .btn-2 { background: linear-gradient(135deg, #ff8c00, #e52d27); } /* Jingga */
+        .btn-3 { background: linear-gradient(135deg, #ffee55, #ffaa00); color: #222; } /* Kuning */
+        .btn-4 { background: linear-gradient(135deg, #11998e, #38ef7d); } /* Hijau */
+        .btn-5 { background: linear-gradient(135deg, #00c6ff, #0072ff); } /* Biru */
+        .btn-6 { background: linear-gradient(135deg, #7f00ff, #e100ff); } /* Ungu */
+
+        /* Gaya Watermark Paling Bawah */
+        .watermark {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 5px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="menu-container">
+        <div class="watermark">by Faqihdulu</div>
+
+        <a href="https://project-188-six.vercel.app/" target="_blank" class="btn-shortcut btn-1">PokéCollect</a>
+        <a href="https://project-188-six.vercel.app/Arena.html" target="_blank" class="btn-shortcut btn-2">Arena</a>
+        <a href="https://project-188-six.vercel.app/chat.html" target="_blank" class="btn-shortcut btn-3">Chat global</a>
+        <a href="https://project-188-six.vercel.app/chattroll.html" target="_blank" class="btn-shortcut btn-4">Chat grup & priv</a>
+        <a href="https://project-188-six.vercel.app/Event.html" target="_blank" class="btn-shortcut btn-5">event</a>
+        <a href="https://whatsapp.com/channel/0029Vb6uJOcKrWQqwHhHn439" target="_blank" class="btn-shortcut btn-6">saluran</a>
+    </div>
+</body>
+</html>
