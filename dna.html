@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Wallet.bei7</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #f8fafc; display: flex; justify-content: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 480px; background: #f8fafc; min-height: 100vh; padding-bottom: 40px; position: relative; }
+        
+        .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 30px 24px 60px 24px; border-bottom-left-radius: 28px; border-bottom-right-radius: 28px; }
+        .user-info h2 { font-size: 20px; font-weight: 700; }
+        .user-info p { font-size: 13px; opacity: 0.8; }
+        
+        .balance-card { background: #ffffff; margin: -40px 24px 20px 24px; padding: 20px 24px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.12); display: flex; justify-content: space-between; align-items: center; }
+        .balance-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .balance-amount { font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 2px; }
+        .btn-action { background: #eff6ff; color: #2563eb; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 24px; margin-bottom: 20px; }
+        .menu-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; background: none; border: none; }
+        .icon-box { width: 54px; height: 54px; background: #ffffff; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .menu-item span { font-size: 12px; font-weight: 600; color: #475569; }
+        
+        .section-title { padding: 0 24px; font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+        .history-list { padding: 0 24px; display: flex; flex-direction: column; gap: 10px; }
+        .history-item { background: white; padding: 14px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #f1f5f9; }
+        .status-badge { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: 700; }
+        .type-MINUS { color: #ef4444; font-weight: 700; }
+        .type-PLUS { color: #22c55e; font-weight: 700; }
+
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
+        .modal-card { background: white; width: 90%; max-width: 380px; padding: 24px; border-radius: 20px; text-align: center; }
+        .modal-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .modal-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .modal-btns button:disabled { background: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed; }
+
+        #loginScreen { position: fixed; top:0; left:0; right:0; bottom:0; background:#2563eb; z-index:999; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .login-card { background:white; padding:30px; border-radius:24px; width:100%; max-width:360px; text-align:center; }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-card">
+            <h2 style="color:#1e293b; margin-bottom:6px;">Selamat Datang! 👋</h2>
+            <p style="color:#64748b; font-size:13px; margin-bottom:20px;">Masukkan Nomor HP kamu untuk melanjutkan</p>
+            <input type="text" id="inputName" placeholder="Nama Lengkap" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
+            <input type="number" id="inputPhone" placeholder="Nomor HP (Contoh: 0812345678)" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:20px;">
+            <button id="btnLogin" style="width:100%; background:#2563eb; color:white; padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Masuk Aplikasi</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <div class="header">
+            <div class="user-info">
+                <p>Selamat Datang,</p>
+                <h2 id="userNameDisplay">User</h2>
+                <small id="userPhoneDisplay" style="opacity:0.8;">-</small>
+            </div>
+        </div>
+
+        <div class="balance-card">
+            <div>
+                <div class="balance-label">Total Saldo</div>
+                <div class="balance-amount" id="balanceDisplay">Rp 0</div>
+            </div>
+            <button class="btn-action" onclick="openModal('topupModal')">+ Request TopUp</button>
+        </div>
+
+        <div class="menu-grid">
+            <button class="menu-item" onclick="openModal('transferModal')">
+                <div class="icon-box">📤</div>
+                <span>Kirim</span>
+            </button>
+            <button class="menu-item" onclick="openModal('dailyModal')">
+                <div class="icon-box">📅</div>
+                <span>Absen Harian</span>
+            </button>
+            <button class="menu-item" onclick="openModal('gameModal')">
+                <div class="icon-box">🔐</div>
+                <span>Bobol Brankas</span>
+            </button>
+            <button class="menu-item" onclick="alert('Fitur Pulsa Segera Hadir')">
+                <div class="icon-box">⚡</div>
+                <span>Pulsa</span>
+            </button>
+        </div>
+
+        <div class="section-title">Riwayat Transaksi</div>
+        <div class="history-list" id="historyList">
+            <p style="color: #94a3b8; text-align: center;">Memuat riwayat...</p>
+        </div>
+    </div>
+
+    <div class="modal" id="topupModal">
+        <div class="modal-card">
+            <h3>Request Top Up</h3>
+            <p style="font-size:12px; color:#64748b;">Nominal akan diverifikasi oleh Admin</p>
+            <input type="number" id="topupAmount" placeholder="Nominal (Rp)">
+            <div class="modal-btns">
+                <button style="background: #f1f5f9;" onclick="closeModal('topupModal')">Batal</button>
+                <button style="background: #2563eb; color: white;" id="btnSubmitTopup">Kirim Request</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="transferModal">
+        <div class="modal-card">
+            <h3>Kirim Saldo</h3>
+            <input type="number" id="targetPhone" placeholder="Nomor HP Penerima">
+            <input type="number" id="transferAmount" placeholder="Nominal Saldo (Rp)">
+            <div class="modal-btns">
+                <button style="background: #f1f5f9;" onclick="closeModal('transferModal')">Batal</button>
+                <button style="background: #2563eb; color: white;" id="btnSubmitTransfer">Kirim Sekarang</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="dailyModal">
+        <div class="modal-card">
+            <h3>📅 Absen Harian</h3>
+            <p style="font-size:12px; color:#64748b; margin-bottom:15px;">Klaim Rp 2.000 gratis setiap hari!</p>
+            <div id="dailyStatusText" style="font-size:14px; font-weight:700; color:#2563eb; margin-bottom:15px;">Cek status...</div>
+            <div class="modal-btns">
+                <button style="background: #f1f5f9;" onclick="closeModal('dailyModal')">Tutup</button>
+                <button style="background: #22c55e; color: white;" id="btnClaimDaily">KLAIM SEKARANG</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="gameModal">
+        <div class="modal-card">
+            <h3>🔐 Bobol Brankas (1-10)</h3>
+            <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Tebak angka rahasia dari 1 sampai 10.<br>Kesempatan: <b id="attemptsLeft">3</b>x</p>
+            <div id="gameHint" style="font-size:13px; font-weight:700; color:#e11d48; margin-bottom:10px; min-height:20px;"></div>
+            <input type="number" id="guessInput" placeholder="Masukkan Angka (1-10)" min="1" max="10">
+            <div class="modal-btns">
+                <button style="background: #f1f5f9;" onclick="closeModal('gameModal')">Menyerah</button>
+                <button style="background: #8b5cf6; color: white;" id="btnGuess">TEBAK!</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, query, where, getDocs, updateDoc, increment, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDt_nx3VFEQeZ9foGft2AdmQnCJJCbgqME",
+  authDomain: "wallet-bei7.firebaseapp.com",
+  projectId: "wallet-bei7",
+  storageBucket: "wallet-bei7.firebasestorage.app",
+  messagingSenderId: "737404060715",
+  appId: "1:737404060715:web:e6e25f18b64302d066d66e",
+  measurementId: "G-Y86WS7RQWM"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let secretCode = Math.floor(Math.random() * 10) + 1;
+        let attempts = 3;
+
+        const savedPhone = localStorage.getItem('dompetku_phone');
+        if (savedPhone) loginUser(savedPhone);
+
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            const name = document.getElementById('inputName').value.trim();
+            const phone = document.getElementById('inputPhone').value.trim();
+            if (!name || !phone) return alert('Nama dan Nomor HP wajib diisi!');
+
+            const userRef = doc(db, "users", phone);
+            await setDoc(userRef, { name: name, phone: phone, balance: 0, lastClaimDate: "" }, { merge: true });
+
+            localStorage.setItem('dompetku_phone', phone);
+            loginUser(phone);
+        });
+
+        function loginUser(phone) {
+            document.getElementById('loginScreen').style.display = 'none';
+
+            onSnapshot(doc(db, "users", phone), (docSnap) => {
+                if (docSnap.exists()) {
+                    currentUser = docSnap.data();
+                    document.getElementById('userNameDisplay').innerText = currentUser.name;
+                    document.getElementById('userPhoneDisplay').innerText = currentUser.phone;
+                    document.getElementById('balanceDisplay').innerText = 'Rp ' + currentUser.balance.toLocaleString('id-ID');
+                    checkDailyStatus();
+                }
+            });
+
+            const q = query(collection(db, "transactions"), where("participantPhones", "array-contains", phone));
+            onSnapshot(q, (snapshot) => {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+
+                if(snapshot.empty) {
+                    historyList.innerHTML = '<p style="color:#94a3b8; text-align:center;">Belum ada riwayat transaksi</p>';
+                    return;
+                }
+
+                snapshot.forEach((docSnap) => {
+                    const tx = docSnap.data();
+                    const isSender = tx.senderPhone === phone;
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    
+                    let typeClass = isSender ? 'type-MINUS' : 'type-PLUS';
+                    let sign = isSender ? '-' : '+';
+                    if(tx.type === 'TOPUP') { sign = '+'; typeClass = 'type-PLUS'; }
+
+                    item.innerHTML = `
+                        <div>
+                            <h5>${tx.title}</h5>
+                            <small style="color: #94a3b8">${tx.desc || 'Transaksi'}</small>
+                        </div>
+                        <div>
+                            <div class="${typeClass}">${sign} Rp ${tx.amount.toLocaleString('id-ID')}</div>
+                        </div>
+                    `;
+                    historyList.appendChild(item);
+                });
+            });
+        }
+
+        // Cek Status Absen Harian (Gak bakal kereset walau di-refresh)
+        function checkDailyStatus() {
+            const today = new Date().toDateString();
+            const btn = document.getElementById('btnClaimDaily');
+            const statusText = document.getElementById('dailyStatusText');
+
+            if (currentUser.lastClaimDate === today) {
+                btn.disabled = true;
+                statusText.innerText = "✅ Kamu sudah klaim hari ini!";
+                statusText.style.color = "#22c55e";
+            } else {
+                btn.disabled = false;
+                statusText.innerText = "🎁 Hadiah Rp 2.000 Siap Diklaim!";
+                statusText.style.color = "#2563eb";
+            }
+        }
+
+        // Action Klaim Harian
+        document.getElementById('btnClaimDaily').addEventListener('click', async () => {
+            const btn = document.getElementById('btnClaimDaily');
+            btn.disabled = true;
+
+            const today = new Date().toDateString();
+            const reward = 2000;
+
+            await updateDoc(doc(db, "users", currentUser.phone), {
+                balance: increment(reward),
+                lastClaimDate: today
+            });
+
+            await addDoc(collection(db, "transactions"), {
+                title: `Absen Harian 📅`,
+                desc: `Bonus Login Harian`,
+                senderPhone: 'SYSTEM',
+                receiverPhone: currentUser.phone,
+                participantPhones: [currentUser.phone],
+                amount: reward,
+                type: 'BONUS',
+                createdAt: serverTimestamp()
+            });
+
+            alert('Berhasil klaim Rp 2.000!');
+            closeModal('dailyModal');
+        });
+
+        // Game Tebak Brankas (No Anti Spam/Duplikat)
+        document.getElementById('btnGuess').addEventListener('click', async () => {
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+            const btn = document.getElementById('btnGuess');
+            const hint = document.getElementById('gameHint');
+
+            if (!guess || guess < 1 || guess > 10) return alert('Masukkan angka 1 - 10!');
+
+            if (guess === secretCode) {
+                btn.disabled = true;
+                const winAmount = 10000;
+                hint.style.color = "#22c55e";
+                hint.innerText = "🎉 BENAR! Brankas Terbuka!";
+
+                await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(winAmount) });
+                await addDoc(collection(db, "transactions"), {
+                    title: `Bobol Brankas 🔓`,
+                    desc: `Hadiah Menang Game`,
+                    senderPhone: 'SYSTEM',
+                    receiverPhone: currentUser.phone,
+                    participantPhones: [currentUser.phone],
+                    amount: winAmount,
+                    type: 'BONUS',
+                    createdAt: serverTimestamp()
+                });
+
+                setTimeout(() => {
+                    alert(`Selamat! Kamu membobol brankas & dapat Rp ${winAmount.toLocaleString('id-ID')}!`);
+                    resetGame();
+                    closeModal('gameModal');
+                }, 500);
+
+            } else {
+                attempts--;
+                document.getElementById('attemptsLeft').innerText = attempts;
+
+                if (attempts <= 0) {
+                    btn.disabled = true;
+                    hint.innerText = `💥 GAGAL! Angka rahasia adalah ${secretCode}`;
+                    setTimeout(() => {
+                        alert('Kesempatan habis! Coba lagi nanti.');
+                        resetGame();
+                        closeModal('gameModal');
+                    }, 1000);
+                } else {
+                    hint.innerText = guess < secretCode ? "❌ Terlalu KECIL!" : "❌ Terlalu BESAR!";
+                }
+            }
+            input.value = '';
+        });
+
+        function resetGame() {
+            secretCode = Math.floor(Math.random() * 10) + 1;
+            attempts = 3;
+            document.getElementById('attemptsLeft').innerText = attempts;
+            document.getElementById('gameHint').innerText = '';
+            document.getElementById('btnGuess').disabled = false;
+        }
+
+        // Action Request TopUp
+        document.getElementById('btnSubmitTopup').addEventListener('click', async () => {
+            const amount = parseInt(document.getElementById('topupAmount').value);
+            if (!amount || amount <= 0) return alert('Nominal tidak valid!');
+
+            closeModal('topupModal');
+            document.getElementById('topupAmount').value = '';
+
+            await addDoc(collection(db, "topup_requests"), {
+                userId: currentUser.phone,
+                userName: currentUser.name,
+                userPhone: currentUser.phone,
+                amount: amount,
+                status: "PENDING",
+                createdAt: serverTimestamp()
+            });
+
+            alert('Request dikirim ke Admin!');
+        });
+
+        // Action Transfer Antar User
+        document.getElementById('btnSubmitTransfer').addEventListener('click', async () => {
+            const targetPhone = document.getElementById('targetPhone').value.trim();
+            const amount = parseInt(document.getElementById('transferAmount').value);
+
+            if (!targetPhone || targetPhone === currentUser.phone) return alert('Nomor HP penerima tidak valid!');
+            if (!amount || amount > currentUser.balance) return alert('Saldo kamu tidak cukup!');
+
+            const targetSnap = await getDocs(query(collection(db, "users"), where("phone", "==", targetPhone)));
+            if (targetSnap.empty) return alert('Nomor HP penerima belum terdaftar!');
+
+            closeModal('transferModal');
+
+            await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(-amount) });
+            await updateDoc(doc(db, "users", targetPhone), { balance: increment(amount) });
+
+            await addDoc(collection(db, "transactions"), {
+                title: `Transfer ke ${targetPhone}`,
+                desc: `Pengirim: ${currentUser.name}`,
+                senderPhone: currentUser.phone,
+                receiverPhone: targetPhone,
+                participantPhones: [currentUser.phone, targetPhone],
+                amount: amount,
+                type: 'TRANSFER',
+                createdAt: serverTimestamp()
+            });
+
+            alert('Transfer Berhasil!');
+        });
+
+        window.openModal = (id) => document.getElementById(id).classList.add('active');
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+    </script>
+</body>
+</html>
