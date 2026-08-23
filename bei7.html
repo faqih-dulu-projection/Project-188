@@ -26,7 +26,7 @@
                 <div id="stepPhone" class="space-y-4 text-left">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nomor WhatsApp / HP</label>
-                        <input type="number" id="inputPhone" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 focus:border-blue-600 focus:bg-white outline-none transition" placeholder="Contoh: 08123456789">
+                        <input type="tel" id="inputPhone" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 focus:border-blue-600 focus:bg-white outline-none transition" placeholder="Contoh: 08123456789">
                     </div>
                     <button id="btnCheckPhone" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-blue-600/30 active:scale-95 transition">LANJUTKAN 🚀</button>
                 </div>
@@ -50,7 +50,7 @@
                         ⚠️ Nomor belum terdaftar. Silakan isi data untuk kirim request verifikasi ke Admin.
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nama Lengkap Sesuai KTP</label>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nama Lengkap</label>
                         <input type="text" id="inputRegName" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 focus:border-blue-600 focus:bg-white outline-none transition text-sm" placeholder="Nama lengkapmu">
                     </div>
                     <div>
@@ -65,7 +65,7 @@
                 <div id="stepWaiting" class="space-y-4 text-center hidden py-4">
                     <div class="text-4xl animate-bounce mb-2">⏳</div>
                     <h3 class="font-extrabold text-slate-800 text-base">Menunggu Verifikasi Admin</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Request akunmu sudah dikirim. Hubungi Admin agar akunmu segera di-approve / dikirim kode khusus!</p>
+                    <p class="text-xs text-slate-500 leading-relaxed">Request akunmu sudah dikirim. Minta Admin untuk approve akunmu ya!</p>
                     <button onclick="resetAuthStep()" class="w-full bg-slate-200 text-slate-700 p-3 rounded-xl font-bold text-xs mt-4">Cek Status / Ganti Nomor</button>
                 </div>
             </div>
@@ -143,7 +143,7 @@
                     <option value="GOPAY">GOPAY</option>
                     <option value="BANK BCA">BANK BCA</option>
                 </select>
-                <input type="number" id="wdAccount" placeholder="Nomor Rekening / No. HP" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <input type="tel" id="wdAccount" placeholder="Nomor Rekening / No. HP" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
                 <input type="number" id="wdAmount" placeholder="Nominal (Min. Rp 10.000)" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
                 <button id="btnSubmitWithdraw" class="w-full bg-emerald-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-emerald-600/30 active:scale-95 transition text-sm">Tarik Sekarang</button>
             </div>
@@ -172,7 +172,7 @@
                 <button onclick="closeModal('transferModal')" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
             <div class="space-y-3">
-                <input type="number" id="targetPhone" placeholder="Nomor HP Tujuan" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <input type="tel" id="targetPhone" placeholder="Nomor HP Tujuan" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
                 <input type="number" id="transferAmount" placeholder="Nominal Transfer (Rp)" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
                 <button id="btnSubmitTransfer" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-blue-600/30 active:scale-95 transition text-sm">Kirim Sekarang</button>
             </div>
@@ -205,7 +205,7 @@
         </div>
     </div>
 
-    <!-- MODAL ADMIN (UNTUK APPROVAL AKUN & TOPUP) -->
+    <!-- MODAL ADMIN -->
     <div id="adminModal" class="fixed inset-0 bg-slate-950/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
         <div class="bg-white w-full max-w-md p-6 rounded-3xl shadow-2xl relative my-8">
             <div class="flex justify-between items-center mb-4 border-b pb-3">
@@ -215,7 +215,7 @@
             
             <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
                 <div>
-                    <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">📥 Request Pendaftaran Akun Pending</h4>
+                    <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">📥 Request Pendaftaran Pending</h4>
                     <div id="adminRegList" class="space-y-2 text-xs">
                         <p class="text-slate-400">Memuat request...</p>
                     </div>
@@ -236,22 +236,20 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, query, where, getDoc, updateDoc, increment, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDt_nx3VFEQeZ9foGft2AdmQnCJJCbgqME",
-  authDomain: "wallet-bei7.firebaseapp.com",
-  projectId: "wallet-bei7",
-  storageBucket: "wallet-bei7.firebasestorage.app",
-  messagingSenderId: "737404060715",
-  appId: "1:737404060715:web:e6e25f18b64302d066d66e",
-  measurementId: "G-Y86WS7RQWM"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDt_nx3VFEQeZ9foGft2AdmQnCJJCbgqME",
+            authDomain: "wallet-bei7.firebaseapp.com",
+            projectId: "wallet-bei7",
+            storageBucket: "wallet-bei7.firebasestorage.app",
+            messagingSenderId: "737404060715",
+            appId: "1:737404060715:web:e6e25f18b64302d066d66e"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         // GANTI NOMOR INI DENGAN NOMOR HP UTAMAMU SEBAGAI ADMIN UTAMA
-        const ADMIN_PHONE = "085779647414"; 
+        const ADMIN_PHONE = "085779647414"; // Disesuaikan dari screenshot-mu
 
         let currentUser = null;
         let targetPhoneCache = "";
@@ -261,33 +259,299 @@ const firebaseConfig = {
         const savedPhone = localStorage.getItem('dompetku_phone');
         if (savedPhone) loginUser(savedPhone);
 
-        // STEP 1: CEK NOMOR HP
+        // STEP 1: CEK NOMOR HP (DENGAN TRY-CATCH UNTUK MENCEGAH STUCK)
         document.getElementById('btnCheckPhone').addEventListener('click', async () => {
             const phone = document.getElementById('inputPhone').value.trim();
             if (!phone) return alert('Masukkan nomor HP terlebih dahulu!');
             targetPhoneCache = phone;
 
-            const userRef = doc(db, "users", phone);
-            const userSnap = await getDoc(userRef);
+            try {
+                const userRef = doc(db, "users", phone);
+                const userSnap = await getDoc(userRef);
 
-            if (userSnap.exists()) {
-                // Sudah terdaftar -> Ke Menu Login PIN
-                document.getElementById('stepPhone').classList.add('hidden');
-                document.getElementById('stepLoginPin').classList.remove('hidden');
-                document.getElementById('loginUserName').innerText = userSnap.data().name;
-            } else {
-                // Cek apakah ada request pending
-                const regSnap = await getDoc(doc(db, "registration_requests", phone));
-                if(regSnap.exists()) {
+                if (userSnap.exists()) {
                     document.getElementById('stepPhone').classList.add('hidden');
-                    document.getElementById('stepWaiting').classList.remove('hidden');
+                    document.getElementById('stepLoginPin').classList.remove('hidden');
+                    document.getElementById('loginUserName').innerText = userSnap.data().name;
                 } else {
-                    // Belum terdaftar -> Ke Menu Form Pendaftaran
-                    document.getElementById('stepPhone').classList.add('hidden');
-                    document.getElementById('stepRegister').classList.remove('hidden');
+                    const regSnap = await getDoc(doc(db, "registration_requests", phone));
+                    if(regSnap.exists()) {
+                        document.getElementById('stepPhone').classList.add('hidden');
+                        document.getElementById('stepWaiting').classList.remove('hidden');
+                    } else {
+                        document.getElementById('stepPhone').classList.add('hidden');
+                        document.getElementById('stepRegister').classList.remove('hidden');
+                    }
                 }
+            } catch (error) {
+                console.error(error);
+                alert('Gagal terhubung ke Database! Pastikan Firestore Rules sudah di-set public/test mode. Detail: ' + error.message);
             }
         });
 
         // PROSES LOGIN
-        document.getElementById
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            const pin = document.getElementById('inputLoginPin').value.trim();
+            if (pin.length !== 6) return alert('PIN harus 6 angka!');
+
+            try {
+                const userRef = doc(db, "users", targetPhoneCache);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists() && userSnap.data().pin === pin) {
+                    localStorage.setItem('dompetku_phone', targetPhoneCache);
+                    loginUser(targetPhoneCache);
+                } else {
+                    alert('PIN Keamanan Salah!');
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            }
+        });
+
+        // PROSES KIRIM REQUEST PENDAFTARAN
+        document.getElementById('btnSubmitRegister').addEventListener('click', async () => {
+            const name = document.getElementById('inputRegName').value.trim();
+            const pin = document.getElementById('inputRegPin').value.trim();
+
+            if (!name || pin.length !== 6) return alert('Nama wajib diisi dan PIN harus 6 angka!');
+
+            try {
+                await setDoc(doc(db, "registration_requests", targetPhoneCache), {
+                    phone: targetPhoneCache,
+                    name: name,
+                    pin: pin,
+                    createdAt: serverTimestamp()
+                });
+
+                document.getElementById('stepRegister').classList.add('hidden');
+                document.getElementById('stepWaiting').classList.remove('hidden');
+                alert('Request pendaftaran berhasil dikirim! Minta Admin untuk mengaktifkannya.');
+            } catch (error) {
+                alert('Gagal mengirim request: ' + error.message);
+            }
+        });
+
+        window.resetAuthStep = () => {
+            document.getElementById('stepLoginPin').classList.add('hidden');
+            document.getElementById('stepRegister').classList.add('hidden');
+            document.getElementById('stepWaiting').classList.add('hidden');
+            document.getElementById('stepPhone').classList.remove('hidden');
+        };
+
+        function loginUser(phone) {
+            document.getElementById('authScreen').style.display = 'none';
+
+            if (phone === ADMIN_PHONE) {
+                document.getElementById('btnAdminMenu').classList.remove('hidden');
+                loadAdminData();
+            }
+
+            onSnapshot(doc(db, "users", phone), (docSnap) => {
+                if (docSnap.exists()) {
+                    currentUser = docSnap.data();
+                    document.getElementById('userNameDisplay').innerText = currentUser.name;
+                    document.getElementById('userInitial').innerText = currentUser.name.charAt(0).toUpperCase();
+                    document.getElementById('balanceDisplay').innerText = 'Rp ' + currentUser.balance.toLocaleString('id-ID');
+                    checkDailyStatus();
+                }
+            });
+
+            const q = query(collection(db, "transactions"), where("participantPhones", "array-contains", phone));
+            onSnapshot(q, (snapshot) => {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+
+                if(snapshot.empty) {
+                    historyList.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs font-medium">Belum ada riwayat transaksi</div>';
+                    return;
+                }
+
+                snapshot.forEach((docSnap) => {
+                    const tx = docSnap.data();
+                    const isSender = tx.senderPhone === phone;
+                    const item = document.createElement('div');
+                    item.className = 'bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm';
+                    
+                    let typeClass = isSender ? 'text-rose-600' : 'text-emerald-600';
+                    let sign = isSender ? '-' : '+';
+                    if(tx.type === 'TOPUP' || tx.type === 'BONUS' || tx.type === 'REFUND') { sign = '+'; typeClass = 'text-emerald-600'; }
+
+                    item.innerHTML = `
+                        <div>
+                            <div class="text-xs font-extrabold text-slate-900 mb-0.5">${tx.title}</div>
+                            <div class="text-[10px] font-semibold text-slate-400">${tx.desc || 'DompetKu Safe'}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="${typeClass} font-extrabold text-xs mb-1">${sign} Rp ${tx.amount.toLocaleString('id-ID')}</div>
+                            <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-extrabold">${tx.status || 'SUCCESS'}</span>
+                        </div>
+                    `;
+                    historyList.appendChild(item);
+                });
+            });
+        }
+
+        async function loadAdminData() {
+            try {
+                const regSnap = await getDocs(collection(db, "registration_requests"));
+                const regListContainer = document.getElementById('adminRegList');
+                regListContainer.innerHTML = '';
+                if(regSnap.empty) regListContainer.innerHTML = '<p class="text-slate-400">Tidak ada request pendaftaran.</p>';
+                
+                regSnap.forEach((d) => {
+                    const req = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-50 p-3 rounded-xl border flex justify-between items-center';
+                    div.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">${req.name}</p>
+                            <p class="text-[10px] text-slate-500">${req.phone} | PIN: ${req.pin}</p>
+                        </div>
+                        <button onclick="approveUser('${req.phone}', '${req.name}', '${req.pin}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px]">Approve</button>
+                    `;
+                    regListContainer.appendChild(div);
+                });
+
+                const topupSnap = await getDocs(collection(db, "topup_requests"));
+                const topupListContainer = document.getElementById('adminTopupList');
+                topupListContainer.innerHTML = '';
+                if(topupSnap.empty) topupListContainer.innerHTML = '<p class="text-slate-400">Tidak ada request topup.</p>';
+
+                topupSnap.forEach((d) => {
+                    const topup = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-50 p-3 rounded-xl border flex justify-between items-center';
+                    div.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">${topup.userName} (${topup.userPhone})</p>
+                            <p class="text-[10px] text-emerald-600 font-extrabold">Rp ${topup.amount.toLocaleString('id-ID')}</p>
+                        </div>
+                        <button onclick="approveTopup('${d.id}', '${topup.userPhone}', ${topup.amount})" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px]">Setujui</button>
+                    `;
+                    topupListContainer.appendChild(div);
+                });
+            } catch (err) {
+                console.error("Gagal load admin data:", err);
+            }
+        }
+
+        window.approveUser = async (phone, name, pin) => {
+            await setDoc(doc(db, "users", phone), { name: name, phone: phone, pin: pin, balance: 0, lastClaimDate: "" });
+            await deleteDoc(doc(db, "registration_requests", phone));
+            alert(`Akun ${name} (${phone}) berhasil disetujui!`);
+            loadAdminData();
+        };
+
+        window.approveTopup = async (docId, userPhone, amount) => {
+            await updateDoc(doc(db, "users", userPhone), { balance: increment(amount) });
+            await addDoc(collection(db, "transactions"), { title: `Top Up Saldo 💳`, senderPhone: 'ADMIN', receiverPhone: userPhone, participantPhones: [userPhone], amount: amount, type: 'TOPUP', status: 'SUCCESS', createdAt: serverTimestamp() });
+            await deleteDoc(doc(db, "topup_requests", docId));
+            alert('Top up berhasil disetujui dan saldo masuk!');
+            loadAdminData();
+        };
+
+        document.getElementById('btnSubmitWithdraw').addEventListener('click', async () => {
+            const bank = document.getElementById('wdBank').value;
+            const account = document.getElementById('wdAccount').value.trim();
+            const amount = parseInt(document.getElementById('wdAmount').value);
+
+            if (!account || !amount || amount <= 0) return alert('Isi data penarikan dengan benar!');
+            if (amount > currentUser.balance) return alert('Saldo tidak mencukupi!');
+
+            closeModal('withdrawModal');
+            await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(-amount) });
+            await addDoc(collection(db, "transactions"), { title: `Penarikan ke ${bank}`, desc: `Rek: ${account}`, senderPhone: currentUser.phone, receiverPhone: 'SYSTEM', participantPhones: [currentUser.phone], amount: amount, type: 'WITHDRAW', status: 'PENDING', createdAt: serverTimestamp() });
+            alert('Request penarikan berhasil dikirim!');
+        });
+
+        function checkDailyStatus() {
+            const today = new Date().toDateString();
+            const btn = document.getElementById('btnClaimDaily');
+            const statusText = document.getElementById('dailyStatusText');
+
+            if (currentUser.lastClaimDate === today) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+                statusText.innerText = "✅ Kamu sudah klaim hadiah hari ini!";
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                statusText.innerText = "🎁 Hadiah Rp 2.000 Siap Diklaim!";
+            }
+        }
+
+        document.getElementById('btnClaimDaily').addEventListener('click', async () => {
+            const today = new Date().toDateString();
+            await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(2000), lastClaimDate: today });
+            await addDoc(collection(db, "transactions"), { title: `Absen Harian 📅`, senderPhone: 'SYSTEM', receiverPhone: currentUser.phone, participantPhones: [currentUser.phone], amount: 2000, type: 'BONUS', status: 'SUCCESS', createdAt: serverTimestamp() });
+            alert('Berhasil Klaim Rp 2.000!');
+            closeModal('dailyModal');
+        });
+
+        document.getElementById('btnGuess').addEventListener('click', async () => {
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+            const hint = document.getElementById('gameHint');
+
+            if (!guess || guess < 1 || guess > 10) return alert('Masukkan angka 1 - 10!');
+
+            if (guess === secretCode) {
+                await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(10000) });
+                await addDoc(collection(db, "transactions"), { title: `Bobol Brankas 🔓`, senderPhone: 'SYSTEM', receiverPhone: currentUser.phone, participantPhones: [currentUser.phone], amount: 10000, type: 'BONUS', status: 'SUCCESS', createdAt: serverTimestamp() });
+                alert('🎉 Tebakanmu benar dan dapat Rp 10.000!');
+                resetGame();
+                closeModal('gameModal');
+            } else {
+                attempts--;
+                document.getElementById('attemptsLeft').innerText = attempts;
+                if (attempts <= 0) {
+                    alert(`Kesempatan habis! Angka yang benar adalah ${secretCode}`);
+                    resetGame();
+                    closeModal('gameModal');
+                } else {
+                    hint.innerText = guess < secretCode ? "⬆️ Terlalu KECIL!" : "⬇️ Terlalu BESAR!";
+                }
+            }
+            input.value = '';
+        });
+
+        function resetGame() {
+            secretCode = Math.floor(Math.random() * 10) + 1;
+            attempts = 3;
+            document.getElementById('attemptsLeft').innerText = attempts;
+            document.getElementById('gameHint').innerText = '';
+        }
+
+        document.getElementById('btnSubmitTopup').addEventListener('click', async () => {
+            const amount = parseInt(document.getElementById('topupAmount').value);
+            if (!amount || amount <= 0) return alert('Nominal tidak valid!');
+
+            closeModal('topupModal');
+            await addDoc(collection(db, "topup_requests"), { userPhone: currentUser.phone, userName: currentUser.name, amount: amount, status: "PENDING", createdAt: serverTimestamp() });
+            alert('Request Top Up berhasil dikirim ke Admin!');
+        });
+
+        document.getElementById('btnSubmitTransfer').addEventListener('click', async () => {
+            const targetPhone = document.getElementById('targetPhone').value.trim();
+            const amount = parseInt(document.getElementById('transferAmount').value);
+
+            if (!targetPhone || targetPhone === currentUser.phone) return alert('Penerima tidak valid!');
+            if (!amount || amount > currentUser.balance) return alert('Saldo tidak mencukupi!');
+
+            const targetSnap = await getDoc(doc(db, "users", targetPhone));
+            if (!targetSnap.exists()) return alert('Nomor HP penerima belum terdaftar!');
+
+            closeModal('transferModal');
+            await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(-amount) });
+            await updateDoc(doc(db, "users", targetPhone), { balance: increment(amount) });
+            await addDoc(collection(db,="transactions"), { title: `Transfer ke ${targetPhone}`, desc: `Pengirim: ${currentUser.name}`, senderPhone: currentUser.phone, receiverPhone: targetPhone, participantPhones: [currentUser.phone, targetPhone], amount: amount, type: 'TRANSFER', status: 'SUCCESS', createdAt: serverTimestamp() });
+            alert('Transfer Saldo Berhasil!');
+        });
+
+        window.logout = () => { localStorage.removeItem('dompetku_phone'); location.reload(); };
+        window.openModal = (id) => document.getElementById(id).classList.remove('hidden') || document.getElementById(id).classList.add('flex');
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden') || document.getElementById(id).classList.remove('flex');
+    </script>
+</body>
+</html>
