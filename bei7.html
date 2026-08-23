@@ -9,224 +9,232 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="bg-slate-950 flex justify-center min-h-screen text-slate-800">
 
-    <!-- LOGIN / REGISTER SCREEN -->
-    <div id="loginScreen" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
-            <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-            
-            <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg shadow-blue-500/30 mb-6">
-                🛡️
-            </div>
-            
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-2">DompetKu Secure</h2>
-            <p class="text-slate-500 text-sm mb-6">Masuk dengan Nomor HP & PIN Keamanan</p>
-            
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1 block">Nomor WhatsApp / HP</label>
-                    <input type="number" id="authPhone" placeholder="Contoh: 08123456789" class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none font-medium text-slate-800 bg-slate-50 transition">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1 block">PIN Keamanan (6 Angka)</label>
-                    <input type="password" id="authPin" maxlength="6" placeholder="••••••" class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none font-medium text-slate-800 bg-slate-50 tracking-widest text-center text-lg transition">
-                </div>
-                <div id="nameFieldContainer" style="display:none;">
-                    <label class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1 block">Nama Lengkap (Akun Baru)</label>
-                    <input type="text" id="authName" placeholder="Masukkan nama lengkapmu" class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none font-medium text-slate-800 bg-slate-50 transition">
-                </div>
-            </div>
-
-            <button id="btnAuth" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-600/30">
-                LANJUTKAN 🚀
-            </button>
-        </div>
-    </div>
-
-    <!-- MAIN APP CONTAINER -->
-    <div class="w-full max-w-[480px] bg-slate-50 min-h-screen shadow-2xl relative flex flex-col pb-12">
+    <div class="w-full max-w-md bg-slate-50 min-h-screen relative pb-16 shadow-2xl">
         
-        <!-- HEADER -->
-        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white pt-8 px-6 pb-20 rounded-b-[36px] shadow-lg relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div class="flex justify-between items-center relative z-10">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/30" id="userInitial">
-                        U
+        <!-- SCREEN AUTH (LOGIN / REGISTER) -->
+        <div id="authScreen" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-6 backdrop-blur-md">
+            <div class="bg-white w-full max-w-sm p-8 rounded-3xl text-center shadow-2xl border border-slate-100">
+                <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5 shadow-lg shadow-blue-500/30">🛡️</div>
+                <h2 id="authTitle" class="text-2xl font-extrabold text-slate-900 mb-1">DompetKu Secure</h2>
+                <p id="authSubtitle" class="text-xs text-slate-500 mb-6">Masukkan Nomor HP untuk Masuk / Daftar</p>
+                
+                <!-- STEP 1: INPUT NOMOR HP -->
+                <div id="stepPhone" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nomor WhatsApp / HP</label>
+                        <input type="number" id="inputPhone" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 focus:border-blue-600 focus:bg-white outline-none transition" placeholder="Contoh: 08123456789">
+                    </div>
+                    <button id="btnCheckPhone" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-blue-600/30 active:scale-95 transition">LANJUTKAN 🚀</button>
+                </div>
+
+                <!-- STEP 2A: LOGIN (JIKA SUDAH TERDAFTAR) -->
+                <div id="stepLoginPin" class="space-y-4 text-left hidden">
+                    <div class="bg-blue-50 p-3 rounded-xl mb-4 text-xs font-semibold text-blue-700 flex items-center justify-between">
+                        <span>Halo, <b id="loginUserName">User</b></span>
+                        <button onclick="resetAuthStep()" class="text-slate-400 hover:text-slate-600 underline">Ganti No</button>
                     </div>
                     <div>
-                        <p class="text-xs text-slate-400 font-medium">Selamat Datang,</p>
-                        <h2 id="userNameDisplay" class="font-bold text-base tracking-wide">-</h2>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">PIN Keamanan (6 Angka)</label>
+                        <input type="password" id="inputLoginPin" maxlength="6" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 tracking-[0.5em] text-center text-xl focus:border-blue-600 focus:bg-white outline-none transition" placeholder="••••••">
                     </div>
+                    <button id="btnLogin" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-blue-600/30 active:scale-95 transition">MASUK SEKARANG 🔓</button>
                 </div>
-                <button onclick="logout()" class="bg-white/10 hover:bg-white/25 transition text-xs font-bold px-3.5 py-2 rounded-xl backdrop-blur-md border border-white/10 flex items-center gap-1.5">
-                    🚪 Keluar
-                </button>
+
+                <!-- STEP 2B: REGISTER (JIKA BELUM TERDAFTAR - VERIFIKASI NAMA) -->
+                <div id="stepRegister" class="space-y-4 text-left hidden">
+                    <div class="bg-amber-50 p-3 rounded-xl text-xs font-medium text-amber-800">
+                        ⚠️ Nomor belum terdaftar. Silakan isi data untuk kirim request verifikasi ke Admin.
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nama Lengkap Sesuai KTP</label>
+                        <input type="text" id="inputRegName" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 focus:border-blue-600 focus:bg-white outline-none transition text-sm" placeholder="Nama lengkapmu">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Buat PIN Keamanan (6 Angka)</label>
+                        <input type="password" id="inputRegPin" maxlength="6" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-slate-800 tracking-[0.4em] text-center text-lg focus:border-blue-600 focus:bg-white outline-none transition" placeholder="••••••">
+                    </div>
+                    <button id="btnSubmitRegister" class="w-full bg-emerald-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-emerald-600/30 active:scale-95 transition">KIRIM REQUEST DAFTAR 📨</button>
+                    <button onclick="resetAuthStep()" class="w-full text-slate-400 text-xs font-bold py-2">Kembali</button>
+                </div>
+
+                <!-- STEP 2C: WAITING APPROVAL -->
+                <div id="stepWaiting" class="space-y-4 text-center hidden py-4">
+                    <div class="text-4xl animate-bounce mb-2">⏳</div>
+                    <h3 class="font-extrabold text-slate-800 text-base">Menunggu Verifikasi Admin</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Request akunmu sudah dikirim. Hubungi Admin agar akunmu segera di-approve / dikirim kode khusus!</p>
+                    <button onclick="resetAuthStep()" class="w-full bg-slate-200 text-slate-700 p-3 rounded-xl font-bold text-xs mt-4">Cek Status / Ganti Nomor</button>
+                </div>
             </div>
         </div>
 
-        <!-- BALANCE CARD -->
-        <div class="mx-6 -mt-12 bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex justify-between items-center relative z-20">
+        <!-- HEADER APLIKASI UTAMA -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-950 text-white p-6 pb-20 rounded-b-[40px] flex justify-between items-start shadow-xl">
+            <div class="flex items-center gap-3.5">
+                <div id="userInitial" class="w-12 h-12 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center font-extrabold text-xl shadow-md">U</div>
+                <div>
+                    <p class="text-[11px] text-slate-400 font-medium">Selamat Datang,</p>
+                    <h2 id="userNameDisplay" class="text-base font-extrabold tracking-wide">-</h2>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="btnAdminMenu" onclick="openModal('adminModal')" class="hidden bg-amber-500/20 border border-amber-500/30 text-amber-300 px-3 py-2 rounded-xl text-xs font-bold backdrop-blur-md">⚙️ Admin</button>
+                <button onclick="logout()" class="bg-white/10 border border-white/10 text-white px-3 py-2 rounded-xl text-xs font-bold backdrop-blur-md">🚪 Keluar</button>
+            </div>
+        </div>
+
+        <!-- KARTU SALDO -->
+        <div class="bg-white mx-6 -mt-12 p-6 rounded-3xl shadow-xl shadow-slate-200/50 flex justify-between items-center border border-slate-100">
             <div>
-                <div class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Saldo Aktif</div>
-                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tracking-tight" id="balanceDisplay">Rp 0</div>
+                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Saldo Aktif</div>
+                <div id="balanceDisplay" class="text-2xl font-extrabold text-slate-900 mt-1">Rp 0</div>
             </div>
-            <button onclick="openModal('topupModal')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-3 rounded-2xl font-extrabold text-xs transition flex items-center gap-1.5 shadow-sm">
-                <span>➕</span> Top Up
+            <button onclick="openModal('topupModal')" class="bg-blue-50 text-blue-600 px-4 py-3 rounded-2xl font-extrabold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+                ➕ Top Up
             </button>
         </div>
 
-        <!-- QUICK MENU GRID -->
+        <!-- MENU GRID -->
         <div class="grid grid-cols-4 gap-3 px-6 mt-6">
-            <button onclick="openModal('transferModal')" class="group flex flex-col items-center gap-2 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 group-hover:bg-blue-600 group-hover:text-white text-blue-600 flex items-center justify-center text-xl transition shadow-sm">
-                    📤
-                </div>
+            <div onclick="openModal('transferModal')" class="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-2 shadow-sm active:scale-95 transition cursor-pointer">
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl">📤</div>
                 <span class="text-xs font-bold text-slate-600">Kirim</span>
-            </button>
-            <button onclick="openModal('withdrawModal')" class="group flex flex-col items-center gap-2 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 group-hover:bg-emerald-600 group-hover:text-white text-emerald-600 flex items-center justify-center text-xl transition shadow-sm">
-                    🏦
-                </div>
+            </div>
+            <div onclick="openModal('withdrawModal')" class="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-2 shadow-sm active:scale-95 transition cursor-pointer">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">🏦</div>
                 <span class="text-xs font-bold text-slate-600">Tarik</span>
-            </button>
-            <button onclick="openModal('dailyModal')" class="group flex flex-col items-center gap-2 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-purple-200 transition">
-                <div class="w-12 h-12 rounded-2xl bg-purple-50 group-hover:bg-purple-600 group-hover:text-white text-purple-600 flex items-center justify-center text-xl transition shadow-sm">
-                    🎁
-                </div>
+            </div>
+            <div onclick="openModal('dailyModal')" class="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-2 shadow-sm active:scale-95 transition cursor-pointer">
+                <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-xl">🎁</div>
                 <span class="text-xs font-bold text-slate-600">Absen</span>
-            </button>
-            <button onclick="openModal('gameModal')" class="group flex flex-col items-center gap-2 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition">
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 group-hover:bg-amber-600 group-hover:text-white text-amber-600 flex items-center justify-center text-xl transition shadow-sm">
-                    🔐
-                </div>
+            </div>
+            <div onclick="openModal('gameModal')" class="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-2 shadow-sm active:scale-95 transition cursor-pointer">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">🔐</div>
                 <span class="text-xs font-bold text-slate-600">Brankas</span>
-            </button>
+            </div>
         </div>
 
-        <!-- SECTION: RIWAYAT TRANSAKSI -->
-        <div class="px-6 mt-8 flex-1">
+        <!-- RIWAYAT TRANSAKSI -->
+        <div class="px-6 mt-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-extrabold text-slate-900 text-base">Riwayat Transaksi</h3>
-                <span class="text-xs text-slate-400 font-semibold">Realtime</span>
+                <h3 class="text-sm font-extrabold text-slate-900">Riwayat Transaksi</h3>
+                <span class="text-[11px] font-bold text-slate-400">Realtime</span>
             </div>
-            
             <div id="historyList" class="space-y-3">
-                <div class="text-center py-8 text-slate-400 text-sm">Memuat data transaksi...</div>
+                <div class="text-center py-8 text-slate-400 text-xs font-medium">Memuat data transaksi...</div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL TEMPLATE STYLING -->
     <!-- MODAL TARIK SALDO -->
-    <div id="withdrawModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-slate-900 text-lg">🏦 Tarik Saldo</h3>
-                <button onclick="closeModal('withdrawModal')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+    <div id="withdrawModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl relative">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="font-extrabold text-slate-900 text-base">🏦 Tarik Saldo</h3>
+                <button onclick="closeModal('withdrawModal')" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
             <div class="space-y-3">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">Metode Tujuan</label>
-                    <select id="wdBank" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <option value="DANA">DANA</option>
-                        <option value="OVO">OVO</option>
-                        <option value="GOPAY">GOPAY</option>
-                        <option value="BANK BCA">BANK BCA</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">Nomor Rekening / No. HP</label>
-                    <input type="number" id="wdAccount" placeholder="Contoh: 0812345678" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">Nominal (Rp)</label>
-                    <input type="number" id="wdAmount" placeholder="Minimal Rp 10.000" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <button id="btnSubmitWithdraw" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition">
-                    Tarik Sekarang
-                </button>
+                <select id="wdBank" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                    <option value="DANA">DANA</option>
+                    <option value="OVO">OVO</option>
+                    <option value="GOPAY">GOPAY</option>
+                    <option value="BANK BCA">BANK BCA</option>
+                </select>
+                <input type="number" id="wdAccount" placeholder="Nomor Rekening / No. HP" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <input type="number" id="wdAmount" placeholder="Nominal (Min. Rp 10.000)" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <button id="btnSubmitWithdraw" class="w-full bg-emerald-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-emerald-600/30 active:scale-95 transition text-sm">Tarik Sekarang</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL TOP UP -->
-    <div id="topupModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-slate-900 text-lg">➕ Request Top Up</h3>
-                <button onclick="closeModal('topupModal')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+    <div id="topupModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl relative">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="font-extrabold text-slate-900 text-base">➕ Request Top Up</h3>
+                <button onclick="closeModal('topupModal')" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
             <div class="space-y-3">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">Nominal Top Up (Rp)</label>
-                    <input type="number" id="topupAmount" placeholder="Contoh: 50000" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <button id="btnSubmitTopup" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition">
-                    Kirim Request Top Up
-                </button>
+                <input type="number" id="topupAmount" placeholder="Contoh: 50000" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <button id="btnSubmitTopup" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-blue-600/30 active:scale-95 transition text-sm">Kirim Request Top Up</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL TRANSFER -->
-    <div id="transferModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-slate-900 text-lg">📤 Kirim Saldo</h3>
-                <button onclick="closeModal('transferModal')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+    <div id="transferModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl relative">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="font-extrabold text-slate-900 text-base">📤 Kirim Saldo</h3>
+                <button onclick="closeModal('transferModal')" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
             <div class="space-y-3">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">No HP Tujuan</label>
-                    <input type="number" id="targetPhone" placeholder="Nomor HP penerima terdaftar" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">Nominal Transfer (Rp)</label>
-                    <input type="number" id="transferAmount" placeholder="Nominal" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <button id="btnSubmitTransfer" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition">
-                    Kirim Sekarang
-                </button>
+                <input type="number" id="targetPhone" placeholder="Nomor HP Tujuan" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <input type="number" id="transferAmount" placeholder="Nominal Transfer (Rp)" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 font-bold text-sm outline-none">
+                <button id="btnSubmitTransfer" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-blue-600/30 active:scale-95 transition text-sm">Kirim Sekarang</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL ABSEN HARIAN -->
-    <div id="dailyModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 text-center">
-            <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-3">📅</div>
-            <h3 class="font-bold text-slate-900 text-lg mb-1">Absen Harian</h3>
-            <p id="dailyStatusText" class="text-xs text-slate-500 mb-4 font-semibold">Memeriksa status absen...</p>
-            <button id="btnClaimDaily" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-purple-600/30 transition">
-                KLAIM Rp 2.000
-            </button>
+    <div id="dailyModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl relative text-center">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="font-extrabold text-slate-900 text-base mx-auto">📅 Absen Harian</h3>
+                <button onclick="closeModal('dailyModal')" class="text-slate-400 font-bold text-lg absolute right-6">✕</button>
+            </div>
+            <p id="dailyStatusText" class="text-xs font-bold text-slate-500 mb-6">Memeriksa status...</p>
+            <button id="btnClaimDaily" class="w-full bg-purple-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-purple-600/30 active:scale-95 transition text-sm">KLAIM Rp 2.000</button>
         </div>
     </div>
 
     <!-- MODAL BRANKAS -->
-    <div id="gameModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 text-center">
-            <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-3">🔐</div>
-            <h3 class="font-bold text-slate-900 text-lg mb-1">Tebak Kode Brankas</h3>
-            <p class="text-xs text-slate-500 mb-2">Tebak angka 1 s.d 10. Sisa kesempatan: <b id="attemptsLeft" class="text-amber-600">3</b>x</p>
-            <div id="gameHint" class="text-xs font-bold text-rose-500 min-h-[16px] mb-3"></div>
-            <input type="number" id="guessInput" min="1" max="10" placeholder="Angka (1-10)" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium text-center text-lg mb-3 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <button id="btnGuess" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-amber-500/30 transition">
-                TEBAK SEKARANG
-            </button>
+    <div id="gameModal" class="fixed inset-0 bg-slate-950/60 z-50 hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl relative text-center">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-extrabold text-slate-900 text-base mx-auto">🔐 Tebak Kode Brankas</h3>
+                <button onclick="closeModal('gameModal')" class="text-slate-400 font-bold text-lg absolute right-6">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-2">Tebak angka 1 - 10. Sisa: <b id="attemptsLeft" class="text-amber-600">3</b>x</p>
+            <div id="gameHint" class="text-xs font-extrabold text-rose-600 min-h-[20px] mb-3"></div>
+            <input type="number" id="guessInput" min="1" max="10" placeholder="?" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 font-extrabold text-center text-2xl outline-none mb-3">
+            <button id="btnGuess" class="w-full bg-amber-600 text-white p-4 rounded-2xl font-extrabold shadow-lg shadow-amber-600/30 active:scale-95 transition text-sm">TEBAK SEKARANG</button>
         </div>
     </div>
 
-    <!-- FIREBASE SDK & APP LOGIC -->
+    <!-- MODAL ADMIN (UNTUK APPROVAL AKUN & TOPUP) -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-950/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white w-full max-w-md p-6 rounded-3xl shadow-2xl relative my-8">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="font-extrabold text-slate-900 text-base">⚙️ Panel Admin DompetKu</h3>
+                <button onclick="closeModal('adminModal')" class="text-slate-400 font-bold text-lg">✕</button>
+            </div>
+            
+            <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                <div>
+                    <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">📥 Request Pendaftaran Akun Pending</h4>
+                    <div id="adminRegList" class="space-y-2 text-xs">
+                        <p class="text-slate-400">Memuat request...</p>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">💳 Request Top Up Pending</h4>
+                    <div id="adminTopupList" class="space-y-2 text-xs">
+                        <p class="text-slate-400">Memuat request topup...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, query, where, getDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, query, where, getDoc, updateDoc, increment, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDt_nx3VFEQeZ9foGft2AdmQnCJJCbgqME",
@@ -234,292 +242,50 @@
             projectId: "wallet-bei7",
             storageBucket: "wallet-bei7.firebasestorage.app",
             messagingSenderId: "737404060715",
-            appId: "1:737404060715:web:e6e25f18b64302d066d66e",
-            measurementId: "G-Y86WS7RQWM"
+            appId: "1:737404060715:web:e6e25f18b64302d066d66e"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // GANTI NOMOR INI DENGAN NOMOR HP UTAMAMU SEBAGAI ADMIN UTAMA
+        const ADMIN_PHONE = "08123456789"; 
+
         let currentUser = null;
+        let targetPhoneCache = "";
         let secretCode = Math.floor(Math.random() * 10) + 1;
         let attempts = 3;
 
         const savedPhone = localStorage.getItem('dompetku_phone');
-        if (savedPhone) {
-            loginUser(savedPhone);
-        }
+        if (savedPhone) loginUser(savedPhone);
 
-        document.getElementById('btnAuth').addEventListener('click', async () => {
-            const phone = document.getElementById('authPhone').value.trim();
-            const pin = document.getElementById('authPin').value.trim();
-            const nameFieldContainer = document.getElementById('nameFieldContainer');
-            const nameInput = document.getElementById('authName');
-
-            if (!phone || pin.length !== 6) return alert('Nomor HP dan PIN 6 angka wajib diisi!');
+        // STEP 1: CEK NOMOR HP
+        document.getElementById('btnCheckPhone').addEventListener('click', async () => {
+            const phone = document.getElementById('inputPhone').value.trim();
+            if (!phone) return alert('Masukkan nomor HP terlebih dahulu!');
+            targetPhoneCache = phone;
 
             const userRef = doc(db, "users", phone);
             const userSnap = await getDoc(userRef);
 
             if (userSnap.exists()) {
-                if (userSnap.data().pin === pin) {
-                    localStorage.setItem('dompetku_phone', phone);
-                    loginUser(phone);
+                // Sudah terdaftar -> Ke Menu Login PIN
+                document.getElementById('stepPhone').classList.add('hidden');
+                document.getElementById('stepLoginPin').classList.remove('hidden');
+                document.getElementById('loginUserName').innerText = userSnap.data().name;
+            } else {
+                // Cek apakah ada request pending
+                const regSnap = await getDoc(doc(db, "registration_requests", phone));
+                if(regSnap.exists()) {
+                    document.getElementById('stepPhone').classList.add('hidden');
+                    document.getElementById('stepWaiting').classList.remove('hidden');
                 } else {
-                    alert('PIN Keamanan Salah!');
-                }
-            } else {
-                if (nameFieldContainer.style.display === 'none') {
-                    nameFieldContainer.style.display = 'block';
-                    alert('Nomor belum terdaftar. Silakan isi Nama Lengkap kamu lalu klik MASUK lagi.');
-                    return;
-                }
-
-                const name = nameInput.value.trim();
-                if (!name) return alert('Nama Lengkap wajib diisi!');
-
-                await setDoc(userRef, {
-                    name: name,
-                    phone: phone,
-                    pin: pin,
-                    balance: 0,
-                    lastClaimDate: ""
-                });
-
-                localStorage.setItem('dompetku_phone', phone);
-                loginUser(phone);
-            }
-        });
-
-        function loginUser(phone) {
-            document.getElementById('loginScreen').style.display = 'none';
-
-            onSnapshot(doc(db, "users", phone), (docSnap) => {
-                if (docSnap.exists()) {
-                    currentUser = docSnap.data();
-                    document.getElementById('userNameDisplay').innerText = currentUser.name;
-                    document.getElementById('userInitial').innerText = currentUser.name.charAt(0).toUpperCase();
-                    document.getElementById('balanceDisplay').innerText = 'Rp ' + currentUser.balance.toLocaleString('id-ID');
-                    checkDailyStatus();
-                }
-            });
-
-            const q = query(collection(db, "transactions"), where("participantPhones", "array-contains", phone));
-            onSnapshot(q, (snapshot) => {
-                const historyList = document.getElementById('historyList');
-                historyList.innerHTML = '';
-
-                if(snapshot.empty) {
-                    historyList.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-slate-100 shadow-sm">Belum ada riwayat transaksi</div>';
-                    return;
-                }
-
-                snapshot.forEach((docSnap) => {
-                    const tx = docSnap.data();
-                    const isSender = tx.senderPhone === phone;
-                    const item = document.createElement('div');
-                    item.className = 'bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between';
-                    
-                    let typeClass = isSender ? 'text-rose-500 font-extrabold' : 'text-emerald-600 font-extrabold';
-                    let sign = isSender ? '-' : '+';
-                    if(tx.type === 'TOPUP' || tx.type === 'BONUS' || tx.type === 'REFUND') { sign = '+'; typeClass = 'text-emerald-600 font-extrabold'; }
-
-                    item.innerHTML = `
-                        <div>
-                            <h5 class="font-bold text-slate-800 text-sm">${tx.title}</h5>
-                            <small class="text-slate-400 text-[11px] font-medium">${tx.desc || 'Transaksi DompetKu'}</small>
-                        </div>
-                        <div class="text-right">
-                            <div class="${typeClass} text-sm">${sign} Rp ${tx.amount.toLocaleString('id-ID')}</div>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">${tx.status || 'SUCCESS'}</span>
-                        </div>
-                    `;
-                    historyList.appendChild(item);
-                });
-            });
-        }
-
-        document.getElementById('btnSubmitWithdraw').addEventListener('click', async () => {
-            const bank = document.getElementById('wdBank').value;
-            const account = document.getElementById('wdAccount').value.trim();
-            const amount = parseInt(document.getElementById('wdAmount').value);
-
-            if (!account || !amount || amount <= 0) return alert('Isi data penarikan dengan benar!');
-            if (amount > currentUser.balance) return alert('Saldo tidak mencukupi!');
-
-            closeModal('withdrawModal');
-            await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(-amount) });
-
-            await addDoc(collection(db, "withdraw_requests"), {
-                userPhone: currentUser.phone,
-                userName: currentUser.name,
-                bank: bank,
-                accountNumber: account,
-                amount: amount,
-                status: "PENDING",
-                createdAt: serverTimestamp()
-            });
-
-            await addDoc(collection(db, "transactions"), {
-                title: `Penarikan ke ${bank}`,
-                desc: `Rek: ${account}`,
-                senderPhone: currentUser.phone,
-                receiverPhone: 'SYSTEM',
-                participantPhones: [currentUser.phone],
-                amount: amount,
-                type: 'WITHDRAW',
-                status: 'PENDING',
-                createdAt: serverTimestamp()
-            });
-
-            alert('Request penarikan berhasil dikirim!');
-        });
-
-        function checkDailyStatus() {
-            const today = new Date().toDateString();
-            const btn = document.getElementById('btnClaimDaily');
-            const statusText = document.getElementById('dailyStatusText');
-
-            if (currentUser.lastClaimDate === today) {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-                statusText.innerText = "✅ Kamu sudah klaim hadiah hari ini!";
-                statusText.classList.add('text-emerald-600');
-            } else {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                statusText.innerText = "🎁 Hadiah Rp 2.000 Siap Diklaim!";
-                statusText.classList.remove('text-emerald-600');
-            }
-        }
-
-        document.getElementById('btnClaimDaily').addEventListener('click', async () => {
-            const today = new Date().toDateString();
-            await updateDoc(doc(db, "users", currentUser.phone), {
-                balance: increment(2000),
-                lastClaimDate: today
-            });
-
-            await addDoc(collection(db, "transactions"), {
-                title: `Absen Harian 📅`,
-                senderPhone: 'SYSTEM',
-                receiverPhone: currentUser.phone,
-                participantPhones: [currentUser.phone],
-                amount: 2000,
-                type: 'BONUS',
-                status: 'SUCCESS',
-                createdAt: serverTimestamp()
-            });
-
-            alert('Berhasil Klaim Rp 2.000!');
-            closeModal('dailyModal');
-        });
-
-        document.getElementById('btnGuess').addEventListener('click', async () => {
-            const input = document.getElementById('guessInput');
-            const guess = parseInt(input.value);
-            const hint = document.getElementById('gameHint');
-
-            if (!guess || guess < 1 || guess > 10) return alert('Masukkan angka antara 1 sampai 10!');
-
-            if (guess === secretCode) {
-                await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(10000) });
-                await addDoc(collection(db, "transactions"), {
-                    title: `Bobol Brankas 🔓`,
-                    senderPhone: 'SYSTEM',
-                    receiverPhone: currentUser.phone,
-                    participantPhones: [currentUser.phone],
-                    amount: 10000,
-                    type: 'BONUS',
-                    status: 'SUCCESS',
-                    createdAt: serverTimestamp()
-                });
-
-                alert('🎉 LUAR BIASA! Tebakanmu benar dan dapat Rp 10.000!');
-                resetGame();
-                closeModal('gameModal');
-            } else {
-                attempts--;
-                document.getElementById('attemptsLeft').innerText = attempts;
-                if (attempts <= 0) {
-                    alert(`Kesempatan habis! Angka yang benar adalah ${secretCode}`);
-                    resetGame();
-                    closeModal('gameModal');
-                } else {
-                    hint.innerText = guess < secretCode ? "⬆️ Terlalu KECIL!" : "⬇️ Terlalu BESAR!";
+                    // Belum terdaftar -> Ke Menu Form Pendaftaran
+                    document.getElementById('stepPhone').classList.add('hidden');
+                    document.getElementById('stepRegister').classList.remove('hidden');
                 }
             }
-            input.value = '';
         });
 
-        function resetGame() {
-            secretCode = Math.floor(Math.random() * 10) + 1;
-            attempts = 3;
-            document.getElementById('attemptsLeft').innerText = attempts;
-            document.getElementById('gameHint').innerText = '';
-        }
-
-        document.getElementById('btnSubmitTopup').addEventListener('click', async () => {
-            const amount = parseInt(document.getElementById('topupAmount').value);
-            if (!amount || amount <= 0) return alert('Nominal tidak valid!');
-
-            closeModal('topupModal');
-            await addDoc(collection(db, "topup_requests"), {
-                userPhone: currentUser.phone,
-                userName: currentUser.name,
-                amount: amount,
-                status: "PENDING",
-                createdAt: serverTimestamp()
-            });
-
-            alert('Request Top Up berhasil dikirim ke Admin!');
-        });
-
-        document.getElementById('btnSubmitTransfer').addEventListener('click', async () => {
-            const targetPhone = document.getElementById('targetPhone').value.trim();
-            const amount = parseInt(document.getElementById('transferAmount').value);
-
-            if (!targetPhone || targetPhone === currentUser.phone) return alert('Penerima tidak valid!');
-            if (!amount || amount > currentUser.balance) return alert('Saldo tidak mencukupi!');
-
-            const targetSnap = await getDoc(doc(db, "users", targetPhone));
-            if (!targetSnap.exists()) return alert('Nomor HP penerima belum terdaftar di aplikasi!');
-
-            closeModal('transferModal');
-
-            await updateDoc(doc(db, "users", currentUser.phone), { balance: increment(-amount) });
-            await updateDoc(doc(db, "users", targetPhone), { balance: increment(amount) });
-
-            await addDoc(collection(db, "transactions"), {
-                title: `Transfer ke ${targetPhone}`,
-                desc: `Pengirim: ${currentUser.name}`,
-                senderPhone: currentUser.phone,
-                receiverPhone: targetPhone,
-                participantPhones: [currentUser.phone, targetPhone],
-                amount: amount,
-                type: 'TRANSFER',
-                status: 'SUCCESS',
-                createdAt: serverTimestamp()
-            });
-
-            alert('Transfer Saldo Berhasil!');
-        });
-
-        window.logout = () => {
-            localStorage.removeItem('dompetku_phone');
-            location.reload();
-        };
-
-        window.openModal = (id) => {
-            const el = document.getElementById(id);
-            el.classList.remove('hidden');
-            el.classList.add('flex');
-        }
-        window.closeModal = (id) => {
-            const el = document.getElementById(id);
-            el.classList.remove('flex');
-            el.classList.add('hidden');
-        }
-    </script>
-</body>
-</html>
+        // PROSES LOGIN
+        document.getElementById
