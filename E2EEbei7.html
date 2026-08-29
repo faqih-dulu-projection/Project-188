@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E2EE - Audio MFSK Modem V3</title>
+    <title>E2EE - Audio Modem</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            background-color: #0d0d0d;
+            color: #e0e0e0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,69 +18,101 @@
             box-sizing: border-box;
         }
         .container {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            max-width: 500px;
+            background-color: #1a1a1a;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            max-width: 480px;
             width: 100%;
         }
-        h2 { margin-top: 0; text-align: center; color: #ff007f; }
-        .subtitle { text-align: center; font-size: 0.9rem; color: #888; margin-bottom: 25px; }
-        .section { background-color: #2d2d2d; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-        .pengirim { border-left: 5px solid #00e5ff; }
-        .pengirim h3 { color: #00e5ff; margin-top: 0; }
-        .penerima { border-left: 5px solid #ff9800; }
-        .penerima h3 { color: #ff9800; margin-top: 0; }
-        input[type="text"] {
-            width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #444;
-            border-radius: 6px; background-color: #121212; color: #fff;
-            font-size: 1rem; text-align: center; box-sizing: border-box;
+        h2 { 
+            margin: 0 0 20px 0; 
+            text-align: center; 
+            color: #fff; 
+            font-size: 1.5rem;
+            letter-spacing: 1px;
         }
+        .section { 
+            background-color: #242424; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 12px; 
+        }
+        textarea {
+            width: 100%; 
+            padding: 12px; 
+            margin: 5px 0 10px; 
+            border: 1px solid #333;
+            border-radius: 8px; 
+            background-color: #121212; 
+            color: #fff;
+            font-size: 1rem; 
+            box-sizing: border-box;
+            resize: vertical; 
+            min-height: 80px;
+            font-family: inherit;
+        }
+        textarea:focus { outline: none; border-color: #555; }
         button {
-            color: #121212; border: none; padding: 12px 24px; font-size: 1rem;
-            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin: 5px 0;
+            border: none; 
+            padding: 12px; 
+            font-size: 0.95rem;
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            width: 100%; 
+            margin-bottom: 8px;
+            transition: all 0.2s ease-in-out;
         }
-        .btn-pengirim { background-color: #00e5ff; }
-        .btn-penerima { background-color: #ff9800; }
-        .btn-audio { background-color: #e91e63; color: #fff; }
-        .output-box { margin-top: 15px; padding: 10px; background-color: #1a1a1a; border-radius: 4px; text-align: center; }
-        .label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 1.2rem; font-weight: bold; word-wrap: break-word; margin-top: 5px; }
-        .status { font-size: 0.9rem; color: #00e5ff; margin-top: 10px; text-align: center; font-weight: bold; }
+        button:hover { opacity: 0.85; }
+        
+        .btn-pengirim { background-color: #2d3748; color: #63b3ed; }
+        .btn-penerima { background-color: #4a5568; color: #fbd38d; }
+        .btn-audio { background-color: #702459; color: #fbb6ce; }
+        
+        .output-box { 
+            margin-top: 5px; 
+            padding: 12px; 
+            background-color: #121212; 
+            border-radius: 8px; 
+            text-align: center; 
+            word-wrap: break-word; 
+        }
+        .label { font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        .value { font-size: 1.1rem; font-weight: bold; }
+        .status { font-size: 0.85rem; color: #fbb6ce; margin-bottom: 10px; text-align: center; height: 18px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Sandi E2EE MFSK V3</h2>
+    <h2>E2EE AUDIO MODEM</h2>
     
-    <div class="section pengirim">
-        <h3>1. Menu Pengirim</h3>
-        <input type="text" id="input-kirim" placeholder="Masukkan Teks">
-        <button class="btn-pengirim" onclick="prosesKirim()">BUAT KODE</button>
-        <button class="btn-audio" onclick="putarSuaraMFSK()">KIRIM LEWAT SUARA 🔊</button>
+    <div class="section">
+        <textarea id="input-kirim" placeholder="Ketik pesan rahasia di sini..."></textarea>
+        <button class="btn-pengirim" onclick="prosesKirim()">ENCODE PESAN</button>
+        <button id="btn-pancar" class="btn-audio" onclick="toggleSuara()">🔊 PANCARKAN SUARA</button>
+        
         <div class="output-box">
-            <div class="label" style="color: #00e5ff;">Kode Waktu</div>
-            <div id="out-waktu" class="value" style="color: #00e5ff;">-</div>
+            <div class="label">Kode Sandi</div>
+            <div id="out-waktu" class="value" style="color: #63b3ed;">-</div>
         </div>
     </div>
 
-    <div class="section penerima">
-        <h3>2. Menu Penerima</h3>
-        <button class="btn-audio" onclick="mulaiDengarMFSK()">DENGARKAN SUARA 🎙️</button>
-        <div id="status-mic" class="status">Menunggu...</div>
-        <input type="text" id="input-terima" placeholder="Hasil Suara Masuk Sini">
-        <button class="btn-penerima" onclick="prosesTerima()">Bongkar Pesan</button>
+    <div class="section">
+        <div id="status-mic" class="status"></div>
+        <button id="btn-dengar" class="btn-audio" onclick="toggleDengar()">🎙️ DENGARKAN SINYAL</button>
+        <textarea id="input-terima" placeholder="Tempel kode di sini, atau hasil suara akan otomatis masuk..."></textarea>
+        <button class="btn-penerima" onclick="prosesTerima()">BONGKAR PESAN</button>
+        
         <div class="output-box">
-            <div class="label" style="color: #ff9800;">Pesan Asli</div>
-            <div id="out-asli" class="value" style="color: #ff9800;">-</div>
+            <div class="label">Pesan Asli</div>
+            <div id="out-asli" class="value" style="color: #fbd38d;">-</div>
         </div>
     </div>
 </div>
 
 <script>
-// --- LOGIKA ENKRIPSI BAWAAN ---
 const MINGGU = 604800n, HARI = 86400n, JAM = 3600n, MENIT = 60n;
 
 function enkripsiUltimate(input) {
@@ -143,30 +175,53 @@ function prosesTerima() {
     } catch(e) { document.getElementById('out-asli').innerText = "KODE INVALID"; }
 }
 
+// --- VARIABEL GLOBAL UNTUK KONTROL STOP ---
+let txAudioCtx = null;
+let rxStream = null;
+let rxAudioCtx = null;
+let isTransmitting = false;
+let isReceivingMode = false;
+
 // --- LOGIKA MFSK V3 (REPEAT TONE) ---
 const TONES = {
     '0': 1500, '1': 1700, '2': 1900, '3': 2100, '4': 2300,
     '5': 2500, '6': 2700, '7': 2900, '8': 3100, '9': 3300,
-    'REPEAT': 3600, // Nada khusus untuk angka yang sama dengan sebelumnya
+    'REPEAT': 3600, 
     'START': 4000, 
     'END': 4400    
 };
 
-const TONE_DUR = 0.2; // Sedikit dilambatin (200ms) biar nangkepnya pasti
-const SILENCE_DUR = 0.05; // Jeda hening super singkat anti numpuk
+const TONE_DUR = 0.2; 
+const SILENCE_DUR = 0.05; 
 const TOLERANCE = 80; 
 const THRESHOLD = 100;
 
-function putarSuaraMFSK() {
+function toggleSuara() {
+    const btn = document.getElementById('btn-pancar');
+    
+    // Kalau lagi muter suara, stop!
+    if (isTransmitting) {
+        if (txAudioCtx) txAudioCtx.close();
+        isTransmitting = false;
+        btn.innerHTML = "🔊 PANCARKAN SUARA";
+        btn.style.backgroundColor = "#702459";
+        return;
+    }
+
     const kodeWaktu = document.getElementById('out-waktu').innerText;
     if (!kodeWaktu || kodeWaktu === '-') return;
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let time = audioCtx.currentTime + 0.1;
+    // Mulai muter suara
+    isTransmitting = true;
+    btn.innerHTML = "🛑 STOP SUARA";
+    btn.style.backgroundColor = "#c53030"; // Merah
+
+    txAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let time = txAudioCtx.currentTime + 0.1;
 
     function play(freq, start, dur) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const osc = txAudioCtx.createOscillator();
+        const gain = txAudioCtx.createGain();
         osc.frequency.value = freq;
         gain.gain.setValueAtTime(0, start);
         gain.gain.linearRampToValueAtTime(1, start + 0.02);
@@ -174,22 +229,19 @@ function putarSuaraMFSK() {
         gain.gain.linearRampToValueAtTime(0, start + dur);
         
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(txAudioCtx.destination);
         osc.start(start);
         osc.stop(start + dur);
     }
 
-    // 1. Nada Start
     play(TONES['START'], time, TONE_DUR * 3);
     time += (TONE_DUR * 3) + SILENCE_DUR;
 
-    // 2. Transmisi dengan Cek Karakter Ganda (REPEAT TONE)
     let lastToneName = "";
     for (let char of kodeWaktu) {
         let toneToPlay = TONES[char];
         let currentToneName = char;
 
-        // Kalau angkanya sama persis kayak barusan, ganti ke nada REPEAT
         if (char === lastToneName) {
             toneToPlay = TONES['REPEAT'];
             currentToneName = 'REPEAT';
@@ -197,42 +249,66 @@ function putarSuaraMFSK() {
 
         play(toneToPlay, time, TONE_DUR);
         time += TONE_DUR + SILENCE_DUR;
-        
-        lastToneName = currentToneName; // Simpan nada fisik terakhir yang bunyi
+        lastToneName = currentToneName;
     }
 
-    // 3. Nada End
     play(TONES['END'], time, TONE_DUR * 3);
+
+    // Auto reset tombol pas suara selesai
+    const totalTimeMs = (time - txAudioCtx.currentTime) * 1000;
+    setTimeout(() => {
+        if (isTransmitting) {
+            isTransmitting = false;
+            btn.innerHTML = "🔊 PANCARKAN SUARA";
+            btn.style.backgroundColor = "#702459";
+        }
+    }, totalTimeMs);
 }
 
-async function mulaiDengarMFSK() {
-    const target = document.getElementById('input-terima');
+async function toggleDengar() {
+    const btn = document.getElementById('btn-dengar');
     const statusBox = document.getElementById('status-mic');
+
+    // Kalau mic lagi aktif, matikan!
+    if (isReceivingMode) {
+        isReceivingMode = false;
+        if (rxStream) rxStream.getTracks().forEach(track => track.stop());
+        if (rxAudioCtx) rxAudioCtx.close();
+        btn.innerHTML = "🎙️ DENGARKAN SINYAL";
+        btn.style.backgroundColor = "#702459";
+        statusBox.innerText = "Pendengaran dibatalkan.";
+        return;
+    }
+
+    // Mulai dengerin
+    isReceivingMode = true;
+    btn.innerHTML = "🛑 STOP MIC";
+    btn.style.backgroundColor = "#c53030"; // Merah
+    
+    const target = document.getElementById('input-terima');
     target.value = "";
     statusBox.innerText = "Mic aktif, dekatkan speaker...";
     
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
+        rxStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+        rxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = rxAudioCtx.createMediaStreamSource(rxStream);
         
-        const analyser = audioCtx.createAnalyser();
+        const analyser = rxAudioCtx.createAnalyser();
         analyser.fftSize = 2048;
         source.connect(analyser);
 
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
-        const sampleRate = audioCtx.sampleRate;
+        const sampleRate = rxAudioCtx.sampleRate;
 
         let isReceiving = false;
-        let isListening = true;
         let receivedKode = "";
-        
-        let lastDetectedTone = ""; // Nada yang terdeteksi mikrofon barusan
-        let trueLastDigit = "";    // Angka asli terakhir (buat keperluan REPEAT)
+        let lastDetectedTone = ""; 
+        let trueLastDigit = "";    
 
         function cekFrekuensi() {
-            if (!isListening) return;
+            if (!isReceivingMode) return; // Stop looping kalau tombol stop dipencet
             requestAnimationFrame(cekFrekuensi);
 
             analyser.getByteFrequencyData(dataArray);
@@ -248,27 +324,24 @@ async function mulaiDengarMFSK() {
             const frek = maxIndex * sampleRate / analyser.fftSize;
 
             if (maxValue > THRESHOLD) {
-                // START
                 if (!isReceiving && Math.abs(frek - TONES['START']) < TOLERANCE) {
                     isReceiving = true;
                     receivedKode = "";
                     lastDetectedTone = "";
                     trueLastDigit = "";
                     statusBox.innerText = "Sinyal Masuk! Membaca...";
-                    statusBox.style.color = "#ff007f";
+                    statusBox.style.color = "#fbb6ce";
                 } 
-                // END
                 else if (isReceiving && Math.abs(frek - TONES['END']) < TOLERANCE) {
-                    isReceiving = false;
-                    isListening = false;
-                    stream.getTracks().forEach(track => track.stop());
+                    isReceivingMode = false; // Akhiri mode denger
+                    rxStream.getTracks().forEach(track => track.stop());
                     
+                    btn.innerHTML = "🎙️ DENGARKAN SINYAL";
+                    btn.style.backgroundColor = "#702459";
                     statusBox.innerText = "Selesai Menerima.";
-                    statusBox.style.color = "#00e5ff";
                     target.value = receivedKode;
                     prosesTerima();
                 }
-                // Deteksi Angka / Repeat
                 else if (isReceiving) {
                     let deteksi = "";
                     for (let key in TONES) {
@@ -278,27 +351,25 @@ async function mulaiDengarMFSK() {
                         }
                     }
 
-                    // Kalau ada nada valid dan itu beda dari nada sebelumnya
                     if (deteksi !== "" && deteksi !== lastDetectedTone) {
                         if (deteksi === 'REPEAT') {
-                            // Kalau nadanya REPEAT, masukkan ulang angka yang terakhir disimpan
                             receivedKode += trueLastDigit;
                         } else {
-                            // Kalau angka biasa, masukkan dan simpan sebagai patokan
                             receivedKode += deteksi;
                             trueLastDigit = deteksi;
                         }
-                        
-                        lastDetectedTone = deteksi; // Kunci biar ga kedetect dua kali di frame yang sama
+                        lastDetectedTone = deteksi; 
                         target.value = receivedKode;
                     }
                 }
             }
         }
-
         cekFrekuensi();
 
     } catch (e) {
+        isReceivingMode = false;
+        btn.innerHTML = "🎙️ DENGARKAN SINYAL";
+        btn.style.backgroundColor = "#702459";
         statusBox.innerText = "Izinkan akses mikrofon di browser!";
         statusBox.style.color = "red";
     }
