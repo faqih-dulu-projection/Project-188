@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E2EE - Audio MFSK Modem V2</title>
+    <title>E2EE - Audio MFSK Modem V3</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -53,8 +53,7 @@
 <body>
 
 <div class="container">
-    <h2>Sandi E2EE MFSK V2</h2>
-    <div class="subtitle">Audio Modem (Fix Angka Kembar)</div>
+    <h2>Sandi E2EE MFSK V3</h2>
     
     <div class="section pengirim">
         <h3>1. Menu Pengirim</h3>
@@ -71,7 +70,7 @@
         <h3>2. Menu Penerima</h3>
         <button class="btn-audio" onclick="mulaiDengarMFSK()">DENGARKAN SUARA 🎙️</button>
         <div id="status-mic" class="status">Menunggu...</div>
-        <input type="text" id="input-terima" placeholder="Hasil Suara Otomatis Masuk Sini">
+        <input type="text" id="input-terima" placeholder="Hasil Suara Masuk Sini">
         <button class="btn-penerima" onclick="prosesTerima()">Bongkar Pesan</button>
         <div class="output-box">
             <div class="label" style="color: #ff9800;">Pesan Asli</div>
@@ -81,7 +80,7 @@
 </div>
 
 <script>
-// --- LOGIKA UTAMA DARI FILE Times2.html ---
+// --- LOGIKA ENKRIPSI BAWAAN ---
 const MINGGU = 604800n, HARI = 86400n, JAM = 3600n, MENIT = 60n;
 
 function enkripsiUltimate(input) {
@@ -144,19 +143,19 @@ function prosesTerima() {
     } catch(e) { document.getElementById('out-asli').innerText = "KODE INVALID"; }
 }
 
-// --- LOGIKA MFSK AUDIO MODEM (FIX ANGKA KEMBAR) ---
+// --- LOGIKA MFSK V3 (REPEAT TONE) ---
 const TONES = {
     '0': 1500, '1': 1700, '2': 1900, '3': 2100, '4': 2300,
     '5': 2500, '6': 2700, '7': 2900, '8': 3100, '9': 3300,
-    'SPACE': 3700, // Nada pemisah antar angka
-    'START': 4100, // Nada pembuka
-    'END': 4500    // Nada penutup
+    'REPEAT': 3600, // Nada khusus untuk angka yang sama dengan sebelumnya
+    'START': 4000, 
+    'END': 4400    
 };
 
-const TONE_DUR = 0.15; // Durasi nada angka (150ms)
-const SPACE_DUR = 0.08; // Durasi nada spasi (80ms)
-const TOLERANCE = 80; // Toleransi frekuensi meleset (Hz)
-const THRESHOLD = 100; // Sensitivitas volume
+const TONE_DUR = 0.2; // Sedikit dilambatin (200ms) biar nangkepnya pasti
+const SILENCE_DUR = 0.05; // Jeda hening super singkat anti numpuk
+const TOLERANCE = 80; 
+const THRESHOLD = 100;
 
 function putarSuaraMFSK() {
     const kodeWaktu = document.getElementById('out-waktu').innerText;
@@ -180,23 +179,29 @@ function putarSuaraMFSK() {
         osc.stop(start + dur);
     }
 
-    // 1. Nada Pembuka (Start)
+    // 1. Nada Start
     play(TONES['START'], time, TONE_DUR * 3);
-    time += (TONE_DUR * 3) + SPACE_DUR;
+    time += (TONE_DUR * 3) + SILENCE_DUR;
 
-    // 2. Bunyikan angka dan sisipkan SPASI di antaranya
+    // 2. Transmisi dengan Cek Karakter Ganda (REPEAT TONE)
+    let lastToneName = "";
     for (let char of kodeWaktu) {
-        if (TONES[char]) {
-            // Bunyikan angkanya
-            play(TONES[char], time, TONE_DUR);
-            time += TONE_DUR;
-            // Bunyikan Nada Spasi sebagai pemisah
-            play(TONES['SPACE'], time, SPACE_DUR);
-            time += SPACE_DUR;
+        let toneToPlay = TONES[char];
+        let currentToneName = char;
+
+        // Kalau angkanya sama persis kayak barusan, ganti ke nada REPEAT
+        if (char === lastToneName) {
+            toneToPlay = TONES['REPEAT'];
+            currentToneName = 'REPEAT';
         }
+
+        play(toneToPlay, time, TONE_DUR);
+        time += TONE_DUR + SILENCE_DUR;
+        
+        lastToneName = currentToneName; // Simpan nada fisik terakhir yang bunyi
     }
 
-    // 3. Nada Penutup (End)
+    // 3. Nada End
     play(TONES['END'], time, TONE_DUR * 3);
 }
 
@@ -220,9 +225,11 @@ async function mulaiDengarMFSK() {
         const sampleRate = audioCtx.sampleRate;
 
         let isReceiving = false;
-        let receivedKode = "";
-        let lastChar = ""; 
         let isListening = true;
+        let receivedKode = "";
+        
+        let lastDetectedTone = ""; // Nada yang terdeteksi mikrofon barusan
+        let trueLastDigit = "";    // Angka asli terakhir (buat keperluan REPEAT)
 
         function cekFrekuensi() {
             if (!isListening) return;
@@ -241,15 +248,16 @@ async function mulaiDengarMFSK() {
             const frek = maxIndex * sampleRate / analyser.fftSize;
 
             if (maxValue > THRESHOLD) {
-                // Deteksi nada START
+                // START
                 if (!isReceiving && Math.abs(frek - TONES['START']) < TOLERANCE) {
                     isReceiving = true;
                     receivedKode = "";
-                    lastChar = "";
-                    statusBox.innerText = "Sinyal Masuk! Membaca Data...";
+                    lastDetectedTone = "";
+                    trueLastDigit = "";
+                    statusBox.innerText = "Sinyal Masuk! Membaca...";
                     statusBox.style.color = "#ff007f";
                 } 
-                // Deteksi nada END
+                // END
                 else if (isReceiving && Math.abs(frek - TONES['END']) < TOLERANCE) {
                     isReceiving = false;
                     isListening = false;
@@ -260,23 +268,28 @@ async function mulaiDengarMFSK() {
                     target.value = receivedKode;
                     prosesTerima();
                 }
-                // Deteksi NADA SPASI (Pemisah Angka)
-                else if (isReceiving && Math.abs(frek - TONES['SPACE']) < TOLERANCE) {
-                    lastChar = ""; // Paksa reset agar angka berikutnya bisa dibaca meskipun kembar
-                }
-                // Deteksi ANGKA 0-9
+                // Deteksi Angka / Repeat
                 else if (isReceiving) {
                     let deteksi = "";
                     for (let key in TONES) {
-                        if (key !== 'START' && key !== 'END' && key !== 'SPACE' && Math.abs(frek - TONES[key]) < TOLERANCE) {
+                        if (key !== 'START' && key !== 'END' && Math.abs(frek - TONES[key]) < TOLERANCE) {
                             deteksi = key;
                             break;
                         }
                     }
 
-                    if (deteksi !== "" && deteksi !== lastChar) {
-                        receivedKode += deteksi;
-                        lastChar = deteksi;
+                    // Kalau ada nada valid dan itu beda dari nada sebelumnya
+                    if (deteksi !== "" && deteksi !== lastDetectedTone) {
+                        if (deteksi === 'REPEAT') {
+                            // Kalau nadanya REPEAT, masukkan ulang angka yang terakhir disimpan
+                            receivedKode += trueLastDigit;
+                        } else {
+                            // Kalau angka biasa, masukkan dan simpan sebagai patokan
+                            receivedKode += deteksi;
+                            trueLastDigit = deteksi;
+                        }
+                        
+                        lastDetectedTone = deteksi; // Kunci biar ga kedetect dua kali di frame yang sama
                         target.value = receivedKode;
                     }
                 }
