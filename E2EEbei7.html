@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2EE - Audio MFSK Modem V2</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 { margin-top: 0; text-align: center; color: #ff007f; }
+        .subtitle { text-align: center; font-size: 0.9rem; color: #888; margin-bottom: 25px; }
+        .section { background-color: #2d2d2d; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .pengirim { border-left: 5px solid #00e5ff; }
+        .pengirim h3 { color: #00e5ff; margin-top: 0; }
+        .penerima { border-left: 5px solid #ff9800; }
+        .penerima h3 { color: #ff9800; margin-top: 0; }
+        input[type="text"] {
+            width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #444;
+            border-radius: 6px; background-color: #121212; color: #fff;
+            font-size: 1rem; text-align: center; box-sizing: border-box;
+        }
+        button {
+            color: #121212; border: none; padding: 12px 24px; font-size: 1rem;
+            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin: 5px 0;
+        }
+        .btn-pengirim { background-color: #00e5ff; }
+        .btn-penerima { background-color: #ff9800; }
+        .btn-audio { background-color: #e91e63; color: #fff; }
+        .output-box { margin-top: 15px; padding: 10px; background-color: #1a1a1a; border-radius: 4px; text-align: center; }
+        .label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
+        .value { font-size: 1.2rem; font-weight: bold; word-wrap: break-word; margin-top: 5px; }
+        .status { font-size: 0.9rem; color: #00e5ff; margin-top: 10px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sandi E2EE MFSK V2</h2>
+    <div class="subtitle">Audio Modem (Fix Angka Kembar)</div>
+    
+    <div class="section pengirim">
+        <h3>1. Menu Pengirim</h3>
+        <input type="text" id="input-kirim" placeholder="Masukkan Teks">
+        <button class="btn-pengirim" onclick="prosesKirim()">BUAT KODE</button>
+        <button class="btn-audio" onclick="putarSuaraMFSK()">KIRIM LEWAT SUARA 🔊</button>
+        <div class="output-box">
+            <div class="label" style="color: #00e5ff;">Kode Waktu</div>
+            <div id="out-waktu" class="value" style="color: #00e5ff;">-</div>
+        </div>
+    </div>
+
+    <div class="section penerima">
+        <h3>2. Menu Penerima</h3>
+        <button class="btn-audio" onclick="mulaiDengarMFSK()">DENGARKAN SUARA 🎙️</button>
+        <div id="status-mic" class="status">Menunggu...</div>
+        <input type="text" id="input-terima" placeholder="Hasil Suara Otomatis Masuk Sini">
+        <button class="btn-penerima" onclick="prosesTerima()">Bongkar Pesan</button>
+        <div class="output-box">
+            <div class="label" style="color: #ff9800;">Pesan Asli</div>
+            <div id="out-asli" class="value" style="color: #ff9800;">-</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- LOGIKA UTAMA DARI FILE Times2.html ---
+const MINGGU = 604800n, HARI = 86400n, JAM = 3600n, MENIT = 60n;
+
+function enkripsiUltimate(input) {
+    let hasil = "";
+    const karakterArray = Array.from(input);
+    for (let char of karakterArray) {
+        const codePoint = char.codePointAt(0);
+        const strCode = String(codePoint);
+        const panjang = strCode.length;
+        const penandaNol = "0".repeat(String(panjang).length);
+        hasil += `${penandaNol}${panjang}${strCode}`;
+    }
+    return hasil;
+}
+
+function encodeKeWaktu(angkaString) {
+    const totalDetik = BigInt("9" + angkaString);
+    const minggu = totalDetik / MINGGU;
+    let sisa = totalDetik % MINGGU;
+    const hari = sisa / HARI; sisa %= HARI;
+    const jam = sisa / JAM; sisa %= JAM;
+    const menit = sisa / MENIT;
+    const detik = sisa % MENIT;
+    return `${minggu}${String(hari).padStart(2,'0')}${String(jam).padStart(2,'0')}${String(menit).padStart(2,'0')}${String(detik).padStart(2,'0')}`;
+}
+
+function decodeDariWaktu(kodeWaktu) {
+    const strDetik = kodeWaktu.slice(-2), strMenit = kodeWaktu.slice(-4, -2), strJam = kodeWaktu.slice(-6, -4), strHari = kodeWaktu.slice(-8, -6), strMinggu = kodeWaktu.slice(0, -8);
+    const totalDetik = (BigInt(strMinggu) * MINGGU) + (BigInt(strHari) * HARI) + (BigInt(strJam) * JAM) + (BigInt(strMenit) * MENIT) + BigInt(strDetik);
+    return totalDetik.toString().substring(1);
+}
+
+function dekripsiUltimate(kodeMentah) {
+    let teks = "", i = 0;
+    while (i < kodeMentah.length) {
+        if (kodeMentah[i] === '0') {
+            let nol = 0;
+            while (i < kodeMentah.length && kodeMentah[i] === '0') { nol++; i++; }
+            let panjang = parseInt(kodeMentah.substring(i, i + nol)); i += nol;
+            let codePoint = parseInt(kodeMentah.substring(i, i + panjang)); i += panjang;
+            teks += String.fromCodePoint(codePoint);
+        } else {
+            i++;
+        }
+    }
+    return teks;
+}
+
+function prosesKirim() {
+    const input = document.getElementById('input-kirim').value;
+    if(!input) return;
+    document.getElementById('out-waktu').innerText = encodeKeWaktu(enkripsiUltimate(input));
+}
+
+function prosesTerima() {
+    const input = document.getElementById('input-terima').value.trim();
+    if(!input) return;
+    try {
+        document.getElementById('out-asli').innerText = dekripsiUltimate(decodeDariWaktu(input));
+    } catch(e) { document.getElementById('out-asli').innerText = "KODE INVALID"; }
+}
+
+// --- LOGIKA MFSK AUDIO MODEM (FIX ANGKA KEMBAR) ---
+const TONES = {
+    '0': 1500, '1': 1700, '2': 1900, '3': 2100, '4': 2300,
+    '5': 2500, '6': 2700, '7': 2900, '8': 3100, '9': 3300,
+    'SPACE': 3700, // Nada pemisah antar angka
+    'START': 4100, // Nada pembuka
+    'END': 4500    // Nada penutup
+};
+
+const TONE_DUR = 0.15; // Durasi nada angka (150ms)
+const SPACE_DUR = 0.08; // Durasi nada spasi (80ms)
+const TOLERANCE = 80; // Toleransi frekuensi meleset (Hz)
+const THRESHOLD = 100; // Sensitivitas volume
+
+function putarSuaraMFSK() {
+    const kodeWaktu = document.getElementById('out-waktu').innerText;
+    if (!kodeWaktu || kodeWaktu === '-') return;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let time = audioCtx.currentTime + 0.1;
+
+    function play(freq, start, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(1, start + 0.02);
+        gain.gain.setValueAtTime(1, start + dur - 0.02);
+        gain.gain.linearRampToValueAtTime(0, start + dur);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+    }
+
+    // 1. Nada Pembuka (Start)
+    play(TONES['START'], time, TONE_DUR * 3);
+    time += (TONE_DUR * 3) + SPACE_DUR;
+
+    // 2. Bunyikan angka dan sisipkan SPASI di antaranya
+    for (let char of kodeWaktu) {
+        if (TONES[char]) {
+            // Bunyikan angkanya
+            play(TONES[char], time, TONE_DUR);
+            time += TONE_DUR;
+            // Bunyikan Nada Spasi sebagai pemisah
+            play(TONES['SPACE'], time, SPACE_DUR);
+            time += SPACE_DUR;
+        }
+    }
+
+    // 3. Nada Penutup (End)
+    play(TONES['END'], time, TONE_DUR * 3);
+}
+
+async function mulaiDengarMFSK() {
+    const target = document.getElementById('input-terima');
+    const statusBox = document.getElementById('status-mic');
+    target.value = "";
+    statusBox.innerText = "Mic aktif, dekatkan speaker...";
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const sampleRate = audioCtx.sampleRate;
+
+        let isReceiving = false;
+        let receivedKode = "";
+        let lastChar = ""; 
+        let isListening = true;
+
+        function cekFrekuensi() {
+            if (!isListening) return;
+            requestAnimationFrame(cekFrekuensi);
+
+            analyser.getByteFrequencyData(dataArray);
+            let maxIndex = 0, maxValue = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                if (dataArray[i] > maxValue) {
+                    maxValue = dataArray[i];
+                    maxIndex = i;
+                }
+            }
+
+            const frek = maxIndex * sampleRate / analyser.fftSize;
+
+            if (maxValue > THRESHOLD) {
+                // Deteksi nada START
+                if (!isReceiving && Math.abs(frek - TONES['START']) < TOLERANCE) {
+                    isReceiving = true;
+                    receivedKode = "";
+                    lastChar = "";
+                    statusBox.innerText = "Sinyal Masuk! Membaca Data...";
+                    statusBox.style.color = "#ff007f";
+                } 
+                // Deteksi nada END
+                else if (isReceiving && Math.abs(frek - TONES['END']) < TOLERANCE) {
+                    isReceiving = false;
+                    isListening = false;
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    statusBox.innerText = "Selesai Menerima.";
+                    statusBox.style.color = "#00e5ff";
+                    target.value = receivedKode;
+                    prosesTerima();
+                }
+                // Deteksi NADA SPASI (Pemisah Angka)
+                else if (isReceiving && Math.abs(frek - TONES['SPACE']) < TOLERANCE) {
+                    lastChar = ""; // Paksa reset agar angka berikutnya bisa dibaca meskipun kembar
+                }
+                // Deteksi ANGKA 0-9
+                else if (isReceiving) {
+                    let deteksi = "";
+                    for (let key in TONES) {
+                        if (key !== 'START' && key !== 'END' && key !== 'SPACE' && Math.abs(frek - TONES[key]) < TOLERANCE) {
+                            deteksi = key;
+                            break;
+                        }
+                    }
+
+                    if (deteksi !== "" && deteksi !== lastChar) {
+                        receivedKode += deteksi;
+                        lastChar = deteksi;
+                        target.value = receivedKode;
+                    }
+                }
+            }
+        }
+
+        cekFrekuensi();
+
+    } catch (e) {
+        statusBox.innerText = "Izinkan akses mikrofon di browser!";
+        statusBox.style.color = "red";
+    }
+}
+</script>
+</body>
+</html>
