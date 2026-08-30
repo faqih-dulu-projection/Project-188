@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2EE - Ultimate Modem</title>
+    
+    <!-- Library untuk Generate QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Library untuk Scanner QR Code Kamera -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0d0d;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #1a1a1a;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            max-width: 480px;
+            width: 100%;
+        }
+        h2 { 
+            margin: 0 0 20px 0; 
+            text-align: center; 
+            color: #fff; 
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+        .section { 
+            background-color: #242424; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 12px; 
+        }
+        textarea {
+            width: 100%; 
+            padding: 12px; 
+            margin: 5px 0 10px; 
+            border: 1px solid #333;
+            border-radius: 8px; 
+            background-color: #121212; 
+            color: #fff;
+            font-size: 1rem; 
+            box-sizing: border-box;
+            resize: vertical; 
+            min-height: 80px;
+            font-family: inherit;
+        }
+        textarea:focus { outline: none; border-color: #555; }
+        button {
+            border: none; 
+            padding: 12px; 
+            font-size: 0.95rem;
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            width: 100%; 
+            margin-bottom: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+        button:hover { opacity: 0.85; }
+        
+        .btn-biru { background-color: #2d3748; color: #63b3ed; }
+        .btn-kuning { background-color: #4a5568; color: #fbd38d; }
+        .btn-pink { background-color: #702459; color: #fbb6ce; }
+        .btn-hijau { background-color: #22543d; color: #9ae6b4; }
+        
+        .output-box { 
+            margin-top: 5px; 
+            padding: 12px; 
+            background-color: #121212; 
+            border-radius: 8px; 
+            text-align: center; 
+            word-wrap: break-word; 
+        }
+        .label { font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        .value { font-size: 1.1rem; font-weight: bold; }
+        .status { font-size: 0.85rem; color: #fbb6ce; margin-bottom: 10px; text-align: center; height: 18px; }
+        
+        /* Container QR Code */
+        .qr-wrapper {
+            margin-top: 15px;
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            display: none; 
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Container Kamera Scanner */
+        #reader {
+            width: 100%;
+            display: none; /* Sembunyikan default */
+            background-color: #ffffff;
+            color: #000000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        #reader button { margin-top: 10px; background-color: #4a5568; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>E2EE ULTIMATE MODEM</h2>
+    
+    <!-- BAGIAN PENGIRIM -->
+    <div class="section">
+        <textarea id="input-kirim" placeholder="Ketik pesan rahasia di sini..."></textarea>
+        <button class="btn-biru" onclick="prosesKirim()">ENCODE PESAN</button>
+        <button id="btn-pancar" class="btn-pink" onclick="toggleSuara()">🔊 PANCARKAN SUARA</button>
+        
+        <div class="output-box">
+            <div class="label">Kode Sandi</div>
+            <div id="out-waktu" class="value" style="color: #63b3ed;">-</div>
+            
+            <div id="qr-container" class="qr-wrapper">
+                <div id="qrcode"></div>
+            </div>
+            <!-- Tombol Download QR muncul saat QR dibuat -->
+            <button id="btn-simpan-qr" class="btn-hijau" style="display: none; margin-top: 15px;" onclick="simpanQR()">📥 SIMPAN QR CODE</button>
+        </div>
+    </div>
+
+    <!-- BAGIAN PENERIMA -->
+    <div class="section">
+        <div id="status-mic" class="status"></div>
+        <button id="btn-dengar" class="btn-pink" onclick="toggleDengar()">🎙️ DENGARKAN SUARA</button>
+        
+        <!-- Tombol Buka Kamera Scanner -->
+        <button id="btn-scan" class="btn-biru" onclick="toggleScanQR()">📷 SCAN QR CODE</button>
+        
+        <!-- Layar Kamera Scanner -->
+        <div id="reader"></div>
+
+        <textarea id="input-terima" placeholder="Tempel kode angka / hasil otomatis masuk di sini..."></textarea>
+        <button class="btn-kuning" onclick="prosesTerima()">BONGKAR PESAN</button>
+        
+        <div class="output-box">
+            <div class="label">Pesan Asli</div>
+            <div id="out-asli" class="value" style="color: #fbd38d;">-</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- LOGIKA ENKRIPSI ---
+const MINGGU = 604800n, HARI = 86400n, JAM = 3600n, MENIT = 60n;
+
+function enkripsiUltimate(input) {
+    let hasil = "";
+    const karakterArray = Array.from(input);
+    for (let char of karakterArray) {
+        const codePoint = char.codePointAt(0);
+        const strCode = String(codePoint);
+        const panjang = strCode.length;
+        const penandaNol = "0".repeat(String(panjang).length);
+        hasil += `${penandaNol}${panjang}${strCode}`;
+    }
+    return hasil;
+}
+
+function encodeKeWaktu(angkaString) {
+    const totalDetik = BigInt("9" + angkaString);
+    const minggu = totalDetik / MINGGU;
+    let sisa = totalDetik % MINGGU;
+    const hari = sisa / HARI; sisa %= HARI;
+    const jam = sisa / JAM; sisa %= JAM;
+    const menit = sisa / MENIT;
+    const detik = sisa % MENIT;
+    return `${minggu}${String(hari).padStart(2,'0')}${String(jam).padStart(2,'0')}${String(menit).padStart(2,'0')}${String(detik).padStart(2,'0')}`;
+}
+
+function decodeDariWaktu(kodeWaktu) {
+    const strDetik = kodeWaktu.slice(-2), strMenit = kodeWaktu.slice(-4, -2), strJam = kodeWaktu.slice(-6, -4), strHari = kodeWaktu.slice(-8, -6), strMinggu = kodeWaktu.slice(0, -8);
+    const totalDetik = (BigInt(strMinggu) * MINGGU) + (BigInt(strHari) * HARI) + (BigInt(strJam) * JAM) + (BigInt(strMenit) * MENIT) + BigInt(strDetik);
+    return totalDetik.toString().substring(1);
+}
+
+function dekripsiUltimate(kodeMentah) {
+    let teks = "", i = 0;
+    while (i < kodeMentah.length) {
+        if (kodeMentah[i] === '0') {
+            let nol = 0;
+            while (i < kodeMentah.length && kodeMentah[i] === '0') { nol++; i++; }
+            let panjang = parseInt(kodeMentah.substring(i, i + nol)); i += nol;
+            let codePoint = parseInt(kodeMentah.substring(i, i + panjang)); i += panjang;
+            teks += String.fromCodePoint(codePoint);
+        } else {
+            i++;
+        }
+    }
+    return teks;
+}
+
+// --- LOGIKA BIKIN & SIMPAN QR CODE ---
+let qrCodeObj = null;
+
+function prosesKirim() {
+    const input = document.getElementById('input-kirim').value;
+    if(!input) return;
+    
+    const kodeWaktu = encodeKeWaktu(enkripsiUltimate(input));
+    document.getElementById('out-waktu').innerText = kodeWaktu;
+
+    const qrContainer = document.getElementById('qr-container');
+    qrContainer.style.display = 'flex';
+    document.getElementById('btn-simpan-qr').style.display = 'block'; // Tampilkan tombol simpan
+    
+    const qrElement = document.getElementById("qrcode");
+    qrElement.innerHTML = ""; 
+
+    qrCodeObj = new QRCode(qrElement, {
+        text: kodeWaktu,
+        width: 180, 
+        height: 180, 
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.L 
+    });
+}
+
+function simpanQR() {
+    const qrElement = document.getElementById("qrcode");
+    const canvas = qrElement.querySelector("canvas");
+    const img = qrElement.querySelector("img");
+    
+    let dataUrl = "";
+    if (canvas) {
+        dataUrl = canvas.toDataURL("image/png");
+    } else if (img) {
+        dataUrl = img.src;
+    }
+
+    if (dataUrl) {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = "Sandi-Rahasia-QR.png"; // Nama file saat disave
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        alert("Gagal menyimpan. Coba generate ulang.");
+    }
+}
+
+function prosesTerima() {
+    const input = document.getElementById('input-terima').value.trim();
+    if(!input) return;
+    try {
+        document.getElementById('out-asli').innerText = dekripsiUltimate(decodeDariWaktu(input));
+    } catch(e) { document.getElementById('out-asli').innerText = "KODE INVALID"; }
+}
+
+// --- LOGIKA SCANNER KAMERA ---
+let html5QrcodeScanner = null;
+let isScanning = false;
+
+function toggleScanQR() {
+    const btn = document.getElementById('btn-scan');
+    const readerDiv = document.getElementById('reader');
+
+    if (isScanning) {
+        // Matikan Scanner
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear().then(() => {
+                readerDiv.style.display = "none";
+                btn.innerHTML = "📷 SCAN QR CODE";
+                btn.style.backgroundColor = "#2d3748";
+                isScanning = false;
+            });
+        }
+        return;
+    }
+
+    // Hidupkan Scanner
+    readerDiv.style.display = "block";
+    btn.innerHTML = "🛑 STOP SCANNER";
+    btn.style.backgroundColor = "#c53030";
+    isScanning = true;
+
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { fps: 10, qrbox: {width: 250, height: 250} },
+        false
+    );
+    
+    html5QrcodeScanner.render(
+        (decodedText) => {
+            // Berhasil scan!
+            html5QrcodeScanner.clear().then(() => {
+                readerDiv.style.display = "none";
+                btn.innerHTML = "📷 SCAN QR CODE";
+                btn.style.backgroundColor = "#2d3748";
+                isScanning = false;
+                
+                // Otomatis masukkan kode ke box dan bongkar
+                document.getElementById('input-terima').value = decodedText;
+                prosesTerima();
+            });
+        },
+        (error) => { /* Abaikan error selama kamera belum fokus */ }
+    );
+}
+
+// --- LOGIKA AUDIO MODEM ---
+let txAudioCtx = null;
+let rxStream = null;
+let rxAudioCtx = null;
+let isTransmitting = false;
+let isReceivingMode = false;
+
+const TONES = {
+    '0': 1500, '1': 1700, '2': 1900, '3': 2100, '4': 2300,
+    '5': 2500, '6': 2700, '7': 2900, '8': 3100, '9': 3300,
+    'REPEAT': 3600, 
+    'START': 4000, 
+    'END': 4400    
+};
+
+const TONE_DUR = 0.2; 
+const SILENCE_DUR = 0.05; 
+const TOLERANCE = 80; 
+const THRESHOLD = 100;
+
+function toggleSuara() {
+    const btn = document.getElementById('btn-pancar');
+    if (isTransmitting) {
+        if (txAudioCtx) txAudioCtx.close();
+        isTransmitting = false;
+        btn.innerHTML = "🔊 PANCARKAN SUARA";
+        btn.style.backgroundColor = "#702459";
+        return;
+    }
+
+    const kodeWaktu = document.getElementById('out-waktu').innerText;
+    if (!kodeWaktu || kodeWaktu === '-') return;
+
+    isTransmitting = true;
+    btn.innerHTML = "🛑 STOP SUARA";
+    btn.style.backgroundColor = "#c53030";
+
+    txAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let time = txAudioCtx.currentTime + 0.1;
+
+    function play(freq, start, dur) {
+        const osc = txAudioCtx.createOscillator();
+        const gain = txAudioCtx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(1, start + 0.02);
+        gain.gain.setValueAtTime(1, start + dur - 0.02);
+        gain.gain.linearRampToValueAtTime(0, start + dur);
+        
+        osc.connect(gain);
+        gain.connect(txAudioCtx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+    }
+
+    play(TONES['START'], time, TONE_DUR * 3);
+    time += (TONE_DUR * 3) + SILENCE_DUR;
+
+    let lastToneName = "";
+    for (let char of kodeWaktu) {
+        let toneToPlay = TONES[char];
+        let currentToneName = char;
+
+        if (char === lastToneName) {
+            toneToPlay = TONES['REPEAT'];
+            currentToneName = 'REPEAT';
+        }
+
+        play(toneToPlay, time, TONE_DUR);
+        time += TONE_DUR + SILENCE_DUR;
+        lastToneName = currentToneName;
+    }
+
+    play(TONES['END'], time, TONE_DUR * 3);
+
+    const totalTimeMs = (time - txAudioCtx.currentTime) * 1000;
+    setTimeout(() => {
+        if (isTransmitting) {
+            isTransmitting = false;
+            btn.innerHTML = "🔊 PANCARKAN SUARA";
+            btn.style.backgroundColor = "#702459";
+        }
+    }, totalTimeMs);
+}
+
+async function toggleDengar() {
+    const btn = document.getElementById('btn-dengar');
+    const statusBox = document.getElementById('status-mic');
+
+    if (isReceivingMode) {
+        isReceivingMode = false;
+        if (rxStream) rxStream.getTracks().forEach(track => track.stop());
+        if (rxAudioCtx) rxAudioCtx.close();
+        btn.innerHTML = "🎙️ DENGARKAN SUARA";
+        btn.style.backgroundColor = "#702459";
+        statusBox.innerText = "Pendengaran dibatalkan.";
+        return;
+    }
+
+    isReceivingMode = true;
+    btn.innerHTML = "🛑 STOP MIC";
+    btn.style.backgroundColor = "#c53030";
+    
+    const target = document.getElementById('input-terima');
+    target.value = "";
+    statusBox.innerText = "Mic aktif, dekatkan speaker...";
+    
+    try {
+        rxStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+        rxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = rxAudioCtx.createMediaStreamSource(rxStream);
+        
+        const analyser = rxAudioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const sampleRate = rxAudioCtx.sampleRate;
+
+        let isReceiving = false;
+        let receivedKode = "";
+        let lastDetectedTone = ""; 
+        let trueLastDigit = "";    
+
+        function cekFrekuensi() {
+            if (!isReceivingMode) return;
+            requestAnimationFrame(cekFrekuensi);
+
+            analyser.getByteFrequencyData(dataArray);
+            let maxIndex = 0, maxValue = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                if (dataArray[i] > maxValue) {
+                    maxValue = dataArray[i];
+                    maxIndex = i;
+                }
+            }
+
+            const frek = maxIndex * sampleRate / analyser.fftSize;
+
+            if (maxValue > THRESHOLD) {
+                if (!isReceiving && Math.abs(frek - TONES['START']) < TOLERANCE) {
+                    isReceiving = true;
+                    receivedKode = "";
+                    lastDetectedTone = "";
+                    trueLastDigit = "";
+                    statusBox.innerText = "Sinyal Masuk! Membaca...";
+                    statusBox.style.color = "#fbb6ce";
+                } 
+                else if (isReceiving && Math.abs(frek - TONES['END']) < TOLERANCE) {
+                    isReceivingMode = false;
+                    rxStream.getTracks().forEach(track => track.stop());
+                    
+                    btn.innerHTML = "🎙️ DENGARKAN SUARA";
+                    btn.style.backgroundColor = "#702459";
+                    statusBox.innerText = "Selesai Menerima.";
+                    target.value = receivedKode;
+                    prosesTerima();
+                }
+                else if (isReceiving) {
+                    let deteksi = "";
+                    for (let key in TONES) {
+                        if (key !== 'START' && key !== 'END' && Math.abs(frek - TONES[key]) < TOLERANCE) {
+                            deteksi = key;
+                            break;
+                        }
+                    }
+
+                    if (deteksi !== "" && deteksi !== lastDetectedTone) {
+                        if (deteksi === 'REPEAT') {
+                            receivedKode += trueLastDigit;
+                        } else {
+                            receivedKode += deteksi;
+                            trueLastDigit = deteksi;
+                        }
+                        lastDetectedTone = deteksi; 
+                        target.value = receivedKode;
+                    }
+                }
+            }
+        }
+        cekFrekuensi();
+
+    } catch (e) {
+        isReceivingMode = false;
+        btn.innerHTML = "🎙️ DENGARKAN SUARA";
+        btn.style.backgroundColor = "#702459";
+        statusBox.innerText = "Izinkan akses mikrofon di browser!";
+        statusBox.style.color = "red";
+    }
+}
+</script>
+</body>
+</html>
