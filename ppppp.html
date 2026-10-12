@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kolektor Legendaris - PokéCoin Edition v5.2</title>
+    <style>
+        /* ==================== ROOT & BASE STYLES ==================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body {
+            background-color: #060810;
+            color: #f8fafc;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* ==================== TOAST NOTIFICATION ==================== */
+        #gameMentionToast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: #e0e7ff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: 2px solid #6366f1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(99, 102, 241, 0.5);
+            z-index: 999999;
+            display: none;
+            cursor: pointer;
+            min-width: 320px;
+            animation: gameSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes gameSlideDown {
+            from { top: -80px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        /* ==================== DASHBOARD ==================== */
+        .dashboard {
+            background: linear-gradient(135deg, #0f172a 100%, #0b0f19 0%);
+            border: 2px solid #ffd700;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard h1 {
+            font-size: 26px;
+            color: #ffd700;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .balance {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .cps {
+            font-size: 13px;
+            color: #34d399;
+            font-weight: 600;
+        }
+
+        /* ==================== MENU TABS ==================== */
+        .menu-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            background: #0f172a;
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid #1e293b;
+        }
+
+        .tab-btn {
+            background-color: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 10px 4px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .tab-btn:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ffd700, #f59e0b);
+            color: #0f172a;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        /* ==================== PANELS ==================== */
+        .panel {
+            display: none;
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 16px;
+            min-height: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== CLICK SECTION ==================== */
+        .click-section {
+            text-align: center;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .click-btn {
+            width: 100%;
+            max-width: 240px;
+            height: 140px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #ffd700 0%, #d97706 100%);
+            border: 3px solid #fff;
+            color: #0f172a;
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(217, 119, 6, 0.5);
+            transition: transform 0.1s, box-shadow 0.1s;
+            outline: none;
+        }
+
+        .click-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.7);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e293b;
+            color: #f1f5f9;
+            text-decoration: none;
+            padding: 10px 18px;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            max-width: 240px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .nav-link:hover {
+            background-color: #334155;
+            border-color: #60a5fa;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        /* ==================== GACHA SECTION ==================== */
+        .gacha-box {
+            background-color: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+        .gacha-box:hover { border-color: #475569; }
+
+        .gacha-info h3 { font-size: 14px; color: #f8fafc; font-weight: 700; }
+        .gacha-info p { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .gacha-info span { font-size: 10px; color: #f43f5e; font-weight: 700; display: block; margin-top: 2px; }
+
+        .gacha-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .gacha-btn:hover { background-color: #059669; transform: scale(1.03); }
+        .gacha-btn:active { transform: scale(0.97); }
+
+        .gacha-result {
+            margin-top: 14px;
+            min-height: 130px;
+            background-color: #0b0f19;
+            border: 2px dashed #334155;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==================== UPGRADE SHOP ==================== */
+        .upgrade-item {
+            background-color: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upgrade-info h3 { font-size: 14px; margin-bottom: 2px; color: #ffd700; font-weight: 700; }
+        .upgrade-info p { font-size: 11px; color: #94a3b8; }
+
+        .buy-btn {
+            background-color: #f8fafc;
+            color: #0f172a;
+            border: none;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .buy-btn:hover { background-color: #e2e8f0; transform: scale(1.03); }
+
+        /* ==================== INVENTORY / ALBUM ==================== */
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 6px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .card {
+            background-color: #0b0f19;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .card-rarity { font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
+        .card-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-qty { font-size: 11px; color: #94a3b8; font-weight: 600; }
+
+        /* Card Rarity Borders & Styles */
+        .r-common { border-color: #475569; } .r-common .card-rarity { color: #94a3b8; }
+        .r-uncommon { border-color: #10b981; } .r-uncommon .card-rarity { color: #10b981; }
+        .r-rare { border-color: #3b82f6; } .r-rare .card-rarity { color: #3b82f6; }
+        .r-epic { border-color: #a855f7; } .r-epic .card-rarity { color: #a855f7; }
+        .r-legendary { border-color: #f59e0b; box-shadow: 0 0 10px rgba(245,158,11,0.25); } .r-legendary .card-rarity { color: #f59e0b; }
+
+        /* Glass Shine Effect */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -150%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .r-legendary::after, .r-mythic::after, .r-godly::after, .r-hack::after, .r-impossible::after {
+            animation: glassShine 3s infinite;
+        }
+
+        @keyframes glassShine {
+            0% { left: -150%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .card-rarity, .card-name, .card-qty { position: relative; z-index: 2; }
+
+        @keyframes mythicPulse { 0% { box-shadow: 0 0 6px #ef4444; } 50% { box-shadow: 0 0 18px #b91c1c; } 100% { box-shadow: 0 0 6px #ef4444; } }
+        .r-mythic { border-color: #ef4444; animation: mythicPulse 2s infinite; } .r-mythic .card-rarity { color: #ef4444; text-shadow: 0 0 6px #ef4444; }
+
+        @keyframes godlyGlow { 0% { border-color: #ec4899; box-shadow: 0 0 12px rgba(236,72,153,0.4); } 50% { border-color: #818cf8; box-shadow: 0 0 22px rgba(129,140,248,0.7); } 100% { border-color: #ec4899; box-shadow: 0 0 12px rgba(236,72,153,0.4); } }
+        .r-godly { background: linear-gradient(135deg, #200414 0%, #0b0f19 100%); animation: godlyGlow 3s infinite; } .r-godly .card-rarity { color: #ec4899; text-shadow: 0 0 6px #ec4899; }
+
+        @keyframes hackScan { 0% { background-position: 0% 0%; } 100% { background-position: 0% 100%; } }
+        .r-hack { border-color: #10b981; background: linear-gradient(0deg, rgba(16,185,129,0.06) 0%, rgba(11,15,25,1) 100%); background-size: 100% 4px; animation: hackScan 1s linear infinite; box-shadow: inset 0 0 10px rgba(16,185,129,0.3), 0 0 14px rgba(16,185,129,0.5); } .r-hack .card-rarity { color: #10b981; text-shadow: 0 0 8px #10b981; font-family: 'Courier New', monospace; }
+
+        .r-impossible {
+            background: radial-gradient(circle at center, #0a0118 20%, #04000a 80%, #000000 100%);
+            border: 1px solid #7c3aed;
+            box-shadow: 0 0 18px rgba(124, 58, 237, 0.4), inset 0 0 25px #000000;
+            position: relative;
+            overflow: hidden;
+        }
+        .r-impossible .card-name { color: #ff0055; text-shadow: 0 0 8px rgba(255, 0, 85, 0.6); font-weight: 900; }
+        .r-impossible .card-rarity { color: #c084fc; text-shadow: 0 0 10px #c084fc; letter-spacing: 2px; }
+
+        /* ==================== ACHIEVEMENTS ==================== */
+        .achiv-card { 
+            background-color: #0b0f19; 
+            border: 1px solid #1e293b; 
+            border-radius: 10px; 
+            padding: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            opacity: 0.45; 
+            transition: all 0.3s; 
+        }
+        .achiv-card.unlocked { border-color: #ffd700; opacity: 1; box-shadow: 0 0 12px rgba(255, 215, 0, 0.15); background: linear-gradient(135deg, #111827, #0b0f19); }
+        .achiv-badge { font-size: 11px; padding: 4px 8px; border-radius: 6px; background-color: #1e293b; color: #94a3b8; font-weight: 700; }
+        .achiv-card.unlocked .achiv-badge { background-color: #ffd700; color: #0f172a; }
+
+        /* ==================== MODAL ==================== */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); backdrop-filter: blur(6px); justify-content: center; align-items: center; z-index: 99999; padding: 16px; }
+        .modal-content { background-color: #0f172a; border: 2px solid #334155; padding: 20px; border-radius: 16px; max-width: 380px; width: 100%; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .close-btn { position: absolute; top: 12px; right: 18px; font-size: 26px; cursor: pointer; color: #94a3b8; transition: color 0.2s; }
+        .close-btn:hover { color: #fff; }
+        .modal-desc-box { background-color: #0b0f19; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin: 12px 0; border: 1px solid #1e293b; color: #cbd5e1; }
+        
+        .floating-text { position: absolute; color: #ffd700; font-weight: 800; font-size: 20px; pointer-events: none; animation: floatUp 0.6s ease-out forwards; text-shadow: 0 0 8px rgba(255,215,0,0.6); z-index: 9999; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
+        
+        .empty-info { grid-column: 1/-1; text-align: center; color: #94a3b8; font-size: 13px; padding: 40px 0; }
+
+        /* ==================== BOTTOM UNIFIED HUD (5 FITUR GABUNGAN) ==================== */
+        .bottom-hud {
+            width: 100%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        /* 1. Ticker Berita Berjalan */
+        .hud-ticker {
+            background: #060810;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 5px 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 11px;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+        .hud-ticker span {
+            display: inline-block;
+            animation: tickerScroll 20s linear infinite;
+        }
+        @keyframes tickerScroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Baris Grid 2 Kolom (Daily Quest & Quick Stats) */
+        .hud-grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .hud-card-box {
+            background: #060810;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 11px;
+        }
+        .hud-card-title {
+            color: #ffd700;
+            font-weight: 700;
+            margin-bottom: 2px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .hud-card-content {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        /* Baris Grid 2 Kolom (Redeem Code & Social Community) */
+        .hud-action-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .redeem-group {
+            display: flex;
+            gap: 4px;
+        }
+        .redeem-input {
+            background: #060810;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 5px 8px;
+            color: #fff;
+            font-size: 11px;
+            width: 100%;
+            outline: none;
+        }
+        .redeem-input:focus { border-color: #38bdf8; }
+        
+        .redeem-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .redeem-btn:hover { background: #2563eb; }
+
+        .community-socials {
+            display: flex;
+            gap: 6px;
+        }
+        .social-icon-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .social-icon-btn:hover { background: #334155; border-color: #38bdf8; }
+
+        /* Baris Bawah (Footer & Tombol Musik) */
+        .hud-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 6px;
+        }
+
+        #btn-mute {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+        #btn-mute:hover { background: #334155; }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+  <div id="gameMentionToast"></div>
+
+  <audio id="game-bgm" src="bgm2.mp3" loop></audio>
+
+    <div class="game-container">
+        
+        <div class="dashboard">
+            <h1>Kolektor Legendaris</h1>
+            <div class="balance"><span id="ui-coins">0</span> PokéCoins</div>
+            <div class="cps">+<span id="ui-cps">0</span> PokéCoins / sec</div>
+        </div>
+
+        <div class="menu-tabs">
+            <button class="tab-btn active" onclick="switchTab('click')">KLIKER</button>
+            <button class="tab-btn" onclick="switchTab('gacha')">GACHA</button>
+            <button class="tab-btn" onclick="switchTab('shop')">UPGRADE</button>
+            <button class="tab-btn" onclick="switchTab('inventory')">ALBUM</button>
+            <button class="tab-btn" onclick="switchTab('achiv')">~🏆~</button>
+        </div>
+
+        <!-- TAB KLIKER -->
+        <div id="tab-click" class="panel active">
+            <div class="click-section">
+                <button class="click-btn" onclick="executeClick(event)">TAP!</button>
+                <p style="font-size: 13px; color: #94a3b8;">Click Power: +<span id="ui-cpc" style="color:#ffd700; font-weight:bold;">1</span> PokéCoins</p>
+                <a href="Arena.html" class="nav-link">⚔️ Masuk ke Arena</a>
+                <a href="chat.html" class="nav-link">💬 Global Chat</a>
+            </div>
+        </div>
+
+        <!-- TAB GACHA -->
+        <div id="tab-gacha" class="panel">
+            <div class="gacha-box">
+                <div class="gacha-info"><h3>Normal Banner</h3><p>Cost: 100</p><span>Murni Perjuangan Awal</span></div>
+                <button class="gacha-btn" onclick="triggerGacha('normal')">Gacha</button>
+            </div>
+            <div class="gacha-box">
+                <div class="gacha-info"><h3>Super Banner</h3><p>Cost: 10K</p><span>Rare & Epic Terbuka</span></div>
+                <button class="gacha-btn" onclick="triggerGacha('super')">Gacha</button>
+            </div>
+            <div class="gacha-box">
+                <div class="gacha-info"><h3>Mega Banner</h3><p>Cost: 1B</p><span>Mythic Rate: 1 : 1K</span></div>
+                <button class="gacha-btn" onclick="triggerGacha('mega')">Gacha</button>
+            </div>
+            <div class="gacha-box" style="border-color: #ec4899;">
+                <div class="gacha-info"><h3 style="color:#ec4899">Dewa Banner 👑</h3><p>Cost: 125B</p><span>Godly Rate: 1%</span></div>
+                <button class="gacha-btn" style="background-color:#ec4899; color:#0f172a" onclick="triggerGacha('god')">Gacha</button>
+            </div>
+            <div class="gacha-box" style="border-color: #10b981;">
+                <div class="gacha-info"><h3 style="color:#10b981">Hacker Realm 🖥️</h3><p>Cost: 1T</p><span style="color:#10b981">Hack Rate: 6.5% | Godly Melimpah</span></div>
+                <button class="gacha-btn" style="background-color:#10b981; color:#0f172a" onclick="triggerGacha('hacker')">Hack</button>
+            </div>
+            <div class="gacha-box" style="border-color: #334155; background: #0f172a">
+                <div class="gacha-info"><h3 style="color:#f8fafc">Dev1</h3><p>Cost: 1Qa</p><span style="color:#34d399">Hack Rate: 35% Mutasi hack</span></div>
+                <button class="gacha-btn" style="background-color:#34d399; color:#0f172a" onclick="triggerGacha('hacker2')">Ghost</button>
+            </div>
+            <div class="gacha-box" style="border-color: #334155; background: #0f172a">
+                <div class="gacha-info"><h3 style="color:#f8fafc">Dev2</h3><p>Cost: 100Qa</p><span style="color:#34d399">Hack Rate: 45% Mutasi hack</span></div>
+                <button class="gacha-btn" style="background-color:#34d399; color:#0f172a" onclick="triggerGacha('hacker3')">Ghost</button>
+            </div>
+            <div class="gacha-box" style="border-color: #7c3aed; background: linear-gradient(135deg, #1a0033 0%, #0b0f19 100%);">
+                <div class="gacha-info">
+                    <h3 style="color:#c084fc">Pasar Gelap Void 🌌</h3>
+                    <p>Cost: 60 Unit Hack</p>
+                    <span style="color:#c084fc">Hadiah: 1 Item IMPOSSIBLE</span>
+                </div>
+                <button class="gacha-btn" style="background-color:#7c3aed; color:#fff" onclick="tukarHackKeImpossible()">TUKAR</button>
+            </div>
+            <div class="gacha-result" id="gacha-output">
+                <span style="color: #64748b; font-size: 13px;">Dapatkan item impianmu di sini!...</span>
+            </div>
+        </div>
+
+        <!-- TAB UPGRADE -->
+        <div id="tab-shop" class="panel">
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Paket Pelajar</h3><p>Adds +1 / click</p></div>
+                <button class="buy-btn">Cost: 100</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Paket Jutawan</h3><p>Adds +120 / click</p></div>
+                <button class="buy-btn">Cost: 8K</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Suntikan Sultan</h3><p>Adds +15K / click</p></div>
+                <button class="buy-btn">Cost: 500K</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Sistem Semesta</h3><p>Adds +15M / click</p></div>
+                <button class="buy-btn">Cost: 450M</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Modal Investor 💼</h3><p>Adds +350M / click</p></div>
+                <button class="buy-btn">Cost: 8B</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Bisnis Monopoli 🏢</h3><p>Adds +5B / click</p></div>
+                <button class="buy-btn">Cost: 95B</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Bantuan Goib</h3><p>Adds +75B / click</p></div>
+                <button class="buy-btn">Cost: 1T</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>GONG</h3><p>Adds +1T / click</p></div>
+                <button class="buy-btn">Cost: 10T</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Liberall</h3><p>Adds +1Qa / click</p></div>
+                <button class="buy-btn">Cost: 1Qa</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Cienturall</h3><p>Adds +1Qi / click</p></div>
+                <button class="buy-btn">Cost: 1Qi</button>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-info"><h3>Sentuhan Void</h3><p>Adds +1Sx / click</p></div>
+                <button class="buy-btn">Cost: 1Sx</button>
+            </div>
+        </div>
+
+        <!-- TAB ALBUM -->
+        <div id="tab-inventory" class="panel">
+            <div class="inventory-header">
+                <div>ALBUM KOLEKSI</div>
+                <div>UNLOCKED: <span id="ui-unique" style="color:#ffd700; font-weight:bold;">0</span> / 100</div>
+            </div>
+            <div class="inventory-grid" id="ui-grid-mesh"></div>
+        </div>
+
+        <!-- TAB PENCAPAIAN -->
+        <div id="tab-achiv" class="panel">
+            <div class="inventory-header" style="border-color: #ffd700;">
+                <div>PENCAPAIAN</div>
+                <div>SELESAI: <span id="ui-achiv-count" style="color:#34d399; font-weight:bold;">0 / 11</span></div>
+            </div>
+            <div id="ui-achiv-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 380px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM UNIFIED HUD (5 FITUR LENGKAP TERPADU) -->
+    <div class="bottom-hud">
+        <!-- 1. Ticker Berita Game -->
+        <div class="hud-ticker">
+            <span>📢 Tulis kode redeem "LEGENDA2026" untuk bonus koin! • Kumpulkan item kasta Impossible untuk merusak probabilitas semesta! • Mainkan Arena & Global Chat sekarang! 🔥</span>
+        </div>
+
+        <!-- 2 & 3. Daily Quest Mini & Quick Stats -->
+        <div class="hud-grid-row">
+            <div class="hud-card-box">
+                <div class="hud-card-title">🎯 Misi Harian</div>
+                <div class="hud-card-content" id="hud-quest-text">Klik layar 100x</div>
+            </div>
+            <div class="hud-card-box">
+                <div class="hud-card-title">📊 Quick Stats</div>
+                <div class="hud-card-content" id="hud-quick-stats">Waktu: 0m | Unik: 0/100</div>
+            </div>
+        </div>
+
+        <!-- 4 & 5. Kotak Kode Redeem & Tombol Komunitas (Socials) -->
+        <div class="hud-action-row">
+            <div class="redeem-group">
+                <input type="text" id="redeem-code-input" class="redeem-input" placeholder="Masukkan Kode...">
+                <button class="redeem-btn" onclick="claimRedeemCode()">KLAIM</button>
+            </div>
+            <div class="community-socials">
+                <a href="https://t.me/" target="_blank" class="social-icon-btn" title="Telegram Komunitas">💬</a>
+                <a href="https://discord.com/" target="_blank" class="social-icon-btn" title="Discord Komunitas">🎮</a>
+            </div>
+        </div>
+
+        <!-- Footer Baris Terakhir (Kredit & Tombol Musik) -->
+        <div class="hud-footer-row">
+            <div>© Faqihdulu & LORD EL</div>
+            <button id="btn-mute" onclick="toggleMute()">🎵 Musik: ON</button>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL ITEM -->
+    <div class="modal" id="item-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="mdl-rarity" style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;"></div>
+            <h2 id="mdl-title" style="margin-top: 4px; font-size: 20px; color: #f8fafc;"></h2>
+            <div id="mdl-chance" style="font-size: 12px; color: #94a3b8; margin-top: 2px;"></div>
+            <div class="modal-desc-box" id="mdl-desc"></div>
+            <div id="mdl-income" style="font-size: 13px; color: #34d399; font-weight: bold; margin-bottom: 4px;"></div>
+            <div id="mdl-qty" style="font-size: 13px; font-weight: bold; color: #f8fafc;"></div>
+        </div>
+    </div>
+
+    <!-- GAME SCRIPT -->
+    <script>
+        const ITEMS = [
+            { id: 10, name: "MBG (My Bini Gwh)", rarity: "common", desc: "Program Gratis!" },
+            { id: 11, name: "Bantal", rarity: "common", desc: "Kamu bisa tertidur lelap." },
+            { id: 12, name: "Lampu", rarity: "common", desc: "Hanya menerangi fakta." },
+            { id: 13, name: "Semanggi 3", rarity: "common", desc: "Daun Semanggi 3 yang B ajah." },
+            { id: 14, name: "Tit tut tit", rarity: "common", desc: "Suara token listrik minta pulsa" },
+            { id: 15, name: "Sawit", rarity: "common", desc: "Olahan minyak goreng khas Indo." },
+            { id: 16, name: "Padi", rarity: "common", desc: "Olahan makanan pokok basic" },
+            { id: 17, name: "Pulpen temen", rarity: "common", desc: "Kembaliin woy!..😡" },
+            { id: 18, name: "Permen Karet", rarity: "common", desc: "Permen lengket dari karet." },
+            { id: 19, name: "Permen Kapas", rarity: "common", desc: "Awan yang manis dimulut" },
+            
+            { id: 100, name: "Kertas Perak Rokok", rarity: "uncommon", desc: "Bungkus dalam rokok yang sering dijadikan mainan anak 90an." },
+            { id: 101, name: "Uang Koin Yasin", rarity: "uncommon", desc: "Koin kuno pinggir jalan yang katanya jimat keberuntungan." },
+            { id: 102, name: "Cincin Mainan Berhadiah", rarity: "uncommon", desc: "Cincin plastik dengan permata kaca warna hijau menyala." },
+            { id: 103, name: "Gantungan Kunci Kura-Kura", rarity: "uncommon", desc: "Gantungan kunci kayu yang bisa goyang-goyang sendiri." },
+            { id: 104, name: "Kaset Pita Rusak", rarity: "uncommon", desc: "Kaset lagu lawas yang pitanya sudah kusut melilit." },
+            { id: 105, name: "Baterai ABC Berjamur", rarity: "uncommon", desc: "Baterai remot TV yang sudah digigit-gigit biar dayanya naik lagi." },
+            { id: 106, name: "Kelereng Susu Langka", rarity: "uncommon", desc: "Kelereng warna putih susu pekat, jadi rebutan saat main di lapangan." },
+            { id: 107, name: "Tali Rafia Gulung", rarity: "uncommon", desc: "Gulungan kecil tali rafia sisa 17 Agustusan tahun lalu." },
+            { id: 108, name: "Sedotan Melingkar", rarity: "uncommon", desc: "Sedotan plastik estetik berbentuk spiral dari kafe gaul." },
+            { id: 109, name: "Stiker Hologram Chiki", rarity: "uncommon", desc: "Stiker mengkilap hadiah makanan ringan yang gambarnya robot." },
+
+            { id: 200, name: "Keris Souvenir Pernikahan", rarity: "rare", desc: "Keris mini dari bahan kuningan, tajam kagak tumpul iya." },
+            { id: 201, name: "Uang Kertas Rp100 Perahu", rarity: "rare", desc: "Uang kertas kuno yang katanya dulu bisa buat beli tanah." },
+            { id: 202, name: "Kelereng Beling Kristal", rarity: "rare", desc: "Kelereng andalan waktu kecil yang selalu menang taruhan." },
+            { id: 203, name: "Kartu Yu-Gi-Oh Ori Kw", rarity: "rare", desc: "Tulisannya mengkilap tapi cetakannya agak geser ke kanan." },
+            { id: 204, name: "Batu Giok Garut", rarity: "rare", desc: "Batu hijau yang kalau disenter tembus cahaya mistis." },
+            { id: 205, name: "Uang Koin Kelapa Sawit", rarity: "rare", desc: "Uang logam seribuan emas jadul yang sering dikira koin emas asli." },
+            { id: 206, name: "Komik Petualangan Tipis", rarity: "rare", desc: "Komik saku surga-neraka legendaris penjual buku keliling sekolah." },
+            { id: 207, name: "Gigi Hiu Fosil", rarity: "rare", desc: "Gigi hiu kecil yang sudah membatu, didapatkan dari pesisir pantai selatan." },
+            { id: 208, name: "Kabupaten Banyuwangi", rarity: "rare", desc: "Kabupaten di ujung timur Jawa yang dijuluki 'The Sunrise of Java'." },
+            { id: 209, name: "Kabupaten Raja Ampat", rarity: "rare", desc: "Kabupaten kepulauan dengan keindahan bawah laut kelas dunia." },
+            { id: 210, name: "Kabupaten Tana Toraja", rarity: "rare", desc: "Kabupaten di Sulawesi Selatan yang mendunia karena tradisi Rambu Solo." },
+            { id: 211, name: "Kabupaten Sleman", rarity: "rare", desc: "Kabupaten sejuk di kaki Gunung Merapi, penghasil salak pondoh." },
+            { id: 212, name: "Kabupaten Brebes", rarity: "rare", desc: "Kabupaten jalur pantura penghasil utama bawang merah dan telur asin." },
+            { id: 213, name: "Kabupaten Ponorogo", rarity: "rare", desc: "Tanah kelahiran kesenian legendaris Reog Ponorogo." },
+
+            { id: 300, name: "Sertifikat Tanah Gaib", rarity: "epic", desc: "Sertifikat kepemilikan sebidang tanah di dimensi sebelah." },
+            { id: 301, name: "Pedang Katana Pajangan", rarity: "epic", desc: "Katana tebal yang biasa dipakai cosplay atau pajangan ruang tamu." },
+            { id: 302, name: "Piring Retak Seribu", rarity: "epic", desc: "Piring peninggalan dinasti antah berantah, dilarang dipakai makan." },
+            { id: 303, name: "Kitab Stambul Mini", rarity: "epic", desc: "Kitab berukuran super kecil yang hanya bisa dibaca pakai kaca pembesar." },
+            { id: 304, name: "Prangko Edisi Pertama", rarity: "epic", desc: "Prangko kuno bergambar pahlawan nasional yang belum dicap." },
+            { id: 305, name: "Batu Meteor Pinggiran", rarity: "epic", desc: "Serpihan batu meteor mini yang jatuh menghantam kandang ayam warga." },
+            { id: 306, name: "Fosil Daun Purba", rarity: "epic", desc: "Cetakan daun berumur jutaan tahun di atas sebongkah batu sedimen." },
+            { id: 307, name: "Kunci Gembok Kerajaan", rarity: "epic", desc: "Kunci besi raksasa berkarat peninggalan benteng pertahanan kuno." },
+            { id: 308, name: "Semarang", rarity: "epic", desc: "Ibu Kota Jawa Tengah." },
+            { id: 309, name: "Bandung", rarity: "epic", desc: "Kota Kembang yang terkenal dengan fashion, kuliner, dan Gedung Sate." },
+            { id: 310, name: "Yogyakarta", rarity: "epic", desc: "Daerah Istimewa yang kaya akan budaya dan sejarah kerajaan." },
+            { id: 311, name: "Jakarta", rarity: "epic", desc: "Kota metropolitan super sibuk, ikon Monas dan Bundaran HI." },
+
+            { id: 400, name: "Keris Kuno Empu Gandring", rarity: "legendary", desc: "Keris legendaris yang memancarkan aura haus darah." },
+            { id: 401, name: "Mustika Air Alami", rarity: "legendary", desc: "Batu bulat sempurna yang selalu basah dan dingin." },
+            { id: 402, name: "Mahkota Kerajaan Majapahit", rarity: "legendary", desc: "Emas murni bertabur permata sakral peninggalan nusantara." },
+            { id: 403, name: "Kitab Mantra Logam", rarity: "legendary", desc: "Lembaran tembaga berisi aksara kuno pelindung marabahaya." },
+            { id: 404, name: "Tombak Trisula Nyi Roro", rarity: "legendary", desc: "Tombak bercabang tiga dengan balutan kain hijau magis." },
+            { id: 405, name: "Batu Kalimaya Black Opal", rarity: "legendary", desc: "Batu akik legendaris yang memancarkan kembang api multi-warna." },
+
+            { id: 406, name: "SANGLEGEND", rarity: "mythic", desc: "Tokoh Guru Besar." },
+            { id: 407, name: "INDONESIA", rarity: "mythic", desc: "Negara Tercinta." },
+            { id: 500, name: "Fosil Telur Naga Api", rarity: "mythic", desc: "Telur yang sudah membatu dengan denyut energi panas." },
+            { id: 501, name: "Air Mata Malaikat", rarity: "mythic", desc: "Cairan bening di dalam botol kaca kecil yang bersinar abadi." },
+            { id: 502, name: "Serpihan Meteorit Vibranium", rarity: "mythic", desc: "Batu luar angkasa berbobot super ringan dengan ketahanan mutlak." },
+            { id: 503, name: "Darah Phoenix Abadi", rarity: "mythic", desc: "Satu tetes darah merah membara yang tidak bisa membeku." },
+            { id: 504, name: "Senku", rarity: "mythic", desc: "Ayo ke Indonesia dan dapatkan SAWIT." },
+            { id: 505, name: "Harta Karun", rarity: "mythic", desc: "Anda Beruntung!." },
+            { id: 506, name: "Negara Jepang", rarity: "mythic", desc: "Negara Sakura dengan teknologi masa depan dan tradisi kuno." },
+            { id: 507, name: "Negara Mesir", rarity: "mythic", desc: "Piramida Giza, patung Sphinx, dan Sungai Nil." },
+            { id: 508, name: "Negara Islandia", rarity: "mythic", desc: "Negara api dan es dengan fenomena aurora borealis." },
+            { id: 509, name: "Negara Brasil", rarity: "mythic", desc: "Hutan hujan Amazon dan budaya sepak bola." },
+            { id: 510, name: "Negara Italia", rarity: "mythic", desc: "Menara Pisa, Colosseum, serta pizza autentik." },
+            { id: 511, name: "Negara Yunani", rarity: "mythic", desc: "Mitologi kuno, Parthenon, dan keindahan Santorini." },
+            { id: 512, name: "Negara Swiss", rarity: "mythic", desc: "Pegunungan Alpen, keju, cokelat, dan jam tangan." },
+            { id: 513, name: "Negara India", rarity: "mythic", desc: "Peradaban tua dengan bangunan ikonik Taj Mahal." },
+            { id: 514, name: "Negara Prancis", rarity: "mythic", desc: "Menara Eiffel serta museum Louvre." },
+            { id: 515, name: "Negara Australia", rarity: "mythic", desc: "Kangguru, koala, dan Sydney Opera House." },
+
+            { id: 600, name: "Singgasana Keabadian", rarity: "godly", desc: "Kursi takhta tertinggi para dewa dari galaksi mati." },
+            { id: 601, name: "Mata Intuitif Ra", rarity: "godly", desc: "Artefak berbentuk mata emas yang melihat masa depan koin." },
+            { id: 602, name: "Surat Izin Mengatur Semesta", rarity: "godly", desc: "Dokumen mutlak entitas tertinggi untuk memanipulasi takdir." },
+            { id: 603, name: "Turbo Flash", rarity: "godly", desc: "Kemampuan luar biasa yang jatuh ke bumi." },
+            { id: 604, name: "Manuskrip Voynich", rarity: "legendary", desc: "Buku kuno misterius penuh sandi rahasia." },
+            { id: 605, name: "Belati Meteorit", rarity: "legendary", desc: "Senjata kuno ditempa langsung dari meteor jatuh." },
+            { id: 606, name: "Fosil Purba Apex", rarity: "legendary", desc: "Peninggalan tulang predator penguasa bumi purba." },
+            { id: 607, name: "Jam Matahari Mesir", rarity: "legendary", desc: "Alat pengukur waktu kuno berlapis emas." },
+            { id: 608, name: "Batu Prasasti", rarity: "legendary", desc: "Ukiran batu sakral berisi hukum kuno kerajaan." },
+
+            { id: 700, name: "XCS Hacked", rarity: "hack", desc: "Keuntungan ganda milik tuan Black Hole." },
+            { id: 701, name: "Buaya Mutasi Hacked", rarity: "hack", desc: "Kehidupan di sebuah kilang Hijau." },
+            { id: 702, name: "Cybernetic Glitch", rarity: "hack", desc: "Sebuah Glitch Game." },
+            { id: 703, name: "ANOMALY HACK", rarity: "hack", desc: "Bug keras yang xg#$(:/+." },
+            { id: 704, name: "Badai Solar", rarity: "hack", desc: "Semburan partikel matahari melumpuhkan jaringan satelit." },
+            { id: 705, name: "Api Abadi Mistik", rarity: "hack", desc: "Kobaran api alam yang terus menyala tanpa henti." },
+            { id: 706, name: "Aurora Borealis", rarity: "hack", desc: "Anomali langit utara dengan pendaran cahaya neon." },
+            { id: 707, name: "Pusaran Maelstrom", rarity: "hack", desc: "Pusaran air laut raksasa ekstrem." },
+            { id: 708, name: "Gempa Megathrust", rarity: "hack", desc: "Simulasi patahan bumi terdahsyat." },
+
+            { id: 800, name: "The Void's Paradox", rarity: "impossible", desc: "Eksistensi ilegal yang menghapus batas kenyataan." },
+            { id: 801, name: "Zeuzs", rarity: "impossible", desc: "Dewa GACOR pemberi berkah luar biasa." },
+            { id: 802, name: "Inti Supernova", rarity: "impossible", desc: "Sisa ledakan bintang raksasa dengan energi kosmik." },
+            { id: 803, name: "Nebula Kehampaan", rarity: "impossible", desc: "Awan gas antariksa penyerap cahaya." },
+            { id: 804, name: "Komet Halley asli", rarity: "impossible", desc: "Serpihan es kosmik legendaris." },
+            { id: 805, name: "Pulsar Magnetar", rarity: "impossible", desc: "Bintang neutron dengan gelombang magnet terkuat." },
+            { id: 806, name: "Debu Bintang Orion", rarity: "impossible", desc: "Materi pembentuk rasi bintang orion." },
+            { id: 807, name: "Singularitas Void", rarity: "impossible", desc: "Titik tak terhingga pembengkok ruang dan waktu." },
+            { id: 808, name: "Radiasi Hawking", rarity: "impossible", desc: "Sinyal energi murni lolos dari lubang hitam." },
+            { id: 809, name: "Quasar Energi", rarity: "impossible", desc: "Inti galaksi aktif pemancar energi miliaran kali." },
+            { id: 810, name: "Materi Gelap", rarity: "impossible", desc: "Komponen misterius pengikat seluruh galaksi." },
+            { id: 811, name: "Serpihan Asteroid", rarity: "impossible", desc: "Batuan purba pembawa material awal penciptaan." }
+        ];
+
+        const RARITY_ORDER = ["impossible", "hack", "godly", "mythic", "legendary", "epic", "rare", "uncommon", "common"];
+
+        let isMuted = false;
+        let gameData = { 
+            coins: 0, 
+            coinsPerClick: 1, 
+            inventory: {},
+            upgrades: { p1: 0, p100: 0, p10k: 0, p10m: 0, p8b: 0, p95b: 0, p1t: 0, p10t: 0, p1Qa: 0, p1Qi: 0, p1Sx: 0 },
+            lastSavedTime: Date.now(),
+            totalClicks: 0,
+            startTime: Date.now()
+        };
+
+        const BASE_PRICES = { p1: 100, p100: 8000, p10k: 500000, p10m: 450000000, p8b: 8000000000, p95b: 95000000000, p1t: 1000000000000, p10t: 10000000000000, p1Qa: 1e15, p1Qi: 1e18, p1Sx: 1e21 };
+        const rarityIncomeRates = { common: 2, uncommon: 15, rare: 250, epic: 4000, legendary: 500000, mythic: 25000000, godly: 1500000000, hack: 5000000000, impossible: 2500000000000000000000000 };
+
+        // Firebase Setup
+        const firebaseConfig = { databaseURL: "https://multiplayer-5e98b-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        let playerId = localStorage.getItem("poke_username");
+        if (!playerId) {
+            playerId = prompt("Buat Username Arena lu (Tanpa spasi & simbol):\nIni dipakai buat nge-link data item lu ke Arena.");
+            if (!playerId) playerId = "Trainer" + Math.floor(Math.random() * 8999 + 1000);
+            playerId = playerId.replace(/[^a-zA-Z0-9]/g, "");
+            localStorage.setItem("poke_username", playerId);
+        }
+        const myInventoryRef = db.ref("players/" + playerId + "/inventory");
+
+        function saveInventoryToCloud() {
+            let cloudInventory = {};
+            ITEMS.forEach(item => {
+                let lokalQty = gameData.inventory[item.id] || 0;
+                cloudInventory[item.id] = lokalQty > 0 ? 1 : 0;
+            });
+            myInventoryRef.set(cloudInventory);
+        }
+
+        function formatShort(num) {
+            if (num === 0) return "0";
+            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg", "Utg", "Dtg", "+ CHEATER"];
+            const i = Math.floor(Math.log10(num) / 3);
+            if (i >= suffixes.length) return num.toExponential(2); 
+            if (i === 0) return num.toLocaleString('id-ID'); 
+            return (num / Math.pow(10, i * 3)).toFixed(2).replace(/\.00$/, '') + suffixes[i];
+        }
+
+        function getUpgradePrice(type) { return Math.floor(BASE_PRICES[type] * Math.pow(1.15, gameData.upgrades[type] || 0)); }
+
+        window.onload = function() {
+            loadSavedProgress(); 
+            renderStats(); 
+            renderShopPrices(); 
+            updateHUDStats();
+            setInterval(() => {
+                let currentIncome = calculatePassiveIncome();
+                if(currentIncome > 0) { gameData.coins += currentIncome; renderStats(); saveProgress(); }
+                updateHUDStats();
+            }, 1000);
+        };
+
+        function saveProgress() { 
+            gameData.lastSavedTime = Date.now();
+            localStorage.setItem('puanyt_jaguar_v5_1', JSON.stringify(gameData)); 
+        }
+
+        function loadSavedProgress() {
+            let username = localStorage.getItem("game_username");
+            if (!username || username.trim() === "") {
+                username = prompt("Masukkan nama/username kamu untuk bermain:") || "Player_" + Math.floor(Math.random() * 8999 + 1000);
+                localStorage.setItem("game_username", username.trim());
+            }
+
+            let oldDataStr = localStorage.getItem('puanyt_jaguar_v5_0');
+            let newDataStr = localStorage.getItem('puanyt_jaguar_v5_1');
+            let oldData = oldDataStr ? JSON.parse(oldDataStr) : null;
+            let newData = newDataStr ? JSON.parse(newDataStr) : null;
+
+            if (oldData && (!newData || Object.keys(newData.inventory || {}).length < Object.keys(oldData.inventory || {}).length || oldData.coins > newData.coins)) {
+                gameData = oldData;
+            } else if (newData) { 
+                gameData = newData; 
+            }
+
+            if(!gameData.inventory) gameData.inventory = {};
+            if(!gameData.upgrades) gameData.upgrades = {};
+            if(!gameData.lastSavedTime) gameData.lastSavedTime = Date.now();
+            if(!gameData.totalClicks) gameData.totalClicks = 0;
+            if(!gameData.startTime) gameData.startTime = Date.now();
+
+            const now = Date.now();
+            const offlineTime = Math.floor((now - gameData.lastSavedTime) / 1000);
+            let currentIncome = calculatePassiveIncome();
+
+            if (offlineTime > 0 && currentIncome > 0) {
+                const offlineEarnings = offlineTime * currentIncome;
+                gameData.coins += offlineEarnings;
+                setTimeout(() => {
+                    alert(`Welcome back! Lu dapet +${formatShort(offlineEarnings)} PokéCoins selama offline (${offlineTime} detik).`);
+                    renderStats();
+                }, 400);
+            }
+            gameData.lastSavedTime = now;
+
+            myInventoryRef.once("value").then((snapshot) => {
+                if (snapshot.exists()) {
+                    let cloudData = snapshot.val();
+                    ITEMS.forEach(item => {
+                        let nilaiCloud = (cloudData.items && typeof cloudData.items[item.id] !== 'undefined') ? cloudData.items[item.id] : (cloudData[item.id] || 0);
+                        let nilaiLokal = gameData.inventory[item.id] || 0;
+                        if (nilaiCloud === 1 && nilaiLokal === 0) {
+                            gameData.inventory[item.id] = 1;
+                        }
+                    });
+                }
+                saveInventoryToCloud();
+                renderStats();
+                if(document.getElementById('tab-inventory').classList.contains('active')) populateInventoryMesh();
+                checkAndRenderAchievements();
+            });
+
+            let namaPemain = localStorage.getItem("poke_username") || localStorage.getItem("game_username");
+            if (namaPemain) pantauMentionSaatMain(namaPemain);
+        }
+
+        const chatConfig = { databaseURL: "https://database-leatherboard-b4493-default-rtdb.firebaseio.com/" };
+        const chatApp = firebase.apps.some(app => app.name === "ChatApp") ? firebase.app("ChatApp") : firebase.initializeApp(chatConfig, "ChatApp");
+        const chatDb = chatApp.database();
+
+        function pantauMentionSaatMain(usernamePemain) {
+            if (!usernamePemain) return;
+            var mentionRef = chatDb.ref('mentions/' + usernamePemain.toLowerCase());
+            mentionRef.on('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    var data = snapshot.val();
+                    var toast = document.getElementById('gameMentionToast');
+                    if (toast) {
+                        putarSFX('info');
+                        toast.innerHTML = `
+                            <div style="font-size: 11px; color: #ffd700; font-weight: bold; margin-bottom: 2px;">💬 GLOBAL CHAT MENTION</div>
+                            <span style="font-weight: bold; color: #fff;">@${data.from}:</span> 
+                            <span style="color: #cbd5e1;">${data.text}</span>
+                            <div style="font-size: 10px; color: #c084fc; margin-top: 4px; text-align: right; font-style: italic;">Klik untuk membalas ↗️</div>
+                        `;
+                        toast.onclick = function() {
+                            window.open('chat.html', '_blank');
+                            toast.style.display = "none";
+                        };
+                        toast.style.display = "block";
+                        setTimeout(() => {
+                            if (toast.style.display === "block") {
+                                toast.style.display = "none";
+                                mentionRef.remove();
+                            }
+                        }, 8000);
+                    }
+                }
+            });
+        }
+
+        function calculatePassiveIncome() {
+            let total = 0;
+            ITEMS.forEach(item => {
+                let totalOwned = gameData.inventory[item.id] || 0;
+                if(totalOwned > 0) total += ((rarityIncomeRates[item.rarity] || 0) * totalOwned);
+            });
+            return total;
+        }
+
+        function switchTab(tabId) {
+            putarMusikOtomatis();
+            putarSFX('menu');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            event.target.classList.add('active');
+            if(tabId === 'inventory') populateInventoryMesh();
+            if(tabId === 'shop') renderShopPrices();
+            if(tabId === 'achiv') checkAndRenderAchievements();
+        }
+
+        function executeClick(e) {
+            putarMusikOtomatis();
+            putarSFX('menu');
+            gameData.coins += gameData.coinsPerClick;
+            gameData.totalClicks = (gameData.totalClicks || 0) + 1;
+            renderStats();
+            updateHUDStats();
+            saveProgress();
+            
+            let marker = document.createElement('div');
+            marker.className = 'floating-text';
+            marker.innerText = `+${formatShort(gameData.coinsPerClick)}`;
+            marker.style.left = `${e.clientX}px`;
+            marker.style.top = `${e.clientY}px`;
+            document.body.appendChild(marker);
+            setTimeout(() => marker.remove(), 600);
+        }
+
+        function updateHUDStats() {
+            // Update Quick Stats
+            let totalMinutes = Math.floor((Date.now() - gameData.startTime) / 60000);
+            let uniqueCount = ITEMS.filter(i => (gameData.inventory[i.id] || 0) > 0).length;
+            let statsEl = document.getElementById('hud-quick-stats');
+            if(statsEl) {
+                statsEl.innerText = `Waktu: ${totalMinutes}m | Unik: ${uniqueCount}/100`;
+            }
+
+            // Update Daily Quest Mini
+            let questEl = document.getElementById('hud-quest-text');
+            if(questEl) {
+                let targetClicks = 100;
+                let currentClicks = gameData.totalClicks || 0;
+                if(currentClicks >= targetClicks) {
+                    questEl.innerText = "✅ Selesai (Bonus Aktif!)";
+                    questEl.style.color = "#34d399";
+                } else {
+                    questEl.innerText = `Klik: ${currentClicks}/${targetClicks}x`;
+                }
+            }
+        }
+
+        function claimRedeemCode() {
+            let input = document.getElementById('redeem-code-input');
+            let code = input.value.trim().toUpperCase();
+            if(!code) return alert("Masukkan kode redeem terlebih dahulu!");
+
+            if(code === "LEGENDA2026") {
+                gameData.coins += 50000;
+                renderStats();
+                saveProgress();
+                alert("🎉 Berhasil! Kamu mendapatkan +50.000 PokéCoins dari kode redeem!");
+                input.value = "";
+            } else if(code === "VOID") {
+                gameData.coins += 1000000;
+                renderStats();
+                saveProgress();
+                alert("🌌 Kode Void Rahasia Aktif! +1.000.000 PokéCoins!");
+                input.value = "";
+            } else {
+                alert("❌ Kode redeem salah atau sudah kedaluwarsa!");
+            }
+        }
+
+        function buyUpgrade(type, powerBonus) {
+            putarSFX('upgrade');
+            let currentPrice = getUpgradePrice(type);
+            if(gameData.coins >= currentPrice) { 
+                gameData.coins -= currentPrice; 
+                gameData.coinsPerClick += powerBonus; 
+                gameData.upgrades[type] = (gameData.upgrades[type] || 0) + 1; 
+                renderStats(); 
+                renderShopPrices(); 
+                saveProgress(); 
+            } else { 
+                alert("PokéCoins tidak mencukupi!"); 
+            }
+        }
+
+        function renderShopPrices() {
+            const btns = document.querySelectorAll('#tab-shop .buy-btn');
+            const keys = Object.keys(BASE_PRICES);
+            const bonuses = [1, 120, 15000, 15000000, 350000000, 5000000000, 75000000000, 1000000000000, 1e15, 1e18, 1e21];
+            
+            btns.forEach((btn, idx) => {
+                if(keys[idx]) {
+                    let k = keys[idx];
+                    btn.innerText = `Cost: ${formatShort(getUpgradePrice(k))} (Lvl ${gameData.upgrades[k] || 0})`; 
+                    btn.setAttribute('onclick', `buyUpgrade('${k}', ${bonuses[idx]})`);
+                }
+            });
+        }
+
+        function triggerGacha(tier) {
+            let tiers = { normal: 100, super: 10000, mega: 1000000000, god: 125000000000, hacker: 1000000000000, hacker2: 1e15, hacker3: 1e17 };
+            let currentPrice = tiers[tier] || 0;
+            if (gameData.coins < currentPrice) return alert("PokéCoins tidak mencukupi!");
+            
+            gameData.coins -= currentPrice;
+            renderStats();
+
+            let pool = [];
+            if (tier === 'normal') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 70, uncommon: 24.5, rare: 5, epic: 0, legendary: 0.5, mythic: 0, godly: 0, hack: 0, impossible: 0 }[i.rarity] }));
+            } else if (tier === 'super') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 20, uncommon: 50, rare: 22, epic: 7, legendary: 1, mythic: 0, godly: 0, hack: 0, impossible: 0 }[i.rarity] }));
+            } else if (tier === 'mega') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 10, rare: 40, epic: 35, legendary: 13.9, mythic: 1, godly: 0.1, hack: 0, impossible: 0 }[i.rarity] }));
+            } else if (tier === 'god') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 30, legendary: 50, mythic: 18, godly: 2, hack: 0, impossible: 0 }[i.rarity] }));
+            } else if (tier === 'hacker') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 40, mythic: 40, godly: 13.5, hack: 6.5, impossible: 0 }[i.rarity] }));
+            } else if (tier === 'hacker2') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 20, mythic: 30, godly: 15, hack: 35, impossible: 0 }[i.rarity] }));
+            } else if (tier === 'hacker3') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 25, mythic: 15, godly: 15, hack: 45, impossible: 0.1 }[i.rarity] }));
+            }
+
+            let totalWeight = 0;
+            pool.forEach(p => totalWeight += p.weight);
+            
+            let roll = Math.random() * totalWeight;
+            let finalAsset = pool[0];
+            
+            for (let i = 0; i < pool.length; i++) {
+                roll -= pool[i].weight;
+                if (roll <= 0) { finalAsset = pool[i]; break; }
+            }
+
+            gameData.inventory[finalAsset.id] = (gameData.inventory[finalAsset.id] || 0) + 1;
+            saveProgress();
+            saveInventoryToCloud();
+
+            if (['common', 'uncommon', 'rare'].includes(finalAsset.rarity)) putarSFX('menu');
+            else if (['epic', 'legendary'].includes(finalAsset.rarity)) putarSFX('upgrade');
+            else putarSFX('info');
+
+            let targetOutput = document.getElementById('gacha-output');
+            targetOutput.innerHTML = `<div class="card r-${finalAsset.rarity}" style="width:140px; transform: scale(1.05);" onclick="inspectCardDetail(${finalAsset.id})"><div class="card-rarity">${finalAsset.rarity}</div><div class="card-name">${finalAsset.name}</div><div style="font-size:11px; color:#ffd700; font-weight:bold; margin-top:4px;">DAPET!</div></div>`;
+        }
+
+        function tukarHackKeImpossible() {
+            let itemHackYangCukup = ITEMS.find(item => item.rarity === 'hack' && (gameData.inventory[item.id] || 0) >= 60);
+
+            if (!itemHackYangCukup) {
+                let maksHack = 0, namaMaksHack = "Belum Ada";
+                ITEMS.forEach(item => {
+                    if (item.rarity === 'hack') {
+                        let owned = gameData.inventory[item.id] || 0;
+                        if (owned > maksHack) { maksHack = owned; namaMaksHack = item.name; }
+                    }
+                });
+                return alert(`Unit Hack kurang! Minimal punya 60 unit dari SATU JENIS item hack.\n\nProgress terbanyak lu:\n${namaMaksHack} (${maksHack}/60)`);
+            }
+
+            gameData.inventory[itemHackYangCukup.id] -= 60;
+            let poolImpossible = ITEMS.filter(item => item.rarity === 'impossible');
+            let itemImpossibleAcak = poolImpossible[Math.floor(Math.random() * poolImpossible.length)];
+
+            gameData.inventory[itemImpossibleAcak.id] = (gameData.inventory[itemImpossibleAcak.id] || 0) + 1;
+            saveProgress();
+            saveInventoryToCloud();
+            renderStats();
+
+            if(document.getElementById('tab-inventory').classList.contains('active')) populateInventoryMesh();
+
+            document.getElementById('gacha-output').innerHTML = `
+                <div class="card r-impossible" style="width:140px; transform: scale(1.05);" onclick="inspectCardDetail(${itemImpossibleAcak.id})">
+                    <div class="card-rarity">impossible</div>
+                    <div class="card-name">${itemImpossibleAcak.name}</div>
+                    <div style="font-size:11px; color:#ff0055; font-weight:bold; margin-top:4px;">HASIL TUKAR!</div>
+                </div>
+            `;
+            alert(`Sukses! 60 unit [${itemHackYangCukup.name}] ditukar jadi 1 unit [${itemImpossibleAcak.name}]!`);
+        }
+
+        const ACHIEVEMENTS_LIST = [
+            { id: 'ac_common', name: "Kolektor Rongsokan", desc: "Koleksi semua item kasta Common", check: () => ITEMS.filter(i => i.rarity === 'common').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_uncommon', name: "Pencari Barang Unik", desc: "Koleksi semua item kasta Uncommon", check: () => ITEMS.filter(i => i.rarity === 'uncommon').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_rare', name: "Penjelajah Daerah", desc: "Koleksi semua item kasta Rare", check: () => ITEMS.filter(i => i.rarity === 'rare').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_epic', name: "Penguasa Kota Besar", desc: "Koleksi semua item kasta Epic", check: () => ITEMS.filter(i => i.rarity === 'epic').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_legendary', name: "Pewaris Kerajaan", desc: "Koleksi semua item kasta Legendary", check: () => ITEMS.filter(i => i.rarity === 'legendary').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_mythic', name: "Penakluk Dunia", desc: "Koleksi semua item kasta Mythic", check: () => ITEMS.filter(i => i.rarity === 'mythic').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_godly', name: "Dewa Semesta", desc: "Koleksi semua item kasta Godly", check: () => ITEMS.filter(i => i.rarity === 'godly').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_hack', name: "Anak Emas Tuan Black Hole", desc: "Koleksi semua item kasta Hack", check: () => ITEMS.filter(i => i.rarity === 'hack').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_impossible', name: "Perusak Hukum Probabilitas", desc: "Koleksi semua item kasta Impossible", check: () => ITEMS.filter(i => i.rarity === 'impossible').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_godlike_collector', name: "THE SUPREME EMPEROR 👑", desc: "Miliki 100/100 item unik DAN koin minimal 1 No", check: () => ITEMS.filter(i => (gameData.inventory[i.id] || 0) > 0).length >= 100 && gameData.coins >= 1e30 },
+            { id: 'ac_gacha_addict', name: "PENGHASILAN TAK TERBATAS💀", desc: "Dapatkan penghasilan 2 Oc / sec", check: () => calculatePassiveIncome() >= 2e27 }
+        ];
+
+        function checkAndRenderAchievements() {
+            const listContainer = document.getElementById('ui-achiv-list');
+            const countContainer = document.getElementById('ui-achiv-count');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            let completedCount = 0;
+            ACHIEVEMENTS_LIST.forEach(ach => {
+                let isUnlocked = ach.check();
+                if (isUnlocked) completedCount++;
+
+                let div = document.createElement('div');
+                div.className = `achiv-card ${isUnlocked ? 'unlocked' : ''}`;
+                if (isUnlocked && ach.id === 'ac_gacha_addict') {
+                    div.style.borderColor = '#ff0033';
+                    div.style.boxShadow = '0 0 12px rgba(255, 0, 51, 0.4)';
+                }
+                div.innerHTML = `
+                    <div>
+                        <h4 style="font-size:13px; color:${['ac_godlike_collector', 'ac_gacha_addict'].includes(ach.id) ? '#ff0055' : '#ffd700'};">${ach.name}</h4>
+                        <p style="font-size:10px; color:#94a3b8; margin-top:2px;">${ach.desc}</p>
+                    </div>
+                    <span class="achiv-badge">${isUnlocked ? 'Selesai ✨' : 'Terkunci'}</span>
+                `;
+                listContainer.appendChild(div);
+            });
+            if (countContainer) countContainer.innerText = `${completedCount} / ${ACHIEVEMENTS_LIST.length}`;
+        }
+
+        function renderStats() { 
+            document.getElementById('ui-coins').innerText = formatShort(gameData.coins); 
+            document.getElementById('ui-cpc').innerText = formatShort(gameData.coinsPerClick); 
+            document.getElementById('ui-cps').innerText = formatShort(calculatePassiveIncome()); 
+        }
+
+        function populateInventoryMesh() {
+            let containerMesh = document.getElementById('ui-grid-mesh'); 
+            containerMesh.innerHTML = ''; 
+            let uniqueCount = 0, checkEmpty = false;
+
+            RARITY_ORDER.forEach(targetRarity => {
+                ITEMS.filter(item => item.rarity === targetRarity).forEach(item => {
+                    let qtyOwned = gameData.inventory[item.id] || 0;
+                    if (qtyOwned > 0) {
+                        uniqueCount++; checkEmpty = true;
+                        let nodeCard = document.createElement('div'); 
+                        nodeCard.className = `card r-${item.rarity}`; 
+                        nodeCard.setAttribute('onclick', `inspectCardDetail(${item.id})`);
+                        nodeCard.innerHTML = `<div class="card-rarity">${item.rarity}</div><div class="card-name">${item.name}</div><div class="card-qty">${qtyOwned} Units</div>`; 
+                        containerMesh.appendChild(nodeCard);
+                    }
+                });
+            });
+            if (!checkEmpty) containerMesh.innerHTML = `<div class="empty-info">Belum ada koleksi terkumpul. Ayo Gacha!</div>`;
+            document.getElementById('ui-unique').innerText = uniqueCount;
+            checkAndRenderAchievements();
+        }
+
+        function inspectCardDetail(id) {
+            putarSFX('info');
+            let selectedItem = ITEMS.find(i => i.id === id); 
+            let userOwned = gameData.inventory[id] || 0;
+            document.getElementById('mdl-title').innerText = selectedItem.name;
+            let rLabel = document.getElementById('mdl-rarity'); 
+            rLabel.innerText = selectedItem.rarity;
+            
+            const rColors = { common: '#94a3b8', uncommon: '#10b981', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444', hack: '#10b981', godly: '#ec4899', impossible: '#ffffff' };
+            rLabel.style.color = rColors[selectedItem.rarity] || '#fff';
+            document.getElementById('mdl-chance').innerText = `Kategori Kasta: ${selectedItem.rarity.toUpperCase()}`;
+            document.getElementById('mdl-desc').innerText = selectedItem.desc;
+            
+            let baseCps = rarityIncomeRates[selectedItem.rarity] || 0;
+            document.getElementById('mdl-income').innerText = `Passive: +${formatShort(baseCps)} PokéCoins/sec (Total: +${formatShort(baseCps * userOwned)}/sec)`;
+            document.getElementById('mdl-qty').innerText = `Owned: ${userOwned} Units`;
+            document.getElementById('item-modal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('item-modal').style.display = 'none'; }
+
+        window.onclick = function(e) { if (e.target == document.getElementById('item-modal')) closeModal(); }
+
+        window.addEventListener("beforeunload", () => { saveProgress(); });
+
+        function toggleMute() {
+            const bgm = document.getElementById('game-bgm');
+            const btn = document.getElementById('btn-mute');
+            if (!bgm) return;
+            
+            if (isMuted) {
+                bgm.play().catch(() => {});
+                btn.innerText = "🎵 Musik: ON";
+                btn.style.background = "#1e293b";
+                isMuted = false;
+            } else {
+                bgm.pause();
+                btn.innerText = "🔇 Musik: OFF";
+                btn.style.background = "#991b1b";
+                isMuted = true;
+            }
+        }
+
+        function putarMusikOtomatis() {
+            const bgm = document.getElementById('game-bgm');
+            if (isMuted || !bgm) return;
+            if (bgm.paused) {
+                bgm.volume = 0.4;
+                bgm.play().catch(() => {});
+            }
+        }
+
+        function putarSFX(tipe) {
+            if (isMuted) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                const skrg = ctx.currentTime;
+                
+                if (['common', 'uncommon', 'rare', 'menu'].includes(tipe)) {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, skrg);
+                    osc.frequency.exponentialRampToValueAtTime(1000, skrg + 0.1);
+                    gain.gain.setValueAtTime(0.12, skrg);
+                    gain.gain.exponentialRampToValueAtTime(0.01, skrg + 0.1);
+                    osc.start(skrg); osc.stop(skrg + 0.1);
+                } else if (['epic', 'legendary', 'upgrade'].includes(tipe)) {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, skrg);
+                    osc.frequency.setValueAtTime(600, skrg + 0.08);
+                    osc.frequency.setValueAtTime(900, skrg + 0.16);
+                    gain.gain.setValueAtTime(0.15, skrg);
+                    gain.gain.exponentialRampToValueAtTime(0.01, skrg + 0.25);
+                    osc.start(skrg); osc.stop(skrg + 0.25);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1200, skrg);
+                    osc.frequency.exponentialRampToValueAtTime(150, skrg + 0.4);
+                    gain.gain.setValueAtTime(0.08, skrg);
+                    gain.gain.exponentialRampToValueAtTime(0.01, skrg + 0.4);
+                    osc.start(skrg); osc.stop(skrg + 0.4);
+                }
+
+                osc.onended = () => { setTimeout(() => ctx.close(), 100); };
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>
