@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kolektor Legendaris - PokéCoin Edition v6.0</title>
+    <style>
+        /* ==================== ROOT & BASE STYLES ==================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #060810;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        body {
+            padding: 8px;
+            justify-content: space-between;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        /* ==================== TOAST NOTIFICATION ==================== */
+        #gameMentionToast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: #e0e7ff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: 2px solid #6366f1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(99, 102, 241, 0.5);
+            z-index: 999999;
+            display: none;
+            cursor: pointer;
+            min-width: 320px;
+            animation: gameSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes gameSlideDown {
+            from { top: -80px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        /* ==================== DASHBOARD ==================== */
+        .dashboard {
+            background: linear-gradient(135deg, #0f172a 100%, #0b0f19 0%);
+            border: 2px solid #ffd700;
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .dashboard h1 {
+            font-size: 20px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+        }
+
+        .balance {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 2px;
+            color: #ffd700;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+        }
+
+        .dashboard-cps-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .cps {
+            color: #34d399;
+        }
+
+        .rebirth-badge-top {
+            color: #c084fc;
+            background: rgba(192, 132, 252, 0.15);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid #7c3aed;
+        }
+
+        /* ==================== MENU TABS ==================== */
+        .menu-tabs {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            background: #0f172a;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            background-color: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 8px 2px;
+            font-size: 9px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .tab-btn:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ffd700, #f59e0b);
+            color: #0f172a;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+        }
+
+        /* ==================== PANELS ==================== */
+        .panel {
+            display: none;
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            min-height: 0;
+        }
+
+        .panel.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== CLICK SECTION ==================== */
+        .click-section {
+            text-align: center;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 16px;
+        }
+
+        .click-btn {
+            width: 100%;
+            max-width: 260px;
+            height: 160px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #ffd700 0%, #d97706 100%);
+            border: 4px solid #fff;
+            color: #0f172a;
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(217, 119, 6, 0.6), 0 0 25px rgba(255, 215, 0, 0.5);
+            transition: transform 0.1s, box-shadow 0.1s;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .click-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            transform: scale(0);
+            animation: rippleAnim 0.5s linear;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        .click-btn:active {
+            transform: scale(0.94);
+            box-shadow: 0 6px 15px rgba(217, 119, 6, 0.8);
+        }
+
+        .click-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e293b;
+            color: #f1f5f9;
+            text-decoration: none;
+            padding: 12px 16px;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .nav-link:hover {
+            background-color: #334155;
+            border-color: #60a5fa;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        /* ==================== REBIRTH PANEL ==================== */
+        .rebirth-card {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0b0f19 100%);
+            border: 2px solid #7c3aed;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+            flex-shrink: 0;
+        }
+        .rebirth-title { font-size: 14px; color: #c084fc; font-weight: 800; }
+        .rebirth-desc { font-size: 11px; color: #cbd5e1; line-height: 1.4; }
+        .rebirth-btn {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .rebirth-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+        /* ==================== GACHA SECTION ==================== */
+        .gacha-box {
+            background-color: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+        .gacha-box:hover { border-color: #475569; }
+
+        .gacha-info h3 { font-size: 13px; color: #f8fafc; font-weight: 700; }
+        .gacha-info p { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+        .gacha-info span { font-size: 9px; color: #f43f5e; font-weight: 700; display: block; margin-top: 1px; }
+
+        .gacha-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .gacha-btn:hover { background-color: #059669; transform: scale(1.03); }
+        .gacha-btn:active { transform: scale(0.97); }
+
+        .gacha-result {
+            margin-top: 10px;
+            flex: 1;
+            min-height: 110px;
+            background-color: #0b0f19;
+            border: 2px dashed #334155;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==================== UPGRADE SHOP ==================== */
+        .upgrade-item {
+            background-color: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .upgrade-info h3 { font-size: 13px; margin-bottom: 1px; color: #ffd700; font-weight: 700; }
+        .upgrade-info p { font-size: 10px; color: #94a3b8; }
+
+        .buy-btn {
+            background-color: #f8fafc;
+            color: #0f172a;
+            border: none;
+            padding: 7px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .buy-btn:hover { background-color: #e2e8f0; transform: scale(1.03); }
+
+        /* ==================== INVENTORY / ALBUM ==================== */
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 16px;
+            overflow-y: auto;
+            flex: 1;
+            padding: 6px 2px;
+        }
+
+        .card {
+            border-radius: 8px 14px 14px 14px;
+            padding: 16px 8px 10px 8px;
+            text-align: center;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, filter 0.2s;
+            border: 2px solid rgba(255,255,255,0.15);
+            position: relative;
+            height: 102px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -9px;
+            left: 12px;
+            width: 48px;
+            height: 9px;
+            background: inherit;
+            border-top: 2px solid rgba(255,255,255,0.25);
+            border-left: 2px solid rgba(255,255,255,0.25);
+            border-right: 2px solid rgba(255,255,255,0.25);
+            border-radius: 5px 5px 0 0;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.15);
+        }
+
+        .card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 22px rgba(0,0,0,0.6); filter: brightness(1.1); }
+        
+        .folder-opening {
+            animation: openFolderAnim 0.35s ease forwards;
+        }
+        @keyframes openFolderAnim {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.15) rotate(-3deg) translateY(-8px); filter: brightness(1.3); }
+            100% { transform: scale(0.95) rotate(0deg); opacity: 0.8; }
+        }
+
+        .card-rarity { font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 1.2px; }
+        .card-name { font-size: 11px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; padding: 0 4px; }
+        .card-qty { font-size: 10px; color: #cbd5e1; font-weight: 600; background: rgba(0,0,0,0.25); padding: 1px 6px; border-radius: 6px; }
+
+        .r-common { border-color: #64748b; background: linear-gradient(145deg, #334155, #1e293b); } 
+        .r-common .card-rarity { color: #cbd5e1; }
+        
+        .r-uncommon { border-color: #10b981; background: linear-gradient(145deg, #065f46, #064e3b); } 
+        .r-uncommon .card-rarity { color: #34d399; }
+        
+        .r-rare { border-color: #3b82f6; background: linear-gradient(145deg, #1d4ed8, #1e3a8a); } 
+        .r-rare .card-rarity { color: #60a5fa; }
+        
+        .r-epic { border-color: #a855f7; background: linear-gradient(145deg, #7e22ce, #581c87); } 
+        .r-epic .card-rarity { color: #c084fc; }
+        
+        .r-legendary { border-color: #f59e0b; background: linear-gradient(145deg, #b45309, #78350f); box-shadow: 0 0 12px rgba(245,158,11,0.35); } 
+        .r-legendary .card-rarity { color: #fbbf24; }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -150%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .card-rarity, .card-name, .card-qty { position: relative; z-index: 2; }
+
+        @keyframes mythicPulse { 0% { box-shadow: 0 0 6px #ef4444; } 50% { box-shadow: 0 0 16px #b91c1c; } 100% { box-shadow: 0 0 6px #ef4444; } }
+        .r-mythic { border-color: #ef4444; background: linear-gradient(145deg, #991b1b, #7f1d1d); animation: mythicPulse 2s infinite; } 
+        .r-mythic .card-rarity { color: #fca5a5; text-shadow: 0 0 6px #ef4444; }
+
+        @keyframes godlyGlow { 0% { border-color: #ec4899; box-shadow: 0 0 10px rgba(236,72,153,0.4); } 50% { border-color: #818cf8; box-shadow: 0 0 20px rgba(129,140,248,0.7); } 100% { border-color: #ec4899; box-shadow: 0 0 10px rgba(236,72,153,0.4); } }
+        .r-godly { background: linear-gradient(145deg, #701a75, #4a044e); animation: godlyGlow 3s infinite; } 
+        .r-godly .card-rarity { color: #f472b6; text-shadow: 0 0 6px #ec4899; }
+
+        .r-hack { border-color: #10b981; background: linear-gradient(145deg, #065f46, #022c22); box-shadow: inset 0 0 10px rgba(16,185,129,0.4), 0 0 12px rgba(16,185,129,0.5); } 
+        .r-hack .card-rarity { color: #34d399; text-shadow: 0 0 6px #10b981; font-family: 'Courier New', monospace; }
+
+        .r-impossible {
+            background: linear-gradient(145deg, #3b0764, #1e1b4b);
+            border: 2px solid #7c3aed;
+            box-shadow: 0 0 16px rgba(124, 58, 237, 0.5), inset 0 0 12px #000000;
+        }
+        .r-impossible .card-name { color: #ff0055; text-shadow: 0 0 6px rgba(255, 0, 85, 0.6); font-weight: 900; }
+        .r-impossible .card-rarity { color: #c084fc; text-shadow: 0 0 8px #c084fc; letter-spacing: 2px; }
+
+        /* ==================== ACHIEVEMENTS ==================== */
+        .achiv-card { 
+            background-color: #0b0f19; 
+            border: 1px solid #1e293b; 
+            border-radius: 8px; 
+            padding: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            opacity: 0.45; 
+            transition: all 0.3s; 
+            flex-shrink: 0;
+        }
+        .achiv-card.unlocked { border-color: #ffd700; opacity: 1; box-shadow: 0 0 10px rgba(255, 215, 0, 0.15); background: linear-gradient(135deg, #111827, #0b0f19); }
+        .achiv-badge { font-size: 10px; padding: 3px 6px; border-radius: 4px; background-color: #1e293b; color: #94a3b8; font-weight: 700; }
+        .achiv-card.unlocked .achiv-badge { background-color: #ffd700; color: #0f172a; }
+
+        /* ==================== MODAL ==================== */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); backdrop-filter: blur(6px); justify-content: center; align-items: center; z-index: 99999; padding: 16px; }
+        .modal-content { background-color: #0f172a; border: 2px solid #334155; padding: 18px; border-radius: 14px; max-width: 360px; width: 100%; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.6); animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .close-btn { position: absolute; top: 10px; right: 16px; font-size: 24px; cursor: pointer; color: #94a3b8; transition: color 0.2s; }
+        .close-btn:hover { color: #fff; }
+        .modal-desc-box { background-color: #0b0f19; padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; margin: 10px 0; border: 1px solid #1e293b; color: #cbd5e1; }
+        
+        .floating-text { position: absolute; color: #ffd700; font-weight: 800; font-size: 18px; pointer-events: none; animation: floatUp 0.6s ease-out forwards; text-shadow: 0 0 6px rgba(255,215,0,0.6); z-index: 9999; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        
+        .empty-info { grid-column: 1/-1; text-align: center; color: #94a3b8; font-size: 12px; padding: 30px 0; }
+
+        /* ==================== BOTTOM UNIFIED HUD ==================== */
+        .bottom-hud {
+            width: 100%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            flex-shrink: 0;
+        }
+
+        .hud-ticker {
+            background: #060810;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 4px 6px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 10px;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+        .hud-ticker span {
+            display: inline-block;
+            animation: tickerScroll 20s linear infinite;
+        }
+        @keyframes tickerScroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .hud-grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .hud-card-box {
+            background: #060810;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 10px;
+        }
+        .hud-card-title {
+            color: #ffd700;
+            font-weight: 700;
+            margin-bottom: 1px;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+        .hud-card-content {
+            color: #94a3b8;
+            font-size: 10px;
+        }
+
+        .hud-action-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .redeem-group {
+            display: flex;
+            gap: 4px;
+        }
+        .redeem-input {
+            background: #060810;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 4px 6px;
+            color: #fff;
+            font-size: 10px;
+            width: 100%;
+            outline: none;
+        }
+        .redeem-input:focus { border-color: #38bdf8; }
+        
+        .redeem-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .redeem-btn:hover { background: #2563eb; }
+
+        .community-socials {
+            display: flex;
+            gap: 4px;
+        }
+        .social-icon-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .social-icon-btn:hover { background: #334155; border-color: #38bdf8; }
+
+        .hud-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+            padding-top: 4px;
+        }
+
+        #btn-mute {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+        #btn-mute:hover { background: #334155; }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+  <div id="gameMentionToast"></div>
+  <audio id="game-bgm" src="bgm2.mp3" loop></audio>
+
+    <div class="game-container">
+        
+        <div class="dashboard">
+            <h1>Kolektor Legendaris</h1>
+            <div class="balance"><span id="ui-coins">0</span> PokéCoins</div>
+            <div class="dashboard-cps-row">
+                <div class="cps">+<span id="ui-cps">0</span> PokéCoins / sec</div>
+                <div class="rebirth-badge-top">Rebirth Lv.<span id="ui-rebirth-lvl">0</span></div>
+            </div>
+        </div>
+
+        <div class="menu-tabs">
+            <button class="tab-btn active" onclick="switchTab('click')">KLIKER</button>
+            <button class="tab-btn" onclick="switchTab('rebirth')">REBIRTH</button>
+            <button class="tab-btn" onclick="switchTab('gacha')">GACHA</button>
+            <button class="tab-btn" onclick="switchTab('shop')">UPGRADE</button>
+            <button class="tab-btn" onclick="switchTab('inventory')">ALBUM</button>
+            <button class="tab-btn" onclick="switchTab('achiv')">~🏆~</button>
+        </div>
+
+        <!-- TAB KLIKER -->
+        <div id="tab-click" class="panel active">
+            <div class="click-section">
+                <button class="click-btn" onclick="executeClick(event)">TAP!</button>
+                <p style="font-size: 13px; color: #94a3b8;">Click Power: +<span id="ui-cpc" style="color:#ffd700; font-weight:bold;">1</span> PokéCoins</p>
+                <div class="click-actions-grid">
+                    <a href="Arena.html" class="nav-link">⚔️ Masuk ke Arena</a>
+                    <a href="chat.html" class="nav-link">💬 Global Chat</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB REBIRTH -->
+        <div id="tab-rebirth" class="panel">
+            <div class="inventory-header">
+                <div>PUSAT REBIRTH SEMESTA BERJENJANG</div>
+                <div>STATUS: <span id="ui-rebirth-status" style="color:#c084fc; font-weight:bold;">Aktif</span></div>
+            </div>
+            <div id="rebirth-list-container"></div>
+        </div>
+
+        <!-- TAB GACHA -->
+        <div id="tab-gacha" class="panel">
+            <div id="gacha-list-container"></div>
+            <div class="gacha-box" id="banner-void" style="border-color: #7c3aed; background: linear-gradient(135deg, #1a0033 0%, #0b0f19 100%);">
+                <div class="gacha-info">
+                    <h3 style="color:#c084fc">Pasar Gelap Void 🌌</h3>
+                    <p>Cost: 60 Unit Hack</p>
+                    <span style="color:#c084fc">Hadiah: 1 Item IMPOSSIBLE</span>
+                </div>
+                <button class="gacha-btn" style="background-color:#7c3aed; color:#fff" onclick="tukarHackKeImpossible()">TUKAR</button>
+            </div>
+            <div class="gacha-result" id="gacha-output">
+                <span style="color: #64748b; font-size: 12px;">Dapatkan item impianmu di sini!...</span>
+            </div>
+        </div>
+
+        <!-- TAB UPGRADE -->
+        <div id="tab-shop" class="panel">
+            <div id="upgrade-list-container"></div>
+        </div>
+
+        <!-- TAB ALBUM -->
+        <div id="tab-inventory" class="panel">
+            <div class="inventory-header">
+                <div>ALBUM KOLEKSI (300 ITEM)</div>
+                <div>UNLOCKED: <span id="ui-unique" style="color:#ffd700; font-weight:bold;">0</span> / 300</div>
+            </div>
+            <div class="inventory-grid" id="ui-grid-mesh"></div>
+        </div>
+
+        <!-- TAB PENCAPAIAN -->
+        <div id="tab-achiv" class="panel">
+            <div class="inventory-header" style="border-color: #ffd700;">
+                <div>PENCAPAIAN</div>
+                <div>SELESAI: <span id="ui-achiv-count" style="color:#34d399; font-weight:bold;">0 / 11</span></div>
+            </div>
+            <div id="ui-achiv-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px; overflow-y: auto; flex: 1;"></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM UNIFIED HUD -->
+    <div class="bottom-hud">
+        <div class="hud-ticker">
+            <span>📢 Kode redeem kini tersinkronisasi via Database Firebase! • Kumpulkan 300 Koleksi Eksklusif & capai Rebirth Tanpa Batas! • Mainkan Arena & Global Chat sekarang! 🔥</span>
+        </div>
+
+        <div class="hud-grid-row">
+            <div class="hud-card-box">
+                <div class="hud-card-title">🎯 Misi Harian</div>
+                <div class="hud-card-content" id="hud-quest-text">Klik layar 100x</div>
+            </div>
+            <div class="hud-card-box">
+                <div class="hud-card-title">📊 Quick Stats</div>
+                <div class="hud-card-content" id="hud-quick-stats">Waktu: 0m | Unik: 0/300</div>
+            </div>
+        </div>
+
+        <div class="hud-action-row">
+            <div class="redeem-group">
+                <input type="text" id="redeem-code-input" class="redeem-input" placeholder="Masukkan Kode...">
+                <button class="redeem-btn" onclick="claimRedeemCode()">KLAIM</button>
+            </div>
+            <div class="community-socials">
+                <a href="https://t.me/" target="_blank" class="social-icon-btn" title="Telegram Komunitas">💬</a>
+                <a href="https://discord.com/" target="_blank" class="social-icon-btn" title="Discord Komunitas">🎮</a>
+            </div>
+        </div>
+
+        <div class="hud-footer-row">
+            <div>© Faqihdulu & LORD EL</div>
+            <button id="btn-mute" onclick="toggleMute()">🎵 Musik: ON</button>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL ITEM -->
+    <div class="modal" id="item-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="mdl-rarity" style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;"></div>
+            <h2 id="mdl-title" style="margin-top: 4px; font-size: 18px; color: #f8fafc;"></h2>
+            <div id="mdl-chance" style="font-size: 11px; color: #94a3b8; margin-top: 2px;"></div>
+            <div class="modal-desc-box" id="mdl-desc"></div>
+            <div id="mdl-income" style="font-size: 12px; color: #34d399; font-weight: bold; margin-bottom: 3px;"></div>
+            <div id="mdl-qty" style="font-size: 12px; font-weight: bold; color: #f8fafc;"></div>
+        </div>
+    </div>
+
+    <!-- GAME SCRIPT -->
+    <script>
+        const baseItemsList = [
+            { id: 10, name: "MBG (My Bini Gwh)", rarity: "common", desc: "Program Gratis!" },
+            { id: 11, name: "Bantal", rarity: "common", desc: "Kamu bisa tertidur lelap." },
+            { id: 12, name: "Lampu", rarity: "common", desc: "Hanya menerangi fakta." },
+            { id: 13, name: "Semanggi 3", rarity: "common", desc: "Daun Semanggi 3 yang B ajah." },
+            { id: 14, name: "Tit tut tit", rarity: "common", desc: "Suara token listrik minta pulsa" },
+            { id: 15, name: "Sawit", rarity: "common", desc: "Olahan minyak goreng khas Indo." },
+            { id: 16, name: "Padi", rarity: "common", desc: "Olahan makanan pokok basic" },
+            { id: 17, name: "Pulpen temen", rarity: "common", desc: "Kembaliin woy!..😡" },
+            { id: 18, name: "Permen Karet", rarity: "common", desc: "Permen lengket dari karet." },
+            { id: 19, name: "Permen Kapas", rarity: "common", desc: "Awan yang manis dimulut" },
+            
+            { id: 100, name: "Kertas Perak Rokok", rarity: "uncommon", desc: "Bungkus dalam rokok yang sering dijadikan mainan anak 90an." },
+            { id: 101, name: "Uang Koin Yasin", rarity: "uncommon", desc: "Koin kuno pinggir jalan yang katanya jimat keberuntungan." },
+            { id: 102, name: "Cincin Mainan Berhadiah", rarity: "uncommon", desc: "Cincin plastik dengan permata kaca warna hijau menyala." },
+            { id: 103, name: "Gantungan Kunci Kura-Kura", rarity: "uncommon", desc: "Gantungan kunci kayu yang bisa goyang-goyang sendiri." },
+            { id: 104, name: "Kaset Pita Rusak", rarity: "uncommon", desc: "Kaset lagu lawas yang pitanya sudah kusut melilit." },
+            { id: 105, name: "Baterai ABC Berjamur", rarity: "uncommon", desc: "Baterai remot TV yang sudah digigit-gigit biar dayanya naik lagi." },
+            { id: 106, name: "Kelereng Susu Langka", rarity: "uncommon", desc: "Kelereng warna putih susu pekat, jadi rebutan saat main di lapangan." },
+            { id: 107, name: "Tali Rafia Gulung", rarity: "uncommon", desc: "Gulungan kecil tali rafia sisa 17 Agustusan tahun lalu." },
+            { id: 108, name: "Sedotan Melingkar", rarity: "uncommon", desc: "Sedotan plastik estetik berbentuk spiral dari kafe gaul." },
+            { id: 109, name: "Stiker Hologram Chiki", rarity: "uncommon", desc: "Stiker mengkilap hadiah makanan ringan yang gambarnya robot." },
+
+            { id: 200, name: "Keris Souvenir Pernikahan", rarity: "rare", desc: "Keris mini dari bahan kuningan, tajam kagak tumpul iya." },
+            { id: 201, name: "Uang Kertas Rp100 Perahu", rarity: "rare", desc: "Uang kertas kuno yang katanya dulu bisa buat beli tanah." },
+            { id: 202, name: "Kelereng Beling Kristal", rarity: "rare", desc: "Kelereng andalan waktu kecil yang selalu menang taruhan." },
+            { id: 203, name: "Kartu Yu-Gi-Oh Ori Kw", rarity: "rare", desc: "Tulisannya mengkilap tapi cetakannya agak geser ke kanan." },
+            { id: 204, name: "Batu Giok Garut", rarity: "rare", desc: "Batu hijau yang kalau disenter tembus cahaya mistis." },
+            { id: 205, name: "Uang Koin Kelapa Sawit", rarity: "rare", desc: "Uang logam seribuan emas jadul yang sering dikira koin emas asli." },
+            { id: 206, name: "Komik Petualangan Tipis", rarity: "rare", desc: "Komik saku surga-neraka legendaris penjual buku keliling sekolah." },
+            { id: 207, name: "Gigi Hiu Fosil", rarity: "rare", desc: "Gigi hiu kecil yang sudah membatu, didapatkan dari pesisir pantai selatan." },
+            { id: 208, name: "Kabupaten Banyuwangi", rarity: "rare", desc: "Kabupaten di ujung timur Jawa yang dijuluki 'The Sunrise of Java'." },
+            { id: 209, name: "Kabupaten Raja Ampat", rarity: "rare", desc: "Kabupaten kepulauan dengan keindahan bawah laut kelas dunia." },
+            { id: 210, name: "Kabupaten Tana Toraja", rarity: "rare", desc: "Kabupaten di Sulawesi Selatan yang mendunia karena tradisi Rambu Solo." },
+            { id: 211, name: "Kabupaten Sleman", rarity: "rare", desc: "Kabupaten sejuk di kaki Gunung Merapi, penghasil salak pondoh." },
+            { id: 212, name: "Kabupaten Brebes", rarity: "rare", desc: "Kabupaten jalur pantura penghasil utama bawang merah dan telur asin." },
+            { id: 213, name: "Kabupaten Ponorogo", rarity: "rare", desc: "Tanah kelahiran kesenian legendaris Reog Ponorogo." },
+
+            { id: 300, name: "Sertifikat Tanah Gaib", rarity: "epic", desc: "Sertifikat kepemilikan sebidang tanah di dimensi sebelah." },
+            { id: 301, name: "Pedang Katana Pajangan", rarity: "epic", desc: "Katana tebal yang biasa dipakai cosplay atau pajangan ruang tamu." },
+            { id: 302, name: "Piring Retak Seribu", rarity: "epic", desc: "Piring peninggalan dinasti antah berantah, dilarang dipakai makan." },
+            { id: 303, name: "Kitab Stambul Mini", rarity: "epic", desc: "Kitab berukuran super kecil yang hanya bisa dibaca pakai kaca pembesar." },
+            { id: 304, name: "Prangko Edisi Pertama", rarity: "epic", desc: "Prangko kuno bergambar pahlawan nasional yang belum dicap." },
+            { id: 305, name: "Batu Meteor Pinggiran", rarity: "epic", desc: "Serpihan batu meteor mini yang jatuh menghantam kandang ayam warga." },
+            { id: 306, name: "Fosil Daun Purba", rarity: "epic", desc: "Cetakan daun berumur jutaan tahun di atas sebongkah batu sedimen." },
+            { id: 307, name: "Kunci Gembok Kerajaan", rarity: "epic", desc: "Kunci besi raksasa berkarat peninggalan benteng pertahanan kuno." },
+            { id: 308, name: "Semarang", rarity: "epic", desc: "Ibu Kota Jawa Tengah." },
+            { id: 309, name: "Bandung", rarity: "epic", desc: "Kota Kembang yang terkenal dengan fashion, kuliner, dan Gedung Sate." },
+            { id: 310, name: "Yogyakarta", rarity: "epic", desc: "Daerah Istimewa yang kaya akan budaya dan sejarah kerajaan." },
+            { id: 311, name: "Jakarta", rarity: "epic", desc: "Kota metropolitan super sibuk, ikon Monas dan Bundaran HI." },
+
+            { id: 400, name: "Keris Kuno Empu Gandring", rarity: "legendary", desc: "Keris legendaris yang memancarkan aura haus darah." },
+            { id: 401, name: "Mustika Air Alami", rarity: "legendary", desc: "Batu bulat sempurna yang selalu basah dan dingin." },
+            { id: 402, name: "Mahkota Kerajaan Majapahit", rarity: "legendary", desc: "Emas murni bertabur permata sakral peninggalan nusantara." },
+            { id: 403, name: "Kitab Mantra Logam", rarity: "legendary", desc: "Lembaran tembaga berisi aksara kuno pelindung marabahaya." },
+            { id: 404, name: "Tombak Trisula Nyi Roro", rarity: "legendary", desc: "Tombak bercabang tiga dengan balutan kain hijau magis." },
+            { id: 405, name: "Batu Kalimaya Black Opal", rarity: "legendary", desc: "Batu akik legendaris yang memancarkan kembang api multi-warna." },
+
+            { id: 406, name: "SANGLEGEND", rarity: "mythic", desc: "Tokoh Guru Besar." },
+            { id: 407, name: "INDONESIA", rarity: "mythic", desc: "Negara Tercinta." },
+            { id: 500, name: "Fosil Telur Naga Api", rarity: "mythic", desc: "Telur yang sudah membatu dengan denyut energi panas." },
+            { id: 501, name: "Air Mata Malaikat", rarity: "mythic", desc: "Cairan bening di dalam botol kaca kecil yang bersinar abadi." },
+            { id: 502, name: "Serpihan Meteorit Vibranium", rarity: "mythic", desc: "Batu luar angkasa berbobot super ringan dengan ketahanan mutlak." },
+            { id: 503, name: "Darah Phoenix Abadi", rarity: "mythic", desc: "Satu tetes darah merah membara yang tidak bisa membeku." },
+            { id: 504, name: "Senku", rarity: "mythic", desc: "Ayo ke Indonesia dan dapatkan SAWIT." },
+            { id: 505, name: "Harta Karun", rarity: "mythic", desc: "Anda Beruntung!." },
+            { id: 506, name: "Negara Jepang", rarity: "mythic", desc: "Negara Sakura dengan teknologi masa depan dan tradisi kuno." },
+            { id: 507, name: "Negara Mesir", rarity: "mythic", desc: "Piramida Giza, patung Sphinx, dan Sungai Nil." },
+            { id: 508, name: "Negara Islandia", rarity: "mythic", desc: "Negara api dan es dengan fenomena aurora borealis." },
+            { id: 509, name: "Negara Brasil", rarity: "mythic", desc: "Hutan hujan Amazon dan budaya sepak bola." },
+            { id: 510, name: "Negara Italia", rarity: "mythic", desc: "Menara Pisa, Colosseum, serta pizza autentik." },
+            { id: 511, name: "Negara Yunani", rarity: "mythic", desc: "Mitologi kuno, Parthenon, dan keindahan Santorini." },
+            { id: 512, name: "Negara Swiss", rarity: "mythic", desc: "Pegunungan Alpen, keju, cokelat, dan jam tangan." },
+            { id: 513, name: "Negara India", rarity: "mythic", desc: "Peradaban tua dengan bangunan ikonik Taj Mahal." },
+            { id: 514, name: "Negara Prancis", rarity: "mythic", desc: "Menara Eiffel serta museum Louvre." },
+            { id: 515, name: "Negara Australia", rarity: "mythic", desc: "Kangguru, koala, dan Sydney Opera House." },
+
+            { id: 600, name: "Singgasana Keabadian", rarity: "godly", desc: "Kursi takhta tertinggi para dewa dari galaksi mati." },
+            { id: 601, name: "Mata Intuitif Ra", rarity: "godly", desc: "Artefak berbentuk mata emas yang melihat masa depan koin." },
+            { id: 602, name: "Surat Izin Mengatur Semesta", rarity: "godly", desc: "Dokumen mutlak entitas tertinggi untuk memanipulasi takdir." },
+            { id: 603, name: "Turbo Flash", rarity: "godly", desc: "Kemampuan luar biasa yang jatuh ke bumi." },
+            { id: 604, name: "Manuskrip Voynich", rarity: "legendary", desc: "Buku kuno misterius penuh sandi rahasia." },
+            { id: 605, name: "Belati Meteorit", rarity: "legendary", desc: "Senjata kuno ditempa langsung dari meteor jatuh." },
+            { id: 606, name: "Fosil Purba Apex", rarity: "legendary", desc: "Peninggalan tulang predator penguasa bumi purba." },
+            { id: 607, name: "Jam Matahari Mesir", rarity: "legendary", desc: "Alat pengukur waktu kuno berlapis emas." },
+            { id: 608, name: "Batu Prasasti", rarity: "legendary", desc: "Ukiran batu sakral berisi hukum kuno kerajaan." },
+
+            { id: 700, name: "XCS Hacked", rarity: "hack", desc: "Keuntungan ganda milik tuan Black Hole." },
+            { id: 701, name: "Buaya Mutasi Hacked", rarity: "hack", desc: "Kehidupan di sebuah kilang Hijau." },
+            { id: 702, name: "Cybernetic Glitch", rarity: "hack", desc: "Sebuah Glitch Game." },
+            { id: 703, name: "ANOMALY HACK", rarity: "hack", desc: "Bug keras yang xg#$(:/+." },
+            { id: 704, name: "Badai Solar", rarity: "hack", desc: "Semburan partikel matahari melumpuhkan jaringan satelit." },
+            { id: 705, name: "Api Abadi Mistik", rarity: "hack", desc: "Kobaran api alam yang terus menyala tanpa henti." },
+            { id: 706, name: "Aurora Borealis", rarity: "hack", desc: "Anomali langit utara dengan pendaran cahaya neon." },
+            { id: 707, name: "Pusaran Maelstrom", rarity: "hack", desc: "Pusaran air laut raksasa ekstrem." },
+            { id: 708, name: "Gempa Megathrust", rarity: "hack", desc: "Simulasi patahan bumi terdahsyat." },
+
+            { id: 800, name: "The Void's Paradox", rarity: "impossible", desc: "Eksistensi ilegal yang menghapus batas kenyataan." },
+            { id: 801, name: "Zeuzs", rarity: "impossible", desc: "Dewa GACOR pemberi berkah luar biasa." },
+            { id: 802, name: "Inti Supernova", rarity: "impossible", desc: "Sisa ledakan bintang raksasa dengan energi kosmik." },
+            { id: 803, name: "Nebula Kehampaan", rarity: "impossible", desc: "Awan gas antariksa penyerap cahaya." },
+            { id: 804, name: "Komet Halley asli", rarity: "impossible", desc: "Serpihan es kosmik legendaris." },
+            { id: 805, name: "Pulsar Magnetar", rarity: "impossible", desc: "Bintang neutron dengan gelombang magnet terkuat." },
+            { id: 806, name: "Debu Bintang Orion", rarity: "impossible", desc: "Materi pembentuk rasi bintang orion." },
+            { id: 807, name: "Singularitas Void", rarity: "impossible", desc: "Titik tak terhingga pembengkok ruang dan waktu." },
+            { id: 808, name: "Radiasi Hawking", rarity: "impossible", desc: "Sinyal energi murni lolos dari lubang hitam." },
+            { id: 809, name: "Quasar Energi", rarity: "impossible", desc: "Inti galaksi aktif pemancar energi miliaran kali." },
+            { id: 810, name: "Materi Gelap", rarity: "impossible", desc: "Komponen misterius pengikat seluruh galaksi." },
+            { id: 811, name: "Serpihan Asteroid", rarity: "impossible", desc: "Batuan purba pembawa material awal penciptaan." }
+        ];
+
+        const ITEMS = [...baseItemsList];
+        const extraRarities = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "godly", "hack", "impossible"];
+        let nextId = 900;
+        while(ITEMS.length < 300) {
+            let r = extraRarities[ITEMS.length % extraRarities.length];
+            ITEMS.push({
+                id: nextId++,
+                name: `Artefak Kosmik #${ITEMS.length + 1}`,
+                rarity: r,
+                desc: `Peninggalan misterius dimensi ke-${ITEMS.length} dengan energi ${r}.`
+            });
+        }
+
+        const RARITY_ORDER = ["impossible", "hack", "godly", "mythic", "legendary", "epic", "rare", "uncommon", "common"];
+
+        let isMuted = false;
+        let gameData = { 
+            coins: 0, 
+            coinsPerClick: 1, 
+            rebirthLevel: 0,
+            inventory: {},
+            upgrades: { p1: 0, p100: 0, p10k: 0, p10m: 0, p8b: 0, p95b: 0, p1t: 0, p10t: 0, p1Qa: 0, p1Qi: 0, p1Sx: 0 },
+            lastSavedTime: Date.now(),
+            totalClicks: 0,
+            startTime: Date.now()
+        };
+
+        const BASE_PRICES = { p1: 100, p100: 8000, p10k: 500000, p10m: 450000000, p8b: 8000000000, p95b: 95000000000, p1t: 1000000000000, p10t: 10000000000000, p1Qa: 1e15, p1Qi: 1e18, p1Sx: 1e21 };
+        const rarityIncomeRates = { common: 2, uncommon: 15, rare: 250, epic: 4000, legendary: 500000, mythic: 25000000, godly: 1500000000, hack: 5000000000, impossible: 2500000000000000000000000 };
+
+        // Generator Dinamis Rebirth Tanpa Batas (Kelipatan 0.5x, Syarat Koin Meningkat Eksponensial)
+        function getRebirthConfig(level) {
+            let baseCost = 1e12;
+            let cost = level === 1 ? baseCost : baseCost * Math.pow(15, level - 1);
+            let mult = 1.0 + (level * 0.5);
+            return {
+                level: level,
+                costCoins: cost,
+                mult: mult,
+                label: `Rebirth ${level} (${mult.toFixed(1)}x Multiplier)`
+            };
+        }
+
+        const firebaseConfig = { databaseURL: "https://multiplayer-5e98b-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        let playerId = localStorage.getItem("poke_username");
+        if (!playerId) {
+            playerId = prompt("Buat Username Arena lu (Tanpa spasi & simbol):\nIni dipakai buat nge-link data item lu ke Arena.");
+            if (!playerId) playerId = "Trainer" + Math.floor(Math.random() * 8999 + 1000);
+            playerId = playerId.replace(/[^a-zA-Z0-9]/g, "");
+            localStorage.setItem("poke_username", playerId);
+        }
+        const myInventoryRef = db.ref("players/" + playerId + "/inventory");
+        const redeemsDbRef = db.ref("redeem_codes");
+        const rebirthRequestsRef = db.ref("rebirth_requests");
+
+        function saveInventoryToCloud() {
+            let cloudInventory = {};
+            ITEMS.forEach(item => {
+                let lokalQty = gameData.inventory[item.id] || 0;
+                cloudInventory[item.id] = lokalQty > 0 ? 1 : 0;
+            });
+            myInventoryRef.set(cloudInventory);
+        }
+
+        function formatShort(num) {
+            if (num === 0) return "0";
+            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg", "Utg", "Dtg", "+ CHEATER"];
+            const i = Math.floor(Math.log10(num) / 3);
+            if (i >= suffixes.length) return num.toExponential(2); 
+            if (i === 0) return num.toLocaleString('id-ID'); 
+            return (num / Math.pow(10, i * 3)).toFixed(2).replace(/\.00$/, '') + suffixes[i];
+        }
+
+        function getUpgradePrice(type) { return Math.floor(BASE_PRICES[type] * Math.pow(1.15, gameData.upgrades[type] || 0)); }
+
+        window.onload = function() {
+            loadSavedProgress(); 
+            renderStats(); 
+            renderShop(); 
+            renderGachaBanners();
+            renderRebirthPanel();
+            updateHUDStats();
+            
+            setInterval(() => {
+                let currentIncome = calculatePassiveIncome();
+                if(currentIncome > 0) { gameData.coins += currentIncome; renderStats(); saveProgress(); }
+                updateHUDStats();
+            }, 1000);
+
+            rebirthRequestsRef.child(playerId).on("value", (snap) => {
+                if (snap.exists()) {
+                    let reqData = snap.val();
+                    if (reqData.status === "approved" && reqData.level > gameData.rebirthLevel) {
+                        gameData.rebirthLevel = reqData.level;
+                        gameData.coins = 0;
+                        saveProgress();
+                        renderStats();
+                        renderRebirthPanel();
+                        alert(`🎉 Pembayaran Offline Rp.1k Dikonfirmasi Admin! Rebirth ke-${reqData.level} Berhasil! Penghasilan dikalikan.`);
+                        rebirthRequestsRef.child(playerId).remove();
+                    } else if (reqData.status === "rejected") {
+                        alert(`❌ Pembayaran Rebirth ke-${reqData.level} ditolak oleh Admin.`);
+                        rebirthRequestsRef.child(playerId).remove();
+                    }
+                }
+            });
+        };
+
+        function saveProgress() { 
+            gameData.lastSavedTime = Date.now();
+            localStorage.setItem('puanyt_jaguar_v6_0', JSON.stringify(gameData)); 
+        }
+
+        function loadSavedProgress() {
+            let username = localStorage.getItem("game_username");
+            if (!username || username.trim() === "") {
+                username = prompt("Masukkan nama/username kamu untuk bermain:") || "Player_" + Math.floor(Math.random() * 8999 + 1000);
+                localStorage.setItem("game_username", username.trim());
+            }
+
+            let savedStr = localStorage.getItem('puanyt_jaguar_v6_0') || localStorage.getItem('puanyt_jaguar_v5_1');
+            if (savedStr) {
+                try { gameData = JSON.parse(savedStr); } catch(e) {}
+            }
+
+            if(!gameData.inventory) gameData.inventory = {};
+            if(!gameData.upgrades) gameData.upgrades = {};
+            if(!gameData.rebirthLevel) gameData.rebirthLevel = 0;
+            if(!gameData.lastSavedTime) gameData.lastSavedTime = Date.now();
+            if(!gameData.totalClicks) gameData.totalClicks = 0;
+            if(!gameData.startTime) gameData.startTime = Date.now();
+
+            const now = Date.now();
+            const offlineTime = Math.floor((now - gameData.lastSavedTime) / 1000);
+            let currentIncome = calculatePassiveIncome();
+
+            if (offlineTime > 0 && currentIncome > 0) {
+                const offlineEarnings = offlineTime * currentIncome;
+                gameData.coins += offlineEarnings;
+                setTimeout(() => {
+                    alert(`Welcome back! Lu dapet +${formatShort(offlineEarnings)} PokéCoins selama offline (${offlineTime} detik).`);
+                    renderStats();
+                }, 400);
+            }
+            gameData.lastSavedTime = now;
+
+            myInventoryRef.once("value").then((snapshot) => {
+                if (snapshot.exists()) {
+                    let cloudData = snapshot.val();
+                    ITEMS.forEach(item => {
+                        let nilaiCloud = (cloudData.items && typeof cloudData.items[item.id] !== 'undefined') ? cloudData.items[item.id] : (cloudData[item.id] || 0);
+                        let nilaiLokal = gameData.inventory[item.id] || 0;
+                        if (nilaiCloud === 1 && nilaiLokal === 0) {
+                            gameData.inventory[item.id] = 1;
+                        }
+                    });
+                }
+                saveInventoryToCloud();
+                renderStats();
+                if(document.getElementById('tab-inventory').classList.contains('active')) populateInventoryMesh();
+                checkAndRenderAchievements();
+            });
+
+            let namaPemain = localStorage.getItem("poke_username") || localStorage.getItem("game_username");
+            if (namaPemain) pantauMentionSaatMain(namaPemain);
+        }
+
+        const chatConfig = { databaseURL: "https://database-leatherboard-b4493-default-rtdb.firebaseio.com/" };
+        const chatApp = firebase.apps.some(app => app.name === "ChatApp") ? firebase.app("ChatApp") : firebase.initializeApp(chatConfig, "ChatApp");
+        const chatDb = chatApp.database();
+
+        function pantauMentionSaatMain(usernamePemain) {
+            if (!usernamePemain) return;
+            var mentionRef = chatDb.ref('mentions/' + usernamePemain.toLowerCase());
+            mentionRef.on('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    var data = snapshot.val();
+                    var toast = document.getElementById('gameMentionToast');
+                    if (toast) {
+                        putarSFX('info');
+                        toast.innerHTML = `
+                            <div style="font-size: 11px; color: #ffd700; font-weight: bold; margin-bottom: 2px;">💬 GLOBAL CHAT MENTION</div>
+                            <span style="font-weight: bold; color: #fff;">@${data.from}:</span> 
+                            <span style="color: #cbd5e1;">${data.text}</span>
+                            <div style="font-size: 10px; color: #c084fc; margin-top: 4px; text-align: right; font-style: italic;">Klik untuk membalas ↗️</div>
+                        `;
+                        toast.onclick = function() {
+                            window.open('chat.html', '_blank');
+                            toast.style.display = "none";
+                        };
+                        toast.style.display = "block";
+                        setTimeout(() => {
+                            if (toast.style.display === "block") {
+                                toast.style.display = "none";
+                                mentionRef.remove();
+                            }
+                        }, 8000);
+                    }
+                }
+            });
+        }
+
+        function getRebirthMultiplier() {
+            if (gameData.rebirthLevel <= 0) return 1.0;
+            return 1.0 + (gameData.rebirthLevel * 0.5);
+        }
+
+        function calculatePassiveIncome() {
+            let total = 0;
+            ITEMS.forEach(item => {
+                let totalOwned = gameData.inventory[item.id] || 0;
+                if(totalOwned > 0) total += ((rarityIncomeRates[item.rarity] || 0) * totalOwned);
+            });
+            let multiplier = getRebirthMultiplier();
+            return Math.floor(total * multiplier);
+        }
+
+        function switchTab(tabId) {
+            putarMusikOtomatis();
+            putarSFX('menu');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            event.target.classList.add('active');
+            
+            if(tabId === 'inventory') populateInventoryMesh();
+            if(tabId === 'shop') renderShop();
+            if(tabId === 'gacha') renderGachaBanners();
+            if(tabId === 'rebirth') renderRebirthPanel();
+            if(tabId === 'achiv') checkAndRenderAchievements();
+        }
+
+        function executeClick(e) {
+            putarMusikOtomatis();
+            putarSFX('menu');
+            
+            let clickPowerMult = getRebirthMultiplier();
+            let earned = Math.floor(gameData.coinsPerClick * clickPowerMult);
+            gameData.coins += earned;
+            gameData.totalClicks = (gameData.totalClicks || 0) + 1;
+            renderStats();
+            renderShop();
+            renderGachaBanners();
+            updateHUDStats();
+            saveProgress();
+            
+            let btn = e.currentTarget;
+            let rect = btn.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            let ripple = document.createElement('span');
+            ripple.className = 'click-ripple';
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 500);
+
+            let marker = document.createElement('div');
+            marker.className = 'floating-text';
+            marker.innerText = `+${formatShort(earned)}`;
+            marker.style.left = `${e.clientX}px`;
+            marker.style.top = `${e.clientY}px`;
+            document.body.appendChild(marker);
+            setTimeout(() => marker.remove(), 600);
+        }
+
+        function updateHUDStats() {
+            let totalMinutes = Math.floor((Date.now() - gameData.startTime) / 60000);
+            let uniqueCount = ITEMS.filter(i => (gameData.inventory[i.id] || 0) > 0).length;
+            let statsEl = document.getElementById('hud-quick-stats');
+            if(statsEl) {
+                statsEl.innerText = `Waktu: ${totalMinutes}m | Unik: ${uniqueCount}/300`;
+            }
+
+            let questEl = document.getElementById('hud-quest-text');
+            if(questEl) {
+                let targetClicks = 100;
+                let currentClicks = gameData.totalClicks || 0;
+                if(currentClicks >= targetClicks) {
+                    questEl.innerText = "✅ Selesai (Bonus Aktif!)";
+                    questEl.style.color = "#34d399";
+                } else {
+                    questEl.innerText = `Klik: ${currentClicks}/${targetClicks}x`;
+                }
+            }
+        }
+
+        // Render Panel Rebirth: Otomatis menampilkan Rebirth aktif selanjutnya di paling bawah
+        function renderRebirthPanel() {
+            let container = document.getElementById('rebirth-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            // Tampilkan rebirth berikutnya yang belum diambil (misal level saat ini + 1)
+            let nextLevelToShow = gameData.rebirthLevel + 1;
+            let rb = getRebirthConfig(nextLevelToShow);
+
+            let isUnlockedByCoins = gameData.coins >= rb.costCoins;
+
+            let card = document.createElement('div');
+            card.className = 'rebirth-card';
+            card.innerHTML = `
+                <div class="rebirth-title">Rebirth Tahap ${rb.level} (Aktif Berikutnya)</div>
+                <div class="rebirth-desc">
+                    Syarat Koin: <b>${formatShort(rb.costCoins)} PokéCoins</b><br>
+                    Biaya Offline Admin: <b>Rp1.000</b> (Konfirmasi via Admin Panel)<br>
+                    Bonus Penghasilan: <b style="color:#34d399;">${rb.mult.toFixed(1)}x dari Dasar!</b><br>
+                    Status: ${isUnlockedByCoins ? '⭐ SIAP REQUEST REBIRTH' : '🔒 Koin Belum Cukup'}
+                </div>
+                <button class="rebirth-btn" onclick="requestRebirth(${rb.level}, ${rb.costCoins})" ${!isUnlockedByCoins ? 'style="opacity:0.6;"' : ''}>
+                    ${isUnlockedByCoins ? '💳 Bayar Rp.1k & Request Rebirth (Admin Panel)' : 'Koin Belum Cukup'}
+                </button>
+            `;
+            container.appendChild(card);
+
+            document.getElementById('ui-rebirth-lvl').innerText = gameData.rebirthLevel;
+        }
+
+        function requestRebirth(level, costCoins) {
+            if (gameData.coins < costCoins) {
+                alert("PokéCoins belum mencapai syarat untuk Rebirth ini!");
+                return;
+            }
+
+            let confirmBayar = confirm(`💳 Menghubungkan ke Sistem Kolektor Legendaris & Admin Panel...\n\nRebirth Tahap ${level} memerlukan:\n- Koin: ${formatShort(costCoins)} (Akan direset)\n- Pembayaran Offline: Rp.1.000\n\nLanjutkan permintaan konfirmasi ke Admin Panel database?`);
+            if (!confirmBayar) return;
+
+            rebirthRequestsRef.child(playerId).set({
+                username: playerId,
+                level: level,
+                costCoins: costCoins,
+                status: "pending",
+                timestamp: Date.now()
+            }).then(() => {
+                alert("📤 Permintaan Rebirth berhasil dikirim ke Admin Panel & Kolektor Legendaris Database!\n\nSilakan tunggu admin mengonfirmasi pembayaran offline Rp.1k Anda.");
+            }).catch((err) => {
+                console.error(err);
+                alert("Gagal mengirim request ke database.");
+            });
+        }
+
+        function claimRedeemCode() {
+            let input = document.getElementById('redeem-code-input');
+            let code = input.value.trim().toUpperCase();
+            if(!code) return alert("Masukkan kode redeem terlebih dahulu!");
+
+            let userKey = playerId.replace(/[.#$\/\[\]]/g, "_");
+
+            redeemsDbRef.child(code).once("value").then((snapshot) => {
+                if (!snapshot.exists()) {
+                    alert("❌ Kode redeem salah atau tidak ditemukan di Database!");
+                    return;
+                }
+
+                let codeData = snapshot.val();
+                
+                if (codeData.claimedBy && codeData.claimedBy[userKey]) {
+                    alert("⚠️ Kamu sudah pernah menggunakan kode redeem ini!");
+                    return;
+                }
+
+                let rewardAmount = codeData.rewardCoins || 50000;
+                gameData.coins += rewardAmount;
+                renderStats();
+                renderShop();
+                renderGachaBanners();
+                saveProgress();
+
+                redeemsDbRef.child(code).child("claimedBy").child(userKey).set(true);
+
+                alert(`🎉 Berhasil! Kamu mendapatkan +${formatShort(rewardAmount)} PokéCoins dari kode redeem database!`);
+                input.value = "";
+            }).catch((err) => {
+                console.error(err);
+                alert("Gagal terhubung ke database redeem.");
+            });
+        }
+
+        function buyUpgrade(type, powerBonus) {
+            putarSFX('upgrade');
+            let currentPrice = getUpgradePrice(type);
+            if(gameData.coins >= currentPrice) { 
+                gameData.coins -= currentPrice; 
+                gameData.coinsPerClick += powerBonus; 
+                gameData.upgrades[type] = (gameData.upgrades[type] || 0) + 1; 
+                renderStats(); 
+                renderShop(); 
+                renderGachaBanners();
+                saveProgress(); 
+            } else { 
+                alert("PokéCoins tidak mencukupi!"); 
+            }
+        }
+
+        function renderShop() {
+            const container = document.getElementById('upgrade-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const keys = Object.keys(BASE_PRICES);
+            const titles = ["Paket Pelajar", "Paket Jutawan", "Suntikan Sultan", "Sistem Semesta", "Modal Investor 💼", "Bisnis Monopoli 🏢", "Bantuan Goib", "GONG", "Liberall", "Cienturall", "Sentuhan Void"];
+            const descs = ["Adds +1 / click", "Adds +120 / click", "Adds +15K / click", "Adds +15M / click", "Adds +350M / click", "Adds +5B / click", "Adds +75B / click", "Adds +1T / click", "Adds +1Qa / click", "Adds +1Qi / click", "Adds +1Sx / click"];
+            const bonuses = [1, 120, 15000, 15000000, 350000000, 5000000000, 75000000000, 1000000000000, 1e15, 1e18, 1e21];
+
+            keys.forEach((k, idx) => {
+                let price = getUpgradePrice(k);
+                if (price > gameData.coins) return;
+
+                let itemDiv = document.createElement('div');
+                itemDiv.className = 'upgrade-item';
+                itemDiv.innerHTML = `
+                    <div class="upgrade-info"><h3>${titles[idx]}</h3><p>${descs[idx]}</p></div>
+                    <button class="buy-btn" onclick="buyUpgrade('${k}', ${bonuses[idx]})">Cost: ${formatShort(price)} (Lvl ${gameData.upgrades[k] || 0})</button>
+                `;
+                container.appendChild(itemDiv);
+            });
+
+            if(container.children.length === 0) {
+                container.innerHTML = `<div class="empty-info">Semua upgrade yang terjangkau sudah dibeli, atau kumpulkan PokéCoins lebih banyak untuk membuka upgrade berikutnya!</div>`;
+            }
+        }
+
+        function renderGachaBanners() {
+            const container = document.getElementById('gacha-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const banners = [
+                { id: 'normal', name: "Normal Banner", cost: 100, desc: "Murni Perjuangan Awal", style: "" },
+                { id: 'super', name: "Super Banner", cost: 10000, desc: "Rare & Epic Terbuka", style: "" },
+                { id: 'mega', name: "Mega Banner", cost: 1000000000, desc: "Mythic Rate: 1 : 1K", style: "" },
+                { id: 'god', name: "Dewa Banner 👑", cost: 125000000000, desc: "Godly Rate: 1%", style: "border-color: #ec4899;", titleStyle: "color:#ec4899", btnStyle: "background-color:#ec4899; color:#0f172a" },
+                { id: 'hacker', name: "Hacker Realm 🖥️", cost: 1000000000000, desc: "Hack Rate: 6.5% | Godly Melimpah", style: "border-color: #10b981;", titleStyle: "color:#10b981", spanStyle: "color:#10b981", btnStyle: "background-color:#10b981; color:#0f172a" },
+                { id: 'hacker2', name: "Dev1", cost: 1e15, desc: "Hack Rate: 35% Mutasi hack", style: "border-color: #334155; background: #0f172a", spanStyle: "color:#34d399", btnStyle: "background-color:#34d399; color:#0f172a" },
+                { id: 'hacker3', name: "Dev2", cost: 1e17, desc: "Hack Rate: 45% Mutasi hack", style: "border-color: #334155; background: #0f172a", spanStyle: "color:#34d399", btnStyle: "background-color:#34d399; color:#0f172a" }
+            ];
+
+            banners.forEach(b => {
+                if (b.cost > gameData.coins) return;
+
+                let box = document.createElement('div');
+                box.className = 'gacha-box';
+                if(b.style) box.style.cssText = b.style;
+                box.innerHTML = `
+                    <div class="gacha-info">
+                        <h3 ${b.titleStyle ? `style="${b.titleStyle}"` : ''}>${b.name}</h3>
+                        <p>Cost: ${formatShort(b.cost)}</p>
+                        <span ${b.spanStyle ? `style="${b.spanStyle}"` : ''}>${b.desc}</span>
+                    </div>
+                    <button class="gacha-btn" ${b.btnStyle ? `style="${b.btnStyle}"` : ''} onclick="triggerGacha('${b.id}')">Gacha</button>
+                `;
+                container.appendChild(box);
+            });
+
+            if(container.children.length === 0) {
+                container.innerHTML = `<div class="empty-info">Koin belum cukup untuk membuka banner gacha tingkat tinggi. Kumpulkan PokéCoins lebih banyak!</div>`;
+            }
+        }
+
+        function triggerGacha(tier) {
+            let tiers = { normal: 100, super: 10000, mega: 1000000000, god: 125000000000, hacker: 1000000000000, hacker2: 1e15, hacker3: 1e17 };
+            let currentPrice = tiers[tier] || 0;
+            if (gameData.coins < currentPrice) return alert("PokéCoins tidak mencukupi!");
+            
+            gameData.coins -= currentPrice;
+            renderStats();
+            renderShop();
+            renderGachaBanners();
+
+            let pool = [];
+            if (tier === 'normal') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 70, uncommon: 24.5, rare: 5, epic: 0, legendary: 0.5, mythic: 0, godly: 0, hack: 0, impossible: 0 }[i.rarity] || 0.1 }));
+            } else if (tier === 'super') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 20, uncommon: 50, rare: 22, epic: 7, legendary: 1, mythic: 0, godly: 0, hack: 0, impossible: 0 }[i.rarity] || 0.1 }));
+            } else if (tier === 'mega') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 10, rare: 40, epic: 35, legendary: 13.9, mythic: 1, godly: 0.1, hack: 0, impossible: 0 }[i.rarity] || 0.1 }));
+            } else if (tier === 'god') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 30, legendary: 50, mythic: 18, godly: 2, hack: 0, impossible: 0 }[i.rarity] || 0.1 }));
+            } else if (tier === 'hacker') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 40, mythic: 40, godly: 13.5, hack: 6.5, impossible: 0 }[i.rarity] || 0.1 }));
+            } else if (tier === 'hacker2') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 20, mythic: 30, godly: 15, hack: 35, impossible: 0 }[i.rarity] || 0.1 }));
+            } else if (tier === 'hacker3') {
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 25, mythic: 15, godly: 15, hack: 45, impossible: 0.1 }[i.rarity] || 0.1 }));
+            }
+
+            let totalWeight = 0;
+            pool.forEach(p => totalWeight += p.weight);
+            
+            let roll = Math.random() * totalWeight;
+            let finalAsset = pool[0];
+            
+            for (let i = 0; i < pool.length; i++) {
+                roll -= pool[i].weight;
+                if (roll <= 0) { finalAsset = pool[i]; break; }
+            }
+
+            gameData.inventory[finalAsset.id] = (gameData.inventory[finalAsset.id] || 0) + 1;
+            saveProgress();
+            saveInventoryToCloud();
+
+            if (['common', 'uncommon', 'rare'].includes(finalAsset.rarity)) putarSFX('menu');
+            else if (['epic', 'legendary'].includes(finalAsset.rarity)) putarSFX('upgrade');
+            else putarSFX('info');
+
+            let targetOutput = document.getElementById('gacha-output');
+            targetOutput.innerHTML = `<div class="card r-${finalAsset.rarity}" style="width:130px; transform: scale(1.05);" onclick="inspectCardDetail(${finalAsset.id}, this)"><div class="card-rarity">${finalAsset.rarity}</div><div class="card-name">${finalAsset.name}</div><div style="font-size:10px; color:#ffd700; font-weight:bold; margin-top:3px;">DAPET!</div></div>`;
+        }
+
+        function tukarHackKeImpossible() {
+            let itemHackYangCukup = ITEMS.find(item => item.rarity === 'hack' && (gameData.inventory[item.id] || 0) >= 60);
+
+            if (!itemHackYangCukup) {
+                let maksHack = 0, namaMaksHack = "Belum Ada";
+                ITEMS.forEach(item => {
+                    if (item.rarity === 'hack') {
+                        let owned = gameData.inventory[item.id] || 0;
+                        if (owned > maksHack) { maksHack = owned; namaMaksHack = item.name; }
+                    }
+                });
+                return alert(`Unit Hack kurang! Minimal punya 60 unit dari SATU JENIS item hack.\n\nProgress terbanyak lu:\n${namaMaksHack} (${maksHack}/60)`);
+            }
+
+            gameData.inventory[itemHackYangCukup.id] -= 60;
+            let poolImpossible = ITEMS.filter(item => item.rarity === 'impossible');
+            let itemImpossibleAcak = poolImpossible[Math.floor(Math.random() * poolImpossible.length)];
+
+            gameData.inventory[itemImpossibleAcak.id] = (gameData.inventory[itemImpossibleAcak.id] || 0) + 1;
+            saveProgress();
+            saveInventoryToCloud();
+            renderStats();
+
+            if(document.getElementById('tab-inventory').classList.contains('active')) populateInventoryMesh();
+
+            document.getElementById('gacha-output').innerHTML = `
+                <div class="card r-impossible" style="width:130px; transform: scale(1.05);" onclick="inspectCardDetail(${itemImpossibleAcak.id}, this)">
+                    <div class="card-rarity">impossible</div>
+                    <div class="card-name">${itemImpossibleAcak.name}</div>
+                    <div style="font-size:10px; color:#ff0055; font-weight:bold; margin-top:3px;">HASIL TUKAR!</div>
+                </div>
+            `;
+            alert(`Sukses! 60 unit [${itemHackYangCukup.name}] ditukar jadi 1 unit [${itemImpossibleAcak.name}]!`);
+        }
+
+        const ACHIEVEMENTS_LIST = [
+            { id: 'ac_common', name: "Kolektor Rongsokan", desc: "Koleksi semua item kasta Common", check: () => ITEMS.filter(i => i.rarity === 'common').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_uncommon', name: "Pencari Barang Unik", desc: "Koleksi semua item kasta Uncommon", check: () => ITEMS.filter(i => i.rarity === 'uncommon').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_rare', name: "Penjelajah Daerah", desc: "Koleksi semua item kasta Rare", check: () => ITEMS.filter(i => i.rarity === 'rare').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_epic', name: "Penguasa Kota Besar", desc: "Koleksi semua item kasta Epic", check: () => ITEMS.filter(i => i.rarity === 'epic').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_legendary', name: "Pewaris Kerajaan", desc: "Koleksi semua item kasta Legendary", check: () => ITEMS.filter(i => i.rarity === 'legendary').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_mythic', name: "Penakluk Dunia", desc: "Koleksi semua item kasta Mythic", check: () => ITEMS.filter(i => i.rarity === 'mythic').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_godly', name: "Dewa Semesta", desc: "Koleksi semua item kasta Godly", check: () => ITEMS.filter(i => i.rarity === 'godly').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_hack', name: "Anak Emas Tuan Black Hole", desc: "Koleksi semua item kasta Hack", check: () => ITEMS.filter(i => i.rarity === 'hack').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_impossible', name: "Perusak Hukum Probabilitas", desc: "Koleksi semua item kasta Impossible", check: () => ITEMS.filter(i => i.rarity === 'impossible').every(i => (gameData.inventory[i.id] || 0) > 0) },
+            { id: 'ac_godlike_collector', name: "THE SUPREME EMPEROR 👑", desc: "Miliki 300/300 item unik DAN koin minimal 1 No", check: () => ITEMS.filter(i => (gameData.inventory[i.id] || 0) > 0).length >= 300 && gameData.coins >= 1e30 },
+            { id: 'ac_gacha_addict', name: "PENGHASILAN TAK TERBATAS💀", desc: "Dapatkan penghasilan 2 Oc / sec", check: () => calculatePassiveIncome() >= 2e27 }
+        ];
+
+        function checkAndRenderAchievements() {
+            const listContainer = document.getElementById('ui-achiv-list');
+            const countContainer = document.getElementById('ui-achiv-count');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            let completedCount = 0;
+            ACHIEVEMENTS_LIST.forEach(ach => {
+                let isUnlocked = ach.check();
+                if (isUnlocked) completedCount++;
+
+                let div = document.createElement('div');
+                div.className = `achiv-card ${isUnlocked ? 'unlocked' : ''}`;
+                if (isUnlocked && ach.id === 'ac_gacha_addict') {
+                    div.style.borderColor = '#ff0033';
+                    div.style.boxShadow = '0 0 10px rgba(255, 0, 51, 0.4)';
+                }
+                div.innerHTML = `
+                    <div>
+                        <h4 style="font-size:12px; color:${['ac_godlike_collector', 'ac_gacha_addict'].includes(ach.id) ? '#ff0055' : '#ffd700'};">${ach.name}</h4>
+                        <p style="font-size:9px; color:#94a3b8; margin-top:1px;">${ach.desc}</p>
+                    </div>
+                    <span class="achiv-badge">${isUnlocked ? 'Selesai ✨' : 'Terkunci'}</span>
+                `;
+                listContainer.appendChild(div);
+            });
+            if (countContainer) countContainer.innerText = `${completedCount} / ${ACHIEVEMENTS_LIST.length}`;
+        }
+
+        function renderStats() { 
+            document.getElementById('ui-coins').innerText = formatShort(gameData.coins); 
+            document.getElementById('ui-cpc').innerText = formatShort(gameData.coinsPerClick); 
+            document.getElementById('ui-cps').innerText = formatShort(calculatePassiveIncome());
+            document.getElementById('ui-rebirth-lvl').innerText = gameData.rebirthLevel;
+        }
+
+        function populateInventoryMesh() {
+            let containerMesh = document.getElementById('ui-grid-mesh'); 
+            containerMesh.innerHTML = ''; 
+            let uniqueCount = 0, checkEmpty = false;
+
+            RARITY_ORDER.forEach(targetRarity => {
+                ITEMS.filter(item => item.rarity === targetRarity).forEach(item => {
+                    let qtyOwned = gameData.inventory[item.id] || 0;
+                    if (qtyOwned > 0) {
+                        uniqueCount++; checkEmpty = true;
+                        let nodeCard = document.createElement('div'); 
+                        nodeCard.className = `card r-${item.rarity}`; 
+                        nodeCard.setAttribute('onclick', `inspectCardDetail(${item.id}, this)`);
+                        nodeCard.innerHTML = `<div class="card-rarity">${item.rarity}</div><div class="card-name">${item.name}</div><div class="card-qty">${qtyOwned} Units</div>`; 
+                        containerMesh.appendChild(nodeCard);
+                    }
+                });
+            });
+            if (!checkEmpty) containerMesh.innerHTML = `<div class="empty-info">Belum ada koleksi terkumpul. Ayo Gacha!</div>`;
+            document.getElementById('ui-unique').innerText = uniqueCount;
+            checkAndRenderAchievements();
+        }
+
+        function inspectCardDetail(id, element) {
+            putarSFX('info');
+            
+            if (element) {
+                element.classList.add('folder-opening');
+                setTimeout(() => {
+                    element.classList.remove('folder-opening');
+                }, 350);
+            }
+
+            let selectedItem = ITEMS.find(i => i.id === id); 
+            let userOwned = gameData.inventory[id] || 0;
+            document.getElementById('mdl-title').innerText = selectedItem.name;
+            let rLabel = document.getElementById('mdl-rarity'); 
+            rLabel.innerText = selectedItem.rarity;
+            
+            const rColors = { common: '#cbd5e1', uncommon: '#34d399', rare: '#60a5fa', epic: '#c084fc', legendary: '#fbbf24', mythic: '#fca5a5', hack: '#34d399', godly: '#f472b6', impossible: '#ffffff' };
+            rLabel.style.color = rColors[selectedItem.rarity] || '#fff';
+            document.getElementById('mdl-chance').innerText = `Kategori Kasta: ${selectedItem.rarity.toUpperCase()}`;
+            document.getElementById('mdl-desc').innerText = selectedItem.desc;
+            
+            let baseCps = rarityIncomeRates[selectedItem.rarity] || 0;
+            let mult = getRebirthMultiplier();
+            document.getElementById('mdl-income').innerText = `Passive: +${formatShort(baseCps * mult)} PokéCoins/sec (Total: +${formatShort(baseCps * userOwned * mult)}/sec)`;
+            document.getElementById('mdl-qty').innerText = `Owned: ${userOwned} Units`;
+            
+            setTimeout(() => {
+                document.getElementById('item-modal').style.display = 'flex';
+            }, 150);
+        }
+
+        function closeModal() { document.getElementById('item-modal').style.display = 'none'; }
+
+        window.onclick = function(e) { if (e.target == document.getElementById('item-modal')) closeModal(); }
+
+        window.addEventListener("beforeunload", () => { saveProgress(); });
+
+        function toggleMute() {
+            const bgm = document.getElementById('game-bgm');
+            const btn = document.getElementById('btn-mute');
+            if (!bgm) return;
+            
+            if (isMuted) {
+                bgm.play().catch(() => {});
+                btn.innerText = "🎵 Musik: ON";
+                btn.style.background = "#1e293b";
+                isMuted = false;
+            } else {
+                bgm.pause();
+                btn.innerText = "🔇 Musik: OFF";
+                btn.style.background = "#991b1b";
+                isMuted = true;
+            }
+        }
+
+        function putarMusikOtomatis() {
+            const bgm = document.getElementById('game-bgm');
+            if (isMuted || !bgm) return;
+            if (bgm.paused) {
+                bgm.volume = 0.4;
+                bgm.play().catch(() => {});
+            }
+        }
+
+        function putarSFX(tipe) {
+            if (isMuted) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                const skrg = ctx.currentTime;
+                
+                if (['common', 'uncommon', 'rare', 'menu'].includes(tipe)) {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, skrg);
+                    osc.frequency.exponentialRampToValueAtTime(1000, skrg + 0.1);
+                    gain.gain.setValueAtTime(0.12, skrg);
+                    gain.gain.exponentialRampToValueAtTime(0.01, skrg + 0.1);
+                    osc.start(skrg); osc.stop(skrg + 0.1);
+                } else if (['epic', 'legendary', 'upgrade'].includes(tipe)) {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, skrg);
+                    osc.frequency.setValueAtTime(600, skrg + 0.08);
+                    osc.frequency.setValueAtTime(900, skrg + 0.16);
+                    gain.gain.setValueAtTime(0.15, skrg);
+                    gain.gain.exponentialRampToValueAtTime(0.01, skrg + 0.25);
+                    osc.start(skrg); osc.stop(skrg + 0.25);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1200, skrg);
+                    osc.frequency.exponentialRampToValueAtTime(150, skrg + 0.4);
+                    gain.gain.setValueAtTime(0.08, skrg);
+                    gain.gain.exponentialRampToValueAtTime(0.01, skrg + 0.4);
+                    osc.start(skrg); osc.stop(skrg + 0.4);
+                }
+
+                osc.onended = () => { setTimeout(() => ctx.close(), 100); };
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>
