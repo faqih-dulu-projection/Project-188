@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Kolektor Legendaris</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #060810; color: #f8fafc; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .admin-container { width: 100%; max-width: 700px; display: flex; flex-direction: column; gap: 20px; }
+        .header { background: linear-gradient(135deg, #7c3aed, #4f46e5); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4); }
+        .header h1 { font-size: 22px; color: #fff; margin-bottom: 4px; }
+        .header p { font-size: 12px; color: #cbd5e1; }
+        
+        .section-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .section-box h2 { font-size: 15px; color: #ffd700; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        .form-group label { font-size: 11px; color: #94a3b8; font-weight: 600; }
+        .form-input { background: #060810; border: 1px solid #334155; border-radius: 8px; padding: 10px; color: #fff; font-size: 12px; outline: none; }
+        .form-input:focus { border-color: #7c3aed; }
+        
+        .btn { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: filter 0.2s; }
+        .btn:hover { filter: brightness(1.1); }
+        .btn-danger { background: #ef4444; }
+        .btn-primary { background: #3b82f6; }
+
+        .request-item { background: #0b0f19; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .request-info { font-size: 12px; line-height: 1.4; color: #cbd5e1; }
+        .request-info b { color: #ffd700; }
+        .action-btns { display: flex; gap: 6px; }
+        .empty-text { font-size: 12px; color: #64748b; text-align: center; padding: 20px 0; }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="header">
+            <h1>👑 Panel Kontrol Admin</h1>
+            <p>Kelola Permintaan Rebirth Offline & Kode Redeem Game</p>
+        </div>
+
+        <!-- SECTION 1: PERMINTAAN REBIRTH -->
+        <div class="section-box">
+            <h2>📥 Daftar Request Rebirth (Pending)</h2>
+            <div id="rebirth-requests-list">
+                <div class="empty-text">Memuat data request...</div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: BUAT KODE REDEEM -->
+        <div class="section-box">
+            <h2>🎁 Buat Kode Redeem Baru</h2>
+            <div class="form-group">
+                <label>Kode Redeem (Contoh: SULTANBARU)</label>
+                <input type="text" id="input-code" class="form-input" placeholder="Masukkan kode...">
+            </div>
+            <div class="form-group">
+                <label>Hadiah PokéCoins (Contoh: 100000000)</label>
+                <input type="number" id="input-reward" class="form-input" value="500000">
+            </div>
+            <button class="btn btn-primary" onclick="buatKodeRedeem()">Simpan Kode ke Database</button>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Database Firebase (Gunakan URL Realtime Database yang sama dengan game utama kamu)
+        const firebaseConfig = { databaseURL: "https://gemgemini-f90ab-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        const rebirthRequestsRef = db.ref("rebirth_requests");
+        const redeemsDbRef = db.ref("redeem_codes");
+
+        // Load & Pantau Request Rebirth yang Masuk secara Real-time
+        window.onload = function() {
+            rebirthRequestsRef.on("value", (snapshot) => {
+                let container = document.getElementById("rebirth-requests-list");
+                container.innerHTML = "";
+
+                if (!snapshot.exists()) {
+                    container.innerHTML = `<div class="empty-text">Tidak ada request rebirth saat ini.</div>`;
+                    return;
+                }
+
+                let data = snapshot.val();
+                let hasPending = false;
+
+                Object.keys(data).forEach(username => {
+                    let req = data[username];
+                    if (req.status === "pending") {
+                        hasPending = true;
+                        let itemDiv = document.createElement("div");
+                        itemDiv.className = "request-item";
+                        itemDiv.innerHTML = `
+                            <div class="request-info">
+                                Trainer: <b>@${req.username}</b><br>
+                                Target: <b>Rebirth Tahap ${req.level}</b><br>
+                                Syarat Koin: ${req.costCoins.toLocaleString('id-ID')} Coins<br>
+                                <span style="font-size: 10px; color: #a855f7;">Status: Menunggu Konfirmasi Transfer Rp1.000</span>
+                            </div>
+                            <div class="action-btns">
+                                <button class="btn" onclick="approveRebirth('${username}', ${req.level})">Terima</button>
+                                <button class="btn btn-danger" onclick="rejectRebirth('${username}', ${req.level})">Tolak</button>
+                            </div>
+                        `;
+                        container.appendChild(itemDiv);
+                    }
+                });
+
+                if (!hasPending) {
+                    container.innerHTML = `<div class="empty-text">Tidak ada request rebirth yang aktif saat ini.</div>`;
+                }
+            });
+        };
+
+        // Fungsi Admin Menyetujui Rebirth
+        function approveRebirth(username, level) {
+            if (!confirm(`Setujui Rebirth Tahap ${level} untuk player @${username}?`)) return;
+
+            rebirthRequestsRef.child(username).update({
+                status: "approved"
+            }).then(() => {
+                alert(`✅ Rebirth Tahap ${level} untuk @${username} berhasil disetujui! Game player akan otomatis ter-update.`);
+            }).catch(err => {
+                alert("Gagal memperbarui status database.");
+                console.error(err);
+            });
+        }
+
+        // Fungsi Admin Menolak Rebirth
+        function rejectRebirth(username, level) {
+            if (!confirm(`Tolak request Rebirth Tahap ${level} untuk player @${username}?`)) return;
+
+            rebirthRequestsRef.child(username).update({
+                status: "rejected"
+            }).then(() => {
+                alert(`❌ Request Rebirth untuk @${username} ditolak.`);
+            }).catch(err => {
+                alert("Gagal memperbarui status database.");
+            });
+        }
+
+        // Fungsi Admin Membuat Kode Redeem Baru
+        function buatKodeRedeem() {
+            let code = document.getElementById("input-code").value.trim().toUpperCase();
+            let reward = parseInt(document.getElementById("input-reward").value);
+
+            if (!code) return alert("Masukkan kode redeem terlebih dahulu!");
+            if (isNaN(reward) || reward <= 0) return alert("Jumlah hadiah koin tidak valid!");
+
+            redeemsDbRef.child(code).set({
+                rewardCoins: reward,
+                claimedBy: {}
+            }).then(() => {
+                alert(`🎁 Berhasil membuat kode redeem [${code}] dengan hadiah ${reward.toLocaleString('id-ID')} PokéCoins!`);
+                document.getElementById("input-code").value = "";
+            }).catch(err => {
+                alert("Gagal menyimpan kode redeem ke database.");
+                console.error(err);
+            });
+        }
+    </script>
+</body>
+</html>
