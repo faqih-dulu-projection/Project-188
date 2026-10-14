@@ -24,6 +24,7 @@
         .btn:hover { filter: brightness(1.1); }
         .btn-danger { background: #ef4444; }
         .btn-primary { background: #3b82f6; }
+        .btn-warning { background: #f59e0b; color: #0f172a; }
 
         .request-item { background: #0b0f19; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .request-info { font-size: 12px; line-height: 1.4; color: #cbd5e1; }
@@ -41,10 +42,20 @@
     <div class="admin-container">
         <div class="header">
             <h1>👑 Panel Kontrol Admin</h1>
-            <p>Kelola Permintaan Rebirth Offline & Kode Redeem Game</p>
+            <p>Kelola Pengumuman, Request Rebirth & Kode Redeem</p>
         </div>
 
-        <!-- SECTION 1: PERMINTAAN REBIRTH -->
+        <!-- SECTION 1: UBAH TEKS BERJALAN (TICKER PENGUMUMAN) -->
+        <div class="section-box">
+            <h2>📢 Ubah Teks Berjalan Game</h2>
+            <div class="form-group">
+                <label>Teks Pengumuman Running Text</label>
+                <textarea id="input-ticker" class="form-input" rows="3" placeholder="Masukkan teks pengumuman..."></textarea>
+            </div>
+            <button class="btn btn-warning" onclick="updateTickerText()">Update Teks Pengumuman</button>
+        </div>
+
+        <!-- SECTION 2: PERMINTAAN REBIRTH -->
         <div class="section-box">
             <h2>📥 Daftar Request Rebirth (Pending)</h2>
             <div id="rebirth-requests-list">
@@ -52,7 +63,7 @@
             </div>
         </div>
 
-        <!-- SECTION 2: BUAT KODE REDEEM -->
+        <!-- SECTION 3: BUAT KODE REDEEM -->
         <div class="section-box">
             <h2>🎁 Buat Kode Redeem Baru</h2>
             <div class="form-group">
@@ -68,16 +79,23 @@
     </div>
 
     <script>
-        // Konfigurasi Database Firebase (Gunakan URL Realtime Database yang sama dengan game utama kamu)
         const firebaseConfig = { databaseURL: "https://gemgemini-f90ab-default-rtdb.asia-southeast1.firebasedatabase.app/" };
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
 
         const rebirthRequestsRef = db.ref("rebirth_requests");
         const redeemsDbRef = db.ref("redeem_codes");
+        const tickerRef = db.ref("announcement_ticker");
 
-        // Load & Pantau Request Rebirth yang Masuk secara Real-time
         window.onload = function() {
+            // Load Teks Running Text saat ini
+            tickerRef.once("value").then(snap => {
+                if (snap.exists()) {
+                    document.getElementById("input-ticker").value = snap.val();
+                }
+            });
+
+            // Pantau Request Rebirth Masuk
             rebirthRequestsRef.on("value", (snapshot) => {
                 let container = document.getElementById("rebirth-requests-list");
                 container.innerHTML = "";
@@ -118,21 +136,33 @@
             });
         };
 
-        // Fungsi Admin Menyetujui Rebirth
+        // Simpan Teks Pengumuman Berjalan ke Firebase
+        function updateTickerText() {
+            let text = document.getElementById("input-ticker").value.trim();
+            if (!text) return alert("Teks pengumuman tidak boleh kosong!");
+
+            tickerRef.set(text).then(() => {
+                alert("📢 Teks pengumuman berhasil diperbarui dan langsung tampil di layar semua pemain!");
+            }).catch(err => {
+                alert("Gagal mengupdate teks pengumuman.");
+                console.error(err);
+            });
+        }
+
+        // Approve Rebirth
         function approveRebirth(username, level) {
             if (!confirm(`Setujui Rebirth Tahap ${level} untuk player @${username}?`)) return;
 
             rebirthRequestsRef.child(username).update({
                 status: "approved"
             }).then(() => {
-                alert(`✅ Rebirth Tahap ${level} untuk @${username} berhasil disetujui! Game player akan otomatis ter-update.`);
+                alert(`✅ Rebirth Tahap ${level} untuk @${username} berhasil disetujui!`);
             }).catch(err => {
                 alert("Gagal memperbarui status database.");
-                console.error(err);
             });
         }
 
-        // Fungsi Admin Menolak Rebirth
+        // Reject Rebirth
         function rejectRebirth(username, level) {
             if (!confirm(`Tolak request Rebirth Tahap ${level} untuk player @${username}?`)) return;
 
@@ -145,7 +175,7 @@
             });
         }
 
-        // Fungsi Admin Membuat Kode Redeem Baru
+        // Buat Kode Redeem
         function buatKodeRedeem() {
             let code = document.getElementById("input-code").value.trim().toUpperCase();
             let reward = parseInt(document.getElementById("input-reward").value);
@@ -161,7 +191,6 @@
                 document.getElementById("input-code").value = "";
             }).catch(err => {
                 alert("Gagal menyimpan kode redeem ke database.");
-                console.error(err);
             });
         }
     </script>
