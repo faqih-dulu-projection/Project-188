@@ -262,7 +262,7 @@
     <!-- SCRIPT CHAT -->
     <script>
         // Menggunakan Database Chat khusus milikmu
-        const chatConfig = { databaseURL: "https://database-leatherboard-b4493-default-rtdb.firebaseio.com/" };
+        const chatConfig = { databaseURL: "https://typering-0001-default-rtdb.asia-southeast1.firebasedatabase.app/" };
         const chatApp = firebase.apps.some(app => app.name === "ChatApp") ? firebase.app("ChatApp") : firebase.initializeApp(chatConfig, "ChatApp");
         const chatDb = chatApp.database();
 
@@ -335,7 +335,44 @@
             });
         }
 
-        function kirimPesan() {
+            function kirimPesan() {
+    let input = document.getElementById("chat-input-text");
+    let rawText = input.value.trim();
+    if (!rawText) return;
+
+    // OTOMATIS SENSOR KATA KASAR DI SINI
+    let text = sensorText(rawText);
+
+    // Deteksi apakah ada @mention di dalam teks (gunakan teks asli/yang sudah disensor)
+    let mentionMatch = text.match(/@([a-zA-Z0-9_]+)/);
+    if (mentionMatch) {
+        let targetUser = mentionMatch[1].toLowerCase();
+        if (targetUser !== myUsername.toLowerCase()) {
+            mentionsRef.child(targetUser).set({
+                from: myUsername,
+                text: text,
+                timestamp: Date.now()
+            });
+        }
+    }
+
+    let newMsg = {
+        sender: myUsername,
+        text: text,
+        timestamp: Date.now()
+    };
+
+    if (replyingTo) {
+        newMsg.replyTo = replyingTo;
+        batalReply();
+    }
+
+    messagesRef.push(newMsg).then(() => {
+        input.value = "";
+    }).catch(err => {
+        alert("Gagal mengirim pesan.");
+        console.error(err);
+    });
             let input = document.getElementById("chat-input-text");
             let text = input.value.trim();
             if (!text) return;
@@ -425,6 +462,22 @@
             let map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
+        // Daftar kata-kata yang ingin disensor (bisa kamu tambahkan sendiri)
+const censoredWords = [
+    "anjing", "babi", "anjing", "anjir", "bangsat", "kampret", 
+    "kontol", "memek", "ngentot", "tole", "anj", "pler", "puki"
+];
+
+function sensorText(text) {
+    if (!text) return "";
+    let cleanText = text;
+    censoredWords.forEach(word => {
+        let regex = new RegExp(word, "gi"); // Case insensitive (huruf besar/kecil tetap disensor)
+        let replacement = "*".repeat(word.length);
+        cleanText = cleanText.replace(regex, replacement);
+    });
+    return cleanText;
+}
     </script>
 </body>
 </html>
