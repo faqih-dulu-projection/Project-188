@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Chat - Kolektor Legendaris</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #060810;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ==================== HEADER ==================== */
+        .chat-header {
+            background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
+            border-bottom: 1px solid #1e293b;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-game-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .back-game-btn:hover { background: #334155; border-color: #38bdf8; }
+
+        .chat-title h2 { font-size: 15px; color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+        .chat-title p { font-size: 10px; color: #94a3b8; }
+
+        .user-profile-badge {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid #0284c7;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
+        /* ==================== CHAT MESSAGES AREA ==================== */
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: radial-gradient(circle at center, #0f172a 0%, #060810 100%);
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 10px 14px;
+            border-radius: 12px;
+            position: relative;
+            animation: fadeInMsg 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            word-wrap: break-word;
+        }
+        @keyframes fadeInMsg {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-bubble.mine {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-color: #60a5fa;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message-bubble.other {
+            align-self: flex-start;
+            background: #111827;
+            border-color: #1f2937;
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-sender {
+            font-size: 10px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 3px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .message-bubble.mine .msg-sender { color: #93c5fd; text-align: right; }
+
+        .msg-text {
+            font-size: 13px;
+            color: #f8fafc;
+            line-height: 1.4;
+        }
+
+        .msg-time {
+            font-size: 8px;
+            color: #94a3b8;
+            margin-top: 4px;
+            text-align: right;
+        }
+        .message-bubble.mine .msg-time { color: #bfdbfe; }
+
+        .msg-img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 6px;
+            margin-top: 6px;
+            display: block;
+            cursor: pointer;
+        }
+
+        /* ==================== CHAT INPUT BAR ==================== */
+        .chat-input-bar {
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #060810;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-input:focus { border-color: #38bdf8; }
+
+        .chat-action-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .chat-action-btn:hover { background: #334155; border-color: #38bdf8; }
+
+        .send-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            color: white;
+            padding: 0 16px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.1s;
+            flex-shrink: 0;
+        }
+        .send-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+        .send-btn:active { transform: scale(0.97); }
+
+        /* Reply Preview Box */
+        .reply-preview-box {
+            display: none;
+            background: #111827;
+            border-left: 3px solid #38bdf8;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: #cbd5e1;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .reply-preview-box b { color: #38bdf8; }
+        .cancel-reply { cursor: pointer; color: #f43f5e; font-weight: bold; }
+
+        /* Empty & Loading state */
+        .empty-chat { text-align: center; color: #64748b; font-size: 12px; margin: auto; }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="chat-header">
+        <div class="chat-header-left">
+            <a href="indexx.html" class="back-game-btn">⬅️ Kembali ke Game</a>
+            <div class="chat-title">
+                <h2>💬 Global Chat Semesta</h2>
+                <p>Terhubung dengan seluruh Kolektor</p>
+            </div>
+        </div>
+        <div class="user-profile-badge" id="ui-username">@Trainer</div>
+    </div>
+
+    <!-- REPLY BOX -->
+    <div class="reply-preview-box" id="reply-box">
+        <div>Membalas <b id="reply-to-user">User</b>: <span id="reply-to-text" style="font-style: italic;">...</span></div>
+        <span class="cancel-reply" onclick="batalReply()">✖</span>
+    </div>
+
+    <!-- CHAT MESSAGES -->
+    <div class="chat-messages" id="chat-messages-container">
+        <div class="empty-chat">Memuat obrolan global...</div>
+    </div>
+
+    <!-- INPUT BAR -->
+    <div class="chat-input-bar">
+        <input type="file" id="image-file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+        <button class="chat-action-btn" title="Kirim Gambar" onclick="document.getElementById('image-file-input').click()">📷</button>
+        <input type="text" id="chat-input-text" class="chat-input" placeholder="Ketik pesan atau @mention..." onkeypress="handleKeyPress(event)">
+        <button class="send-btn" onclick="kirimPesan()">KIRIM</button>
+    </div>
+
+    <!-- SCRIPT CHAT -->
+    <script>
+        // Menggunakan Database Chat khusus milikmu
+        const chatConfig = { databaseURL: "https://database-leatherboard-b4493-default-rtdb.firebaseio.com/" };
+        const chatApp = firebase.apps.some(app => app.name === "ChatApp") ? firebase.app("ChatApp") : firebase.initializeApp(chatConfig, "ChatApp");
+        const chatDb = chatApp.database();
+
+        let myUsername = localStorage.getItem("poke_username") || localStorage.getItem("game_username");
+        if (!myUsername) {
+            myUsername = prompt("Masukkan Username Chat kamu:") || "Trainer_" + Math.floor(Math.random() * 8999 + 1000);
+            myUsername = myUsername.replace(/[^a-zA-Z0-9]/g, "");
+            localStorage.setItem("poke_username", myUsername);
+        }
+        document.getElementById('ui-username').innerText = `@${myUsername}`;
+
+        const messagesRef = chatDb.ref("global_messages");
+        const mentionsRef = chatDb.ref("mentions");
+
+        let replyingTo = null; // Menyimpan data pesan yang sedang dibalas
+
+        window.onload = function() {
+            muatPesanChat();
+        };
+
+        function muatPesanChat() {
+            messagesRef.limitToLast(100).on("value", (snapshot) => {
+                let container = document.getElementById("chat-messages-container");
+                container.innerHTML = "";
+
+                if (!snapshot.exists()) {
+                    container.innerHTML = `<div class="empty-chat">Belum ada percakapan. Jadilah yang pertama mengirim pesan! 🚀</div>`;
+                    return;
+                }
+
+                let data = snapshot.val();
+                Object.keys(data).forEach(key => {
+                    let msg = data[key];
+                    let isMine = msg.sender.toLowerCase() === myUsername.toLowerCase();
+
+                    let bubble = document.createElement("div");
+                    bubble.className = `message-bubble ${isMine ? 'mine' : 'other'}`;
+                    
+                    let waktuFormat = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    let htmlContent = `
+                        <div class="msg-sender" onclick="mulaiReply('${msg.sender}', '${msg.text ? msg.text.replace(/'/g, "") : "Gambar"}')">
+                            <span>@${msg.sender}</span>
+                            <span style="font-size: 7px; color: #94a3b8;">Balas ↗️</span>
+                        </div>
+                    `;
+
+                    if (msg.replyTo) {
+                        htmlContent += `
+                            <div style="background: rgba(0,0,0,0.25); border-left: 2px solid #38bdf8; padding: 3px 6px; border-radius: 4px; font-size: 10px; margin-bottom: 4px; color: #cbd5e1;">
+                                <b>@${msg.replyTo.sender}</b>: ${msg.replyTo.text}
+                            </div>
+                        `;
+                    }
+
+                    if (msg.text) {
+                        htmlContent += `<div class="msg-text">${escapeHtml(msg.text)}</div>`;
+                    }
+
+                    if (msg.image) {
+                        htmlContent += `<img src="${msg.image}" class="msg-img" onclick="window.open('${msg.image}', '_blank')">`;
+                    }
+
+                    htmlContent += `<div class="msg-time">${waktuFormat}</div>`;
+                    bubble.innerHTML = htmlContent;
+                    container.appendChild(bubble);
+                });
+
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        function kirimPesan() {
+            let input = document.getElementById("chat-input-text");
+            let text = input.value.trim();
+            if (!text) return;
+
+            // Deteksi apakah ada @mention di dalam teks
+            let mentionMatch = text.match(/@([a-zA-Z0-9_]+)/);
+            if (mentionMatch) {
+                let targetUser = mentionMatch[1].toLowerCase();
+                if (targetUser !== myUsername.toLowerCase()) {
+                    mentionsRef.child(targetUser).set({
+                        from: myUsername,
+                        text: text,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+
+            let newMsg = {
+                sender: myUsername,
+                text: text,
+                timestamp: Date.now()
+            };
+
+            if (replyingTo) {
+                newMsg.replyTo = replyingTo;
+                batalReply();
+            }
+
+            messagesRef.push(newMsg).then(() => {
+                input.value = "";
+            }).catch(err => {
+                alert("Gagal mengirim pesan.");
+                console.error(err);
+            });
+        }
+
+        function handleImageUpload(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 1024 * 1024) { // Max 1MB untuk basis realtime database
+                alert("Ukuran gambar terlalu besar! Maksimal 1MB.");
+                return;
+            }
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let base64Image = e.target.result;
+
+                let newMsg = {
+                    sender: myUsername,
+                    image: base64Image,
+                    text: "[Mengirim Gambar]",
+                    timestamp: Date.now()
+                };
+
+                if (replyingTo) {
+                    newMsg.replyTo = replyingTo;
+                    batalReply();
+                }
+
+                messagesRef.push(newMsg);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function mulaiReply(sender, text) {
+            replyingTo = { sender: sender, text: text };
+            document.getElementById("reply-to-user").innerText = sender;
+            document.getElementById("reply-to-text").innerText = text.length > 30 ? text.substring(0, 30) + "..." : text;
+            document.getElementById("reply-box").style.display = "flex";
+            document.getElementById("chat-input-text").focus();
+        }
+
+        function batalReply() {
+            replyingTo = null;
+            document.getElementById("reply-box").style.display = "none";
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                kirimPesan();
+            }
+        }
+
+        function escapeHtml(text) {
+            let map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
