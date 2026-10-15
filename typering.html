@@ -273,13 +273,7 @@
     <div class="chat-input-bar">
         <input type="file" id="image-file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
         <button class="chat-action-btn" title="Kirim Gambar" onclick="document.getElementById('image-file-input').click()">📷</button>
-        
-        <!-- ---> TOMBOL PEREKAM VN BARU <--- -->
         <button class="chat-action-btn" id="vn-record-btn" title="Rekam Voice Note" onclick="toggleRecordVN()">🎤</button>
-        
-        <input type="text" id="chat-input-text" class="chat-input" placeholder="Ketik pesan atau @mention..." onkeypress="handleKeyPress(event)">
-        <button class="send-btn" onclick="kirimPesan()">KIRIM</button>
-    </div>
         <input type="text" id="chat-input-text" class="chat-input" placeholder="Ketik pesan atau @mention..." onkeypress="handleKeyPress(event)">
         <button class="send-btn" onclick="kirimPesan()">KIRIM</button>
     </div>
