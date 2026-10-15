@@ -218,7 +218,6 @@
         .reply-preview-box b { color: #38bdf8; }
         .cancel-reply { cursor: pointer; color: #f43f5e; font-weight: bold; }
 
-        /* Empty & Loading state */
         .empty-chat { text-align: center; color: #64748b; font-size: 12px; margin: auto; }
     </style>
 
@@ -261,7 +260,26 @@
 
     <!-- SCRIPT CHAT -->
     <script>
-        // Menggunakan Database Chat khusus milikmu
+        // Daftar kata-kata sensor
+        const censoredWords = [
+            "anjing", "babi", "anjir", "bangsat", "kampret", 
+            "kontol", "memek", "ngentot", "tole", "anj", "pler", "puki", "celeng", 
+            "asu", "tempek", "jembot", "jembut", "kirik", "bajingan", "silit", "peli", 
+            "lonte", "titit", "bajing", "ultramen"
+        ];
+
+        function sensorText(text) {
+            if (!text) return "";
+            let cleanText = text;
+            censoredWords.forEach(word => {
+                let regex = new RegExp(word, "gi");
+                let replacement = "*".repeat(word.length);
+                cleanText = cleanText.replace(regex, replacement);
+            });
+            return cleanText;
+        }
+
+        // Konfigurasi Database Chat
         const chatConfig = { databaseURL: "https://typering-0001-default-rtdb.asia-southeast1.firebasedatabase.app/" };
         const chatApp = firebase.apps.some(app => app.name === "ChatApp") ? firebase.app("ChatApp") : firebase.initializeApp(chatConfig, "ChatApp");
         const chatDb = chatApp.database();
@@ -277,7 +295,7 @@
         const messagesRef = chatDb.ref("global_messages");
         const mentionsRef = chatDb.ref("mentions");
 
-        let replyingTo = null; // Menyimpan data pesan yang sedang dibalas
+        let replyingTo = null;
 
         window.onload = function() {
             muatPesanChat();
@@ -335,49 +353,13 @@
             });
         }
 
-            function kirimPesan() {
-    let input = document.getElementById("chat-input-text");
-    let rawText = input.value.trim();
-    if (!rawText) return;
-
-    // OTOMATIS SENSOR KATA KASAR DI SINI
-    let text = sensorText(rawText);
-
-    // Deteksi apakah ada @mention di dalam teks (gunakan teks asli/yang sudah disensor)
-    let mentionMatch = text.match(/@([a-zA-Z0-9_]+)/);
-    if (mentionMatch) {
-        let targetUser = mentionMatch[1].toLowerCase();
-        if (targetUser !== myUsername.toLowerCase()) {
-            mentionsRef.child(targetUser).set({
-                from: myUsername,
-                text: text,
-                timestamp: Date.now()
-            });
-        }
-    }
-
-    let newMsg = {
-        sender: myUsername,
-        text: text,
-        timestamp: Date.now()
-    };
-
-    if (replyingTo) {
-        newMsg.replyTo = replyingTo;
-        batalReply();
-    }
-
-    messagesRef.push(newMsg).then(() => {
-        input.value = "";
-    }).catch(err => {
-        alert("Gagal mengirim pesan.");
-        console.error(err);
-    });
+        function kirimPesan() {
             let input = document.getElementById("chat-input-text");
-            let text = input.value.trim();
-            if (!text) return;
+            let rawText = input.value.trim();
+            if (!rawText) return;
 
-            // Deteksi apakah ada @mention di dalam teks
+            let text = sensorText(rawText);
+
             let mentionMatch = text.match(/@([a-zA-Z0-9_]+)/);
             if (mentionMatch) {
                 let targetUser = mentionMatch[1].toLowerCase();
@@ -413,7 +395,7 @@
             let file = event.target.files[0];
             if (!file) return;
 
-            if (file.size > 1024 * 1024) { // Max 1MB untuk basis realtime database
+            if (file.size > 1024 * 1024) {
                 alert("Ukuran gambar terlalu besar! Maksimal 1MB.");
                 return;
             }
@@ -462,24 +444,6 @@
             let map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
-        // Daftar kata-kata yang ingin disensor (bisa kamu tambahkan sendiri)
-const censoredWords = [
-    "anjing", "babi", "anjing", "anjir", "bangsat", "kampret", 
-    "kontol", "memek", "ngentot", "tole", "anj", "pler", "puki", "celeng", 
-    "asu", "tempek", "jembot", "jembut", "kirik", "puki", "bajingan", "silit", "peli", 
-    "lonte", "titit", "bajing", "ultramen"
-];
-
-function sensorText(text) {
-    if (!text) return "";
-    let cleanText = text;
-    censoredWords.forEach(word => {
-        let regex = new RegExp(word, "gi"); // Case insensitive (huruf besar/kecil tetap disensor)
-        let replacement = "*".repeat(word.length);
-        cleanText = cleanText.replace(regex, replacement);
-    });
-    return cleanText;
-}
     </script>
 </body>
 </html>
