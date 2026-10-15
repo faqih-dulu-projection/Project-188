@@ -23,6 +23,24 @@
             overflow: hidden;
         }
 
+        /* Animasi Tombol VN Saat Merekam */
+        .recording {
+            background-color: #ef4444 !important;
+            border-color: #f87171 !important;
+            animation: pulseRecord 1.2s infinite;
+        }
+        @keyframes pulseRecord {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .msg-audio {
+            width: 220px;
+            margin-top: 6px;
+            display: block;
+        }
+
         /* ==================== HEADER ==================== */
         .chat-header {
             background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
@@ -250,10 +268,18 @@
         <div class="empty-chat">Memuat obrolan global...</div>
     </div>
 
+
     <!-- INPUT BAR -->
     <div class="chat-input-bar">
         <input type="file" id="image-file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
         <button class="chat-action-btn" title="Kirim Gambar" onclick="document.getElementById('image-file-input').click()">📷</button>
+        
+        <!-- ---> TOMBOL PEREKAM VN BARU <--- -->
+        <button class="chat-action-btn" id="vn-record-btn" title="Rekam Voice Note" onclick="toggleRecordVN()">🎤</button>
+        
+        <input type="text" id="chat-input-text" class="chat-input" placeholder="Ketik pesan atau @mention..." onkeypress="handleKeyPress(event)">
+        <button class="send-btn" onclick="kirimPesan()">KIRIM</button>
+    </div>
         <input type="text" id="chat-input-text" class="chat-input" placeholder="Ketik pesan atau @mention..." onkeypress="handleKeyPress(event)">
         <button class="send-btn" onclick="kirimPesan()">KIRIM</button>
     </div>
@@ -301,6 +327,71 @@
             muatPesanChat();
         };
 
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Fungsi untuk Mulai / Berhenti Rekam Voice Note
+        function toggleRecordVN() {
+            let btn = document.getElementById("vn-record-btn");
+
+            if (!isRecording) {
+                // Mulai Merekam
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        let audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        
+                        // Cek durasi / ukuran file (maksimal sekitar 1MB agar muat di database)
+                        if (audioBlob.size > 1024 * 1024) {
+                            alert("Durasi suara terlalu panjang! Maksimal ukurannya 1MB.");
+                            return;
+                        }
+
+                        let reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = function() {
+                            let base64Audio = reader.result;
+
+                            let newMsg = {
+                                sender: myUsername,
+                                audio: base64Audio,
+                                text: "[Pesan Suara 🎤]",
+                                timestamp: Date.now()
+                            };
+
+                            if (replyingTo) {
+                                newMsg.replyTo = replyingTo;
+                                batalReply();
+                            }
+
+                            messagesRef.push(newMsg);
+                        };
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.classList.add("recording");
+                    btn.title = "Tekan lagi untuk berhenti & kirim";
+                }).catch(err => {
+                    alert("Gagal mengakses mikrofon! Pastikan izin mikrofon diizinkan di browser.");
+                    console.error(err);
+                });
+            } else {
+                // Berhenti Merekam & Otomatis Kirim
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.classList.remove("recording");
+                btn.title = "Rekam Voice Note";
+            }
+        }
+
         function muatPesanChat() {
             messagesRef.limitToLast(100).on("value", (snapshot) => {
                 let container = document.getElementById("chat-messages-container");
@@ -338,6 +429,11 @@
 
                     if (msg.text) {
                         htmlContent += `<div class="msg-text">${escapeHtml(msg.text)}</div>`;
+                    }
+
+                    // ---> TAMBAHKAN BAGIAN INI <---
+                    if (msg.audio) {
+                        htmlContent += `<audio controls src="${msg.audio}" class="msg-audio"></audio>`;
                     }
 
                     if (msg.image) {
