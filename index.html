@@ -1382,19 +1382,19 @@
 
             let pool = [];
             if (tier === 'normal') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 70, uncommon: 24.5, rare: 5, epic: 0, legendary: 0.0005, mythic: 0, godly: 0, hack: 0, impossible: 0 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 70, uncommon: 24.5, rare: 5, epic: 0.009, legendary: 0.0005, mythic: 0.00001, godly: 0.00000000002, hack: 0.0000000000000007, impossible: 0.000000000000000000000001 }[i.rarity] || 0.1 }));
             } else if (tier === 'super') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 20, uncommon: 50, rare: 22, epic: 7, legendary: 1, mythic: 0, godly: 0, hack: 0, impossible: 0 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 20, uncommon: 50, rare: 22, epic: 7, legendary: 1, mythic: 0.001, godly: 0.00000005, hack: 0.0000000000012, impossible: 0.000000000000000000008 }[i.rarity] || 0.1 }));
             } else if (tier === 'mega') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 10, rare: 40, epic: 35, legendary: 13.9, mythic: 1, godly: 0.1, hack: 0.0005, impossible: 0.0000001 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 10, uncommon: 10, rare: 40, epic: 30, legendary: 9, mythic: 1, godly: 0.1, hack: 0.0005, impossible: 0.0000001 }[i.rarity] || 0.1 }));
             } else if (tier === 'god') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 30, legendary: 50, mythic: 18, godly: 2, hack: 0.1, impossible: 0.001 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 5, uncommon: 5, rare: 20, epic: 20, legendary: 50, mythic: 8, godly: 2, hack: 0.01, impossible: 0.001 }[i.rarity] || 0.1 }));
             } else if (tier === 'hacker') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 40, mythic: 40, godly: 13.5, hack: 6.5, impossible: 0.1 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 2, uncommon: 4, rare: 11, epic: 13, legendary: 55, mythic: 10, godly: 2, hack: 3, impossible: 0.0003 }[i.rarity] || 0.1 }));
             } else if (tier === 'hacker2') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 20, mythic: 30, godly: 15, hack: 35, impossible: 0.9 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 65, mythic: 15, godly: 4, hack: 6, impossible: 0.005 }[i.rarity] || 0.1 }));
             } else if (tier === 'hacker3') {
-                pool = ITEMS.map(i => ({ ...i, weight: { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 25, mythic: 15, godly: 15, hack: 45, impossible: 1 }[i.rarity] || 0.1 }));
+                pool = ITEMS.map(i => ({ ...i, weight: { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 60, mythic: 15, godly: 5, hack: 10, impossible: 0.01 }[i.rarity] || 0.1 }));
             }
 
             let totalWeight = 0;
