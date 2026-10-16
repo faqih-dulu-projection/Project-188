@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lobi & Arena PvP - Kolektor Legendaris</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #060810;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        body {
+            padding: 8px;
+            justify-content: space-between;
+        }
+
+        .arena-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        /* ==================== BAGIAN 1: PROFIL, CARI TEMAN, TITLE ==================== */
+        .section-profile {
+            background: linear-gradient(135deg, #0f172a 0%, #0b0f19 100%);
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+        }
+        .profile-left h3 { font-size: 14px; color: #38bdf8; font-weight: 800; }
+        .profile-title-badge { font-size: 9px; color: #ffd700; background: rgba(255,215,0,0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid #f59e0b; display: inline-block; margin-top: 2px; }
+        .search-friend-group { display: flex; gap: 4px; }
+        .search-input { background: #060810; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; color: #fff; font-size: 10px; width: 110px; outline: none; }
+        .search-input:focus { border-color: #38bdf8; }
+        .btn-small { background: #3b82f6; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+        .btn-small:hover { background: #2563eb; }
+
+        /* ==================== BAGIAN 2: LIST PERTEMANAN & UNDANG ==================== */
+        .section-friends {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 10px;
+            max-height: 110px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .section-title { font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .friends-list { display: flex; flex-direction: column; gap: 4px; }
+        .friend-row { background: #060810; border: 1px solid #1e293b; padding: 6px 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        .status-online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        .status-offline { background: #64748b; }
+        .btn-invite { background: #10b981; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; cursor: pointer; }
+        .btn-invite:hover { background: #059669; }
+
+        /* ==================== BAGIAN 3: LOBI KITA & TEMAN ==================== */
+        .section-lobby {
+            background: linear-gradient(145deg, #1e1b4b 0%, #0b0f19 100%);
+            border: 2px solid #7c3aed;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+        }
+        .lobby-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .lobby-box { background: #060810; border: 1px dashed #7c3aed; border-radius: 8px; padding: 10px; text-align: center; position: relative; min-height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .lobby-avatar { font-size: 22px; margin-bottom: 2px; }
+        .lobby-name { font-size: 11px; font-weight: 700; color: #c084fc; }
+        .lobby-status { font-size: 9px; color: #94a3b8; }
+        
+        .lobby-controls { display: flex; justify-content: space-between; align-items: center; }
+        .mic-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .mic-btn.active { background: #10b981; border-color: #34d399; }
+        
+        .emote-row { display: flex; gap: 4px; }
+        .emote-btn { background: #334155; border: none; padding: 5px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: transform 0.1s; }
+        .emote-btn:hover { transform: scale(1.15); }
+
+        /* ==================== BAGIAN 4: MODE, ITEM, & SKIN ==================== */
+        .section-actions {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+        }
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .mode-card { background: #060810; border: 1px solid #334155; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .mode-card:hover { border-color: #f59e0b; background: #111827; }
+        .mode-card h4 { font-size: 11px; color: #f59e0b; font-weight: 800; }
+        .mode-card p { font-size: 9px; color: #94a3b8; }
+
+        .bottom-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: auto; }
+        .action-tab-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 8px; border-radius: 8px; font-size: 10px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
+        .action-tab-btn:hover { background: #334155; border-color: #38bdf8; }
+
+        /* Modal Umum (Untuk Item Internal & Skin & Paket Emote) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999; padding: 16px; }
+        .modal-box { background: #0f172a; border: 2px solid #334155; border-radius: 14px; padding: 16px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; gap: 10px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
+        .modal-header h3 { font-size: 14px; color: #ffd700; }
+        .close-modal { font-size: 20px; color: #94a3b8; cursor: pointer; }
+        .modal-body { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+        .item-row-modal { background: #060810; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        
+        .skin-card { background: #060810; border: 1px solid #334155; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
+        .skin-card.equipped { border-color: #34d399; background: rgba(52, 211, 153, 0.1); }
+
+        .nav-back { display: block; text-align: center; background: #1e293b; color: #f8fafc; text-decoration: none; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; border: 1px solid #334155; flex-shrink: 0; }
+        .nav-back:hover { background: #334155; }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <div class="arena-container">
+        
+        <!-- BAGIAN 1: PROFIL, CARI TEMAN, TITLE -->
+        <div class="section-profile">
+            <div class="profile-left">
+                <h3 id="ui-username">@Trainer</h3>
+                <div class="profile-title-badge" id="ui-title">👑 Supreme Collector</div>
+            </div>
+            <div class="search-friend-group">
+                <input type="text" id="input-search-friend" class="search-input" placeholder="Cari Trainer...">
+                <button class="btn-small" onclick="cariTeman()">Cari</button>
+            </div>
+        </div>
+
+        <!-- BAGIAN 2: LIST PERTEMANAN & TOMBOL UNDANG -->
+        <div class="section-friends">
+            <div class="section-title">
+                <span>👥 Daftar Teman</span>
+                <span style="font-size: 9px; color: #34d399;">Online: 2</span>
+            </div>
+            <div class="friends-list">
+                <div class="friend-row">
+                    <div><span class="status-dot status-online"></span><b>@LordEl</b> (Online)</div>
+                    <button class="btn-invite" onclick="undangTeman('LordEl')">Undang</button>
+                </div>
+                <div class="friend-row">
+                    <div><span class="status-dot status-online"></span><b>@FaqihGanteng</b> (Online)</div>
+                    <button class="btn-invite" onclick="undangTeman('FaqihGanteng')">Undang</button>
+                </div>
+                <div class="friend-row">
+                    <div><span class="status-dot status-offline"></span><b>@SultanVoid</b> (Offline)</div>
+                    <button class="btn-invite" style="background:#334155; cursor:not-allowed;" disabled>Offline</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAGIAN 3: LOBI KITA & TEMAN, MIC, EMOTE -->
+        <div class="section-lobby">
+            <div class="lobby-slots">
+                <div class="lobby-box">
+                    <div class="lobby-avatar" id="my-avatar-icon">🧑‍💻</div>
+                    <div class="lobby-name" id="my-lobby-name">@Trainer (Kamu)</div>
+                    <div class="lobby-status" style="color:#34d399;">Host Lobi</div>
+                </div>
+                <div class="lobby-box" id="friend-slot-box">
+                    <div class="lobby-avatar">⏳</div>
+                    <div class="lobby-name" style="color:#64748b;">Menunggu Teman...</div>
+                    <div class="lobby-status">Klik 'Undang' di atas</div>
+                </div>
+            </div>
+
+            <div class="lobby-controls">
+                <button class="mic-btn" id="mic-toggle-btn" onclick="toggleMic()">🎤 Mic: OFF</button>
+                <div class="emote-row">
+                    <button class="emote-btn" onclick="kirimEmote('🔥')">🔥</button>
+                    <button class="emote-btn" onclick="kirimEmote('😂')">😂</button>
+                    <button class="emote-btn" onclick="kirimEmote('👑')">👑</button>
+                    <button class="emote-btn" onclick="kirimEmote('💀')">💀</button>
+                    <button class="emote-btn" onclick="bukaModalEmote()" title="Beli Paket Emote Lainnya">🛒</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAGIAN 4: MODE PERTARUNGAN, ITEM INTERNAL, PEMILIH SKIN -->
+        <div class="section-actions">
+            <div class="section-title">⚔️ Pilih Mode Pertarungan</div>
+            <div class="mode-grid">
+                <div class="mode-card" onclick="mulaiModeDuel('1v1 Klasik')">
+                    <h4>1v1 Klasik</h4>
+                    <p>Duel murni adu status item</p>
+                </div>
+                <div class="mode-card" onclick="mulaiModeDuel('Battle Royale')">
+                    <h4>Battle Royale</h4>
+                    <p>Bertahan hidup 4 pemain</p>
+                </div>
+            </div>
+
+            <div class="bottom-nav-grid">
+                <button class="action-tab-btn" onclick="bukaModalItemInternal()">🎒 Lihat Item Internal</button>
+                <button class="action-tab-btn" onclick="bukaModalSkin()">👕 Pemilih Skin Avatar</button>
+            </div>
+        </div>
+
+        <a href="indexx.html" class="nav-back">⬅️ Kembali ke Menu Utama Game</a>
+    </div>
+
+    <!-- MODAL 1: ITEM INTERNAL -->
+    <div class="modal" id="modal-items">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🎒 Koleksi Item Internal Kamu</h3>
+                <span class="close-modal" onclick="tutupModal('modal-items')">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-items-list">
+                <div style="text-align:center; color:#64748b; font-size:11px; padding:20px;">Memuat item dari database...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: PEMILIH SKIN -->
+    <div class="modal" id="modal-skin">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>👕 Pilih Skin Avatar Karakter</h3>
+                <span class="close-modal" onclick="tutupModal('modal-skin')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="skin-card equipped" id="skin-1" onclick="pilihSkin('🧑‍💻', 'Developer Cyber')">
+                    <div style="font-size:24px;">🧑‍💻</div>
+                    <b style="font-size:11px;">Developer Cyber</b>
+                    <p style="font-size:9px; color:#34d399;">Terpasang</p>
+                </div>
+                <div class="skin-card" id="skin-2" onclick="pilihSkin('🤖', 'Cyborg Android')">
+                    <div style="font-size:24px;">🤖</div>
+                    <b style="font-size:11px;">Cyborg Android</b>
+                    <p style="font-size:9px; color:#94a3b8;">Default Skin</p>
+                </div>
+                <div class="skin-card" id="skin-3" onclick="pilihSkin('👑', 'The King Emperor')">
+                    <div style="font-size:24px;">👑</div>
+                    <b style="font-size:11px;">The King Emperor</b>
+                    <p style="font-size:9px; color:#ffd700;">Spesial Title</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: PAKET EMOTE (SHOP) -->
+    <div class="modal" id="modal-emote">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🛒 Toko Paket Emote Eksklusif</h3>
+                <span class="close-modal" onclick="tutupModal('modal-emote')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="item-row-modal">
+                    <div><b>Paket 1: Toxic & Gejek</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🤡, 💩, 🥱</span></div>
+                    <button class="btn-small" onclick="beliPaketEmote('Paket 1', 500000)">500K Coins</button>
+                </div>
+                <div class="item-row-modal">
+                    <div><b>Paket 2: Animasi Keren</b><br><span style="font-size:9px; color:#94a3b8;">Isi: ⚡, 💎, 🚀</span></div>
+                    <button class="btn-small" onclick="beliPaketEmote('Paket 2', 2000000)">2M Coins</button>
+                </div>
+                <div class="item-row-modal">
+                    <div><b>Paket 3: Elemen Mistik</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🌌, 🔮, ⚡</span></div>
+                    <button class="btn-small" onclick="beliPaketEmote('Paket 3', 10000000)">10M Coins</button>
+                </div>
+                <div class="item-row-modal">
+                    <div><b>Paket 4: Badut Semesta</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🤡, 🐒, 👻</span></div>
+                    <button class="btn-small" onclick="beliPaketEmote('Paket 4', 50000000)">50M Coins</button>
+                </div>
+                <div class="item-row-modal">
+                    <div><b>Paket 5: Supreme God</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🌟, ⛩️, 🪐</span></div>
+                    <button class="btn-small" onclick="beliPaketEmote('Paket 5', 250000000)">250M Coins</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOBI ARENA -->
+    <script>
+        const firebaseConfig = { databaseURL: "https://gemgemini-f90ab-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        let myUsername = localStorage.getItem("poke_username") || "Trainer";
+        document.getElementById("ui-username").innerText = `@${myUsername}`;
+        document.getElementById("my-lobby-name").innerText = `@${myUsername} (Kamu)`;
+
+        let isMicOn = false;
+        let playerInventoryData = {};
+
+        window.onload = function() {
+            // Ambil data inventaris dari LocalStorage / Firebase
+            let localGameData = localStorage.getItem('puanyt_jaguar_v6_0');
+            if (localGameData) {
+                try {
+                    let parsed = JSON.parse(localGameData);
+                    playerInventoryData = parsed.inventory || {};
+                } catch(e) {}
+            }
+        };
+
+        function cariTeman() {
+            let target = document.getElementById("input-search-friend").value.trim();
+            if (!target) return alert("Masukkan nama trainer yang ingin dicari!");
+            alert(`🔍 Mencari data Trainer @${target} di database global...`);
+        }
+
+        function undangTeman(namaTeman) {
+            let slotBox = document.getElementById("friend-slot-box");
+            slotBox.innerHTML = `
+                <div class="lobby-avatar">🎮</div>
+                <div class="lobby-name" style="color:#34d399;">@${namaTeman}</div>
+                <div class="lobby-status">Siap Bertempur!</div>
+            `;
+            alert(`✅ Undangan berhasil dikirim ke @${namaTeman}! Dia telah bergabung ke lobi.`);
+        }
+
+        function toggleMic() {
+            isMicOn = !isMicOn;
+            let btn = document.getElementById("mic-toggle-btn");
+            if (isMicOn) {
+                btn.className = "mic-btn active";
+                btn.innerText = "🎤 Mic: ON (Connected)";
+            } else {
+                btn.className = "mic-btn";
+                btn.innerText = "🎤 Mic: OFF";
+            }
+        }
+
+        function kirimEmote(emoji) {
+            alert(`📢 Emote ${emoji} dikirim ke lobi arena!`);
+        }
+
+        function mulaiModeDuel(mode) {
+            alert(`🚀 Memasuki mode [${mode}]! Menyiapkan arena pertempuran...`);
+        }
+
+        function bukaModalItemInternal() {
+            document.getElementById("modal-items").style.display = "flex";
+            let container = document.getElementById("modal-items-list");
+            container.innerHTML = "";
+
+            let hasItems = false;
+            Object.keys(playerInventoryData).forEach(id => {
+                let qty = playerInventoryData[id];
+                if (qty > 0) {
+                    hasItems = true;
+                    let div = document.createElement("div");
+                    div.className = "item-row-modal";
+                    div.innerHTML = `<div><b>Item ID #${id}</b></div><div style="color:#ffd700;">${qty} Unit</div>`;
+                    container.appendChild(div);
+                }
+            });
+
+            if (!hasItems) {
+                container.innerHTML = `<div style="text-align:center; color:#64748b; font-size:11px; padding:20px;">Belum ada item tersimpan di inventaris internal.</div>`;
+            }
+        }
+
+        function bukaModalSkin() { document.getElementById("modal-skin").style.display = "flex"; }
+        function bukaModalEmote() { document.getElementById("modal-emote").style.display = "flex"; }
+
+        function tutupModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        function pilihSkin(icon, name) {
+            document.getElementById("my-avatar-icon").innerText = icon;
+            alert(`👕 Skin avatar diubah menjadi [${name}]!`);
+            tutupModal('modal-skin');
+        }
+
+        function beliPaketEmote(namaPaket, harga) {
+            alert(`🛒 Berhasil membeli ${namaPaket} seharga ${harga.toLocaleString('id-ID')} PokéCoins! Emote baru sudah bisa digunakan.`);
+            tutupModal('modal-emote');
+        }
+    </script>
+</body>
+</html>
