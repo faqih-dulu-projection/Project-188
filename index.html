@@ -1306,69 +1306,87 @@
         }
 
         function renderShop() {
-            const container = document.getElementById('upgrade-list-container');
-            if(!container) return;
-            container.innerHTML = '';
+    const container = document.getElementById('upgrade-list-container');
+    if(!container) return;
+    container.innerHTML = '';
 
-            const keys = Object.keys(BASE_PRICES);
-            const titles = ["Paket Pelajar", "Paket Jutawan", "Suntikan Sultan", "Sistem Semesta", "Modal Investor 💼", "Bisnis Monopoli 🏢", "Bantuan Goib", "GONG", "Liberall", "Cienturall", "Sentuhan Void"];
-            const descs = ["Adds +1 / click", "Adds +120 / click", "Adds +15K / click", "Adds +15M / click", "Adds +350M / click", "Adds +5B / click", "Adds +75B / click", "Adds +1T / click", "Adds +1Qa / click", "Adds +1Qi / click", "Adds +1Sx / click"];
-            const bonuses = [1, 120, 15000, 15000000, 350000000, 5000000000, 75000000000, 1000000000000, 1e15, 1e18, 1e21];
+    const keys = Object.keys(BASE_PRICES);
+    const titles = ["Paket Pelajar", "Paket Jutawan", "Suntikan Sultan", "Sistem Semesta", "Modal Investor 💼", "Bisnis Monopoli 🏢", "Bantuan Goib", "GONG", "Liberall", "Cienturall", "Sentuhan Void"];
+    const descs = ["Adds +1 / click", "Adds +120 / click", "Adds +15K / click", "Adds +15M / click", "Adds +350M / click", "Adds +5B / click", "Adds +75B / click", "Adds +1T / click", "Adds +1Qa / click", "Adds +1Qi / click", "Adds +1Sx / click"];
+    const bonuses = [1, 120, 15000, 15000000, 350000000, 5000000000, 75000000000, 1000000000000, 1e15, 1e18, 1e21];
 
-            keys.forEach((k, idx) => {
-                let price = getUpgradePrice(k);
-                if (price > gameData.coins) return;
+    keys.forEach((k, idx) => {
+        let price = getUpgradePrice(k);
+        let isAffordable = gameData.coins >= price;
 
-                let itemDiv = document.createElement('div');
-                itemDiv.className = 'upgrade-item';
-                itemDiv.innerHTML = `
-                    <div class="upgrade-info"><h3>${titles[idx]}</h3><p>${descs[idx]}</p></div>
-                    <button class="buy-btn" onclick="buyUpgrade('${k}', ${bonuses[idx]})">Cost: ${formatShort(price)} (Lvl ${gameData.upgrades[k] || 0})</button>
-                `;
-                container.appendChild(itemDiv);
-            });
-
-            if(container.children.length === 0) {
-                container.innerHTML = `<div class="empty-info">Semua upgrade yang terjangkau sudah dibeli, atau kumpulkan PokéCoins lebih banyak untuk membuka upgrade berikutnya!</div>`;
-            }
+        let itemDiv = document.createElement('div');
+        itemDiv.className = 'upgrade-item';
+        // Efek redup pada item jika koin belum cukup
+        if (!isAffordable) {
+            itemDiv.style.opacity = "0.45";
         }
+
+        itemDiv.innerHTML = `
+            <div class="upgrade-info">
+                <h3>${titles[idx]}</h3>
+                <p>${descs[idx]}</p>
+            </div>
+            <button class="buy-btn" ${!isAffordable ? 'style="background: #334155; color: #94a3b8; cursor: not-allowed;"' : ''} onclick="buyUpgrade('${k}', ${bonuses[idx]})">
+                ${isAffordable ? `Cost: ${formatShort(price)}` : 'Koin Kurang'} (Lvl ${gameData.upgrades[k] || 0})
+            </button>
+        `;
+        container.appendChild(itemDiv);
+    });
+}
 
         function renderGachaBanners() {
-            const container = document.getElementById('gacha-list-container');
-            if(!container) return;
-            container.innerHTML = '';
+    const container = document.getElementById('gacha-list-container');
+    if(!container) return;
+    container.innerHTML = '';
 
-            const banners = [
-                { id: 'normal', name: "Normal Banner", cost: 1000, desc: "Murni Perjuangan Awal", style: "" },
-                { id: 'super', name: "Super Banner", cost: 100000, desc: "Rare & Epic Terbuka", style: "" },
-                { id: 'mega', name: "Mega Banner", cost: 10000000000, desc: "Mythic Rate: 1 : 1K", style: "" },
-                { id: 'god', name: "Dewa Banner 👑", cost: 1250000000000, desc: "Godly Rate: 1%", style: "border-color: #ec4899;", titleStyle: "color:#ec4899", btnStyle: "background-color:#ec4899; color:#0f172a" },
-                { id: 'hacker', name: "Hacker Realm 🖥️", cost: 10000000000000, desc: "Hack Rate: 6.5% | Godly Melimpah", style: "border-color: #10b981;", titleStyle: "color:#10b981", spanStyle: "color:#10b981", btnStyle: "background-color:#10b981; color:#0f172a" },
-                { id: 'hacker2', name: "Dev1", cost: 1e16, desc: "Hack Rate: 10% Mutasi hack", style: "border-color: #334155; background: #0f172a", spanStyle: "color:#34d399", btnStyle: "background-color:#34d399; color:#0f172a" },
-                { id: 'hacker3', name: "Dev2", cost: 1e18, desc: "Hack Rate: 45% Mutasi hack", style: "border-color: #334155; background: #0f172a", spanStyle: "color:#34d399", btnStyle: "background-color:#34d399; color:#0f172a" }
-            ];
+    const banners = [
+        { id: 'normal', name: "Normal Banner", cost: 1000, desc: "Murni Perjuangan Awal", style: "" },
+        { id: 'super', name: "Super Banner", cost: 100000, desc: "Rare & Epic Terbuka", style: "" },
+        { id: 'mega', name: "Mega Banner", cost: 10000000000, desc: "Mythic Rate: 1 : 1K", style: "" },
+        { id: 'god', name: "Dewa Banner 👑", cost: 1250000000000, desc: "Godly Rate: 1%", style: "border-color: #ec4899;", titleStyle: "color:#ec4899", btnStyle: "background-color:#ec4899; color:#0f172a" },
+        { id: 'hacker', name: "Hacker Realm 🖥️", cost: 10000000000000, desc: "Hack Rate: 6.5% | Godly Melimpah", style: "border-color: #10b981;", titleStyle: "color:#10b981", spanStyle: "color:#10b981", btnStyle: "background-color:#10b981; color:#0f172a" },
+        { id: 'hacker2', name: "Dev1", cost: 1e16, desc: "Hack Rate: 35% Mutasi hack", style: "border-color: #334155; background: #0f172a", spanStyle: "color:#34d399", btnStyle: "background-color:#34d399; color:#0f172a" },
+        { id: 'hacker3', name: "Dev2", cost: 1e18, desc: "Hack Rate: 45% Mutasi hack", style: "border-color: #334155; background: #0f172a", spanStyle: "color:#34d399", btnStyle: "background-color:#34d399; color:#0f172a" }
+    ];
 
-            banners.forEach(b => {
-                if (b.cost > gameData.coins) return;
+    banners.forEach(b => {
+        let isAffordable = gameData.coins >= b.cost;
 
-                let box = document.createElement('div');
-                box.className = 'gacha-box';
-                if(b.style) box.style.cssText = b.style;
-                box.innerHTML = `
-                    <div class="gacha-info">
-                        <h3 ${b.titleStyle ? `style="${b.titleStyle}"` : ''}>${b.name}</h3>
-                        <p>Cost: ${formatShort(b.cost)}</p>
-                        <span ${b.spanStyle ? `style="${b.spanStyle}"` : ''}>${b.desc}</span>
-                    </div>
-                    <button class="gacha-btn" ${b.btnStyle ? `style="${b.btnStyle}"` : ''} onclick="triggerGacha('${b.id}')">Gacha</button>
-                `;
-                container.appendChild(box);
-            });
-
-            if(container.children.length === 0) {
-                container.innerHTML = `<div class="empty-info">Koin belum cukup untuk membuka banner gacha tingkat tinggi. Kumpulkan PokéCoins lebih banyak!</div>`;
-            }
+        let box = document.createElement('div');
+        box.className = 'gacha-box';
+        
+        let customStyle = b.style || "";
+        if (!isAffordable) {
+            customStyle += " opacity: 0.45;";
         }
+        if(customStyle) box.style.cssText = customStyle;
+
+        // Atur tampilan tombol dan teks cost jika koin kurang
+        let finalBtnStyle = b.btnStyle || "";
+        let btnText = "Gacha";
+        let costText = `Cost: ${formatShort(b.cost)}`;
+
+        if (!isAffordable) {
+            finalBtnStyle = "background-color: #334155 !important; color: #94a3b8 !important; cursor: not-allowed;";
+            btnText = "Terkunci";
+        }
+
+        box.innerHTML = `
+            <div class="gacha-info">
+                <h3 ${b.titleStyle ? `style="${b.titleStyle}"` : ''}>${b.name}</h3>
+                <p>${costText}</p>
+                <span ${b.spanStyle ? `style="${b.spanStyle}"` : ''}>${b.desc}</span>
+            </div>
+            <button class="gacha-btn" style="${finalBtnStyle}" onclick="triggerGacha('${b.id}')">${btnText}</button>
+        `;
+        container.appendChild(box);
+    });
+}
 
         function triggerGacha(tier) {
             let tiers = { normal: 1000, super: 100000, mega: 10000000000, god: 1250000000000, hacker: 10000000000000, hacker2: 1e16, hacker3: 1e18 };
