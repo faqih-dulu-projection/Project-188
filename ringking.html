@@ -252,7 +252,6 @@
             });
         }
 
-        // 2. TERIMA UNDANGAN
         function terimaUndanganLobi() {
             if (!incomingInviter) return;
             currentLobbyId = incomingInviter;
@@ -266,7 +265,10 @@
 
             myRef.update({ lobbyId: currentLobbyId });
             document.getElementById("lobby-status-indicator").innerText = `Status: Di Lobi @${currentLobbyId}`;
+            
+            // ---> TAMBAHKAN BARIS INI SUPAYA STATUS MEMANGGIL LANGSUNG BERHENTI <---
             myRef.child("incoming_invite").remove();
+            db.ref("arena_players/" + currentLobbyId + "/incoming_invite").remove();
 
             // Pantau lobi host untuk sinkronisasi live
             mulaiSinkronisasiLobi(currentLobbyId);
