@@ -59,13 +59,13 @@
         .btn-small { background: #3b82f6; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
         .btn-small:hover { background: #2563eb; }
 
-        /* ==================== BAGIAN 2: LIST PERTEMANAN & UNDANG ==================== */
+        /* ==================== BAGIAN 2: LIST PERTEMANAN & LEADERBOARD ====================. */
         .section-friends {
             background: #0f172a;
             border: 1px solid #1e293b;
             border-radius: 12px;
             padding: 10px;
-            max-height: 110px;
+            max-height: 120px;
             overflow-y: auto;
             flex-shrink: 0;
         }
@@ -78,7 +78,7 @@
         .btn-invite { background: #10b981; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; cursor: pointer; }
         .btn-invite:hover { background: #059669; }
 
-        /* ==================== BAGIAN 3: LOBI KITA & TEMAN ==================== */
+        /* ==================== BAGIAN 3: LOBI KARAKTER GEMOY & MIC ==================== */
         .section-lobby {
             background: linear-gradient(145deg, #1e1b4b 0%, #0b0f19 100%);
             border: 2px solid #7c3aed;
@@ -91,20 +91,40 @@
             box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
         }
         .lobby-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .lobby-box { background: #060810; border: 1px dashed #7c3aed; border-radius: 8px; padding: 10px; text-align: center; position: relative; min-height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .lobby-avatar { font-size: 22px; margin-bottom: 2px; }
+        .lobby-box { background: #060810; border: 1px dashed #7c3aed; border-radius: 8px; padding: 8px; text-align: center; position: relative; min-height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        /* Karakter Bulat Gemoy Bernapas (Pou-style) */
+        @keyframes avatarBreathe {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.03); }
+        }
+        .gemoy-avatar-container {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: avatarBreathe 2.5s ease-in-out infinite;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.5);
+            margin-bottom: 2px;
+        }
+        .gemoy-face { font-size: 18px; }
+        .gemoy-accessory { position: absolute; top: -8px; font-size: 14px; }
+
         .lobby-name { font-size: 11px; font-weight: 700; color: #c084fc; }
         .lobby-status { font-size: 9px; color: #94a3b8; }
         
         .lobby-controls { display: flex; justify-content: space-between; align-items: center; }
-        .mic-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
-        .mic-btn.active { background: #10b981; border-color: #34d399; }
+        .mic-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .mic-btn.active { background: #10b981; border-color: #34d399; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
         
         .emote-row { display: flex; gap: 4px; }
-        .emote-btn { background: #334155; border: none; padding: 5px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: transform 0.1s; }
+        .emote-btn { background: #334155; border: none; padding: 5px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; color: #fff; transition: transform 0.1s; }
         .emote-btn:hover { transform: scale(1.15); }
 
-        /* ==================== BAGIAN 4: MODE, ITEM, & SKIN ==================== */
+        /* ==================== BAGIAN 4: MODE, ITEM INTERNAL, & SKIN ==================== */
         .section-actions {
             background: #0f172a;
             border: 1px solid #1e293b;
@@ -122,11 +142,11 @@
         .mode-card h4 { font-size: 11px; color: #f59e0b; font-weight: 800; }
         .mode-card p { font-size: 9px; color: #94a3b8; }
 
-        .bottom-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: auto; }
-        .action-tab-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 8px; border-radius: 8px; font-size: 10px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
+        .bottom-nav-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: auto; }
+        .action-tab-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 8px 4px; border-radius: 8px; font-size: 10px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
         .action-tab-btn:hover { background: #334155; border-color: #38bdf8; }
 
-        /* Modal Umum (Untuk Item Internal & Skin & Paket Emote) */
+        /* Modal Umum */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999; padding: 16px; }
         .modal-box { background: #0f172a; border: 2px solid #334155; border-radius: 14px; padding: 16px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; gap: 10px; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
@@ -136,8 +156,9 @@
 
         .item-row-modal { background: #060810; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
         
-        .skin-card { background: #060810; border: 1px solid #334155; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
-        .skin-card.equipped { border-color: #34d399; background: rgba(52, 211, 153, 0.1); }
+        .customizer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .custom-card { background: #060810; border: 1px solid #334155; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; font-size: 10px; }
+        .custom-card.active { border-color: #34d399; background: rgba(52, 211, 153, 0.1); font-weight: bold; }
 
         .nav-back { display: block; text-align: center; background: #1e293b; color: #f8fafc; text-decoration: none; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; border: 1px solid #334155; flex-shrink: 0; }
         .nav-back:hover { background: #334155; }
@@ -151,222 +172,338 @@
 
     <div class="arena-container">
         
-        <!-- BAGIAN 1: PROFIL, CARI TEMAN, TITLE -->
+        <!-- BAGIAN 1: PROFIL, CARI PEMAIN ASLI, TITLE -->
         <div class="section-profile">
             <div class="profile-left">
                 <h3 id="ui-username">@Trainer</h3>
-                <div class="profile-title-badge" id="ui-title">👑 Supreme Collector</div>
+                <div class="profile-title-badge" id="ui-title">👑 Title: Pemula</div>
             </div>
             <div class="search-friend-group">
-                <input type="text" id="input-search-friend" class="search-input" placeholder="Cari Trainer...">
-                <button class="btn-small" onclick="cariTeman()">Cari</button>
+                <input type="text" id="input-search-friend" class="search-input" placeholder="Cari pemain asli...">
+                <button class="btn-small" onclick="cariPemainAsli()">Cari</button>
             </div>
         </div>
 
-        <!-- BAGIAN 2: LIST PERTEMANAN & TOMBOL UNDANG -->
+        <!-- BAGIAN 2: LIST PERTEMANAN ONLINE & PAPAN PERINGKAT KILL -->
         <div class="section-friends">
             <div class="section-title">
-                <span>👥 Daftar Teman</span>
-                <span style="font-size: 9px; color: #34d399;">Online: 2</span>
+                <span>🌐 Pemain Online & Papan Peringkat Kill Terbanyak</span>
+                <span style="font-size: 9px; color: #34d399;" id="online-count-badge">Live Sync</span>
             </div>
-            <div class="friends-list">
-                <div class="friend-row">
-                    <div><span class="status-dot status-online"></span><b>@LordEl</b> (Online)</div>
-                    <button class="btn-invite" onclick="undangTeman('LordEl')">Undang</button>
-                </div>
-                <div class="friend-row">
-                    <div><span class="status-dot status-online"></span><b>@FaqihGanteng</b> (Online)</div>
-                    <button class="btn-invite" onclick="undangTeman('FaqihGanteng')">Undang</button>
-                </div>
-                <div class="friend-row">
-                    <div><span class="status-dot status-offline"></span><b>@SultanVoid</b> (Offline)</div>
-                    <button class="btn-invite" style="background:#334155; cursor:not-allowed;" disabled>Offline</button>
-                </div>
+            <div class="friends-list" id="global-players-list">
+                <div style="text-align:center; color:#64748b; font-size:10px; padding:6px;">Memuat data pemain aktif...</div>
             </div>
         </div>
 
-        <!-- BAGIAN 3: LOBI KITA & TEMAN, MIC, EMOTE -->
+        <!-- BAGIAN 3: LOBI KARAKTER GEMOY & MIC ASLI -->
         <div class="section-lobby">
             <div class="lobby-slots">
                 <div class="lobby-box">
-                    <div class="lobby-avatar" id="my-avatar-icon">🧑‍💻</div>
+                    <div class="gemoy-avatar-container" id="my-gemoy-bg" style="background-color: #7c3aed;">
+                        <div class="gemoy-accessory" id="my-gemoy-acc">👑</div>
+                        <div class="gemoy-face">😊</div>
+                    </div>
                     <div class="lobby-name" id="my-lobby-name">@Trainer (Kamu)</div>
-                    <div class="lobby-status" style="color:#34d399;">Host Lobi</div>
+                    <div class="lobby-status" style="color:#34d399;">Kill: <span id="my-kill-count">0</span></div>
                 </div>
                 <div class="lobby-box" id="friend-slot-box">
-                    <div class="lobby-avatar">⏳</div>
+                    <div class="gemoy-avatar-container" style="background-color: #334155;">
+                        <div class="gemoy-face">⏳</div>
+                    </div>
                     <div class="lobby-name" style="color:#64748b;">Menunggu Teman...</div>
-                    <div class="lobby-status">Klik 'Undang' di atas</div>
+                    <div class="lobby-status">Undang pemain aktif</div>
                 </div>
             </div>
 
             <div class="lobby-controls">
-                <button class="mic-btn" id="mic-toggle-btn" onclick="toggleMic()">🎤 Mic: OFF</button>
-                <div class="emote-row">
-                    <button class="emote-btn" onclick="kirimEmote('🔥')">🔥</button>
-                    <button class="emote-btn" onclick="kirimEmote('😂')">😂</button>
-                    <button class="emote-btn" onclick="kirimEmote('👑')">👑</button>
-                    <button class="emote-btn" onclick="kirimEmote('💀')">💀</button>
-                    <button class="emote-btn" onclick="bukaModalEmote()" title="Beli Paket Emote Lainnya">🛒</button>
+                <button class="mic-btn" id="mic-toggle-btn" onclick="toggleMicReal()">🎤 Mic: OFF</button>
+                <div class="emote-row" id="equipped-emotes-bar">
+                    <button class="emote-btn" onclick="kirimEmoteAnimasi('🔥')">🔥</button>
+                    <button class="emote-btn" onclick="kirimEmoteAnimasi('⚡')">⚡</button>
+                    <button class="emote-btn" onclick="kirimEmoteAnimasi('👑')">👑</button>
+                    <button class="emote-btn" onclick="bukaModalEmoteShop()" title="Beli Paket Emote (5K Coins)">🛒</button>
                 </div>
             </div>
         </div>
 
-        <!-- BAGIAN 4: MODE PERTARUNGAN, ITEM INTERNAL, PEMILIH SKIN -->
+        <!-- BAGIAN 4: MODE, ITEM INTERNAL ASLI, & CUSTOMIZER SKIN -->
         <div class="section-actions">
             <div class="section-title">⚔️ Pilih Mode Pertarungan</div>
             <div class="mode-grid">
-                <div class="mode-card" onclick="mulaiModeDuel('1v1 Klasik')">
-                    <h4>1v1 Klasik</h4>
-                    <p>Duel murni adu status item</p>
+                <div class="mode-card" onclick="mulaiSimulasiPertandingan()">
+                    <h4>1v1 Arena Duel</h4>
+                    <p>Uji kekuatan tempur lawan musuh acak</p>
                 </div>
-                <div class="mode-card" onclick="mulaiModeDuel('Battle Royale')">
+                <div class="mode-card" onclick="alert('Mode Battle Royale sedang dalam pengembangan semesta!')">
                     <h4>Battle Royale</h4>
-                    <p>Bertahan hidup 4 pemain</p>
+                    <p>Segera Hadir</p>
                 </div>
             </div>
 
             <div class="bottom-nav-grid">
-                <button class="action-tab-btn" onclick="bukaModalItemInternal()">🎒 Lihat Item Internal</button>
-                <button class="action-tab-btn" onclick="bukaModalSkin()">👕 Pemilih Skin Avatar</button>
+                <button class="action-tab-btn" onclick="bukaModalItemInternal()">🎒 Koleksi Asli</button>
+                <button class="action-tab-btn" onclick="bukaModalSkinCustom()">🎨 Kostum Pou</button>
+                <button class="action-tab-btn" onclick="bukaModalEmoteShop()">🛒 Toko Emote</button>
             </div>
         </div>
 
-        <a href="indexx.html" class="nav-back">⬅️ Kembali ke Menu Utama Game</a>
+        <a href="index.html" class="nav-back">⬅️ Kembali ke Menu Utama Game</a>
     </div>
 
-    <!-- MODAL 1: ITEM INTERNAL -->
+    <!-- MODAL 1: KOLEKSI ITEM INTERNAL (NAMA ASLI) -->
     <div class="modal" id="modal-items">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>🎒 Koleksi Item Internal Kamu</h3>
+                <h3>🎒 Inventaris Koleksi Asli Kamu</h3>
                 <span class="close-modal" onclick="tutupModal('modal-items')">&times;</span>
             </div>
             <div class="modal-body" id="modal-items-list">
-                <div style="text-align:center; color:#64748b; font-size:11px; padding:20px;">Memuat item dari database...</div>
+                <div style="text-align:center; color:#64748b; font-size:11px; padding:20px;">Memuat item...</div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: PEMILIH SKIN -->
+    <!-- MODAL 2: CUSTOMIZER SKIN & AKSESORIS -->
     <div class="modal" id="modal-skin">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>👕 Pilih Skin Avatar Karakter</h3>
+                <h3>🎨 Kustomisasi Karakter Gemoy</h3>
                 <span class="close-modal" onclick="tutupModal('modal-skin')">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="skin-card equipped" id="skin-1" onclick="pilihSkin('🧑‍💻', 'Developer Cyber')">
-                    <div style="font-size:24px;">🧑‍💻</div>
-                    <b style="font-size:11px;">Developer Cyber</b>
-                    <p style="font-size:9px; color:#34d399;">Terpasang</p>
+                <label style="font-size:11px; color:#94a3b8; font-weight:bold;">Warna Badan:</label>
+                <div class="customizer-grid">
+                    <div class="custom-card active" onclick="gantiWarnaKulit('#7c3aed', this)">Ungu Void</div>
+                    <div class="custom-card" onclick="gantiWarnaKulit('#3b82f6', this)">Biru Laut</div>
+                    <div class="custom-card" onclick="gantiWarnaKulit('#10b981', this)">Hijau Hack</div>
+                    <div class="custom-card" onclick="gantiWarnaKulit('#ef4444', this)">Merah Nyala</div>
+                    <div class="custom-card" onclick="gantiWarnaKulit('#f59e0b', this)">Emas Sultan</div>
+                    <div class="custom-card" onclick="gantiWarnaKulit('#ec4899', this)">Pink Imut</div>
                 </div>
-                <div class="skin-card" id="skin-2" onclick="pilihSkin('🤖', 'Cyborg Android')">
-                    <div style="font-size:24px;">🤖</div>
-                    <b style="font-size:11px;">Cyborg Android</b>
-                    <p style="font-size:9px; color:#94a3b8;">Default Skin</p>
-                </div>
-                <div class="skin-card" id="skin-3" onclick="pilihSkin('👑', 'The King Emperor')">
-                    <div style="font-size:24px;">👑</div>
-                    <b style="font-size:11px;">The King Emperor</b>
-                    <p style="font-size:9px; color:#ffd700;">Spesial Title</p>
+
+                <label style="font-size:11px; color:#94a3b8; font-weight:bold; margin-top:6px;">Aksesoris:</label>
+                <div class="customizer-grid">
+                    <div class="custom-card active" onclick="gantiAksesoris('👑', this)">Mahkota 👑</div>
+                    <div class="custom-card" onclick="gantiAksesoris('🎀', this)">Pita Lucu 🎀</div>
+                    <div class="custom-card" onclick="gantiAksesoris('🕶️', this)">Kacamata 🕶️</div>
+                    <div class="custom-card" onclick="gantiAksesoris('🪶', this)">Bulu Burung 🪶</div>
+                    <div class="custom-card" onclick="gantiAksesoris('⚽', this)">Bola Olahraga ⚽</div>
+                    <div class="custom-card" onclick="gantiAksesoris('', this)">Tanpa Aksesoris</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: PAKET EMOTE (SHOP) -->
+    <!-- MODAL 3: TOKO EMOTE 5K Koin -->
     <div class="modal" id="modal-emote">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>🛒 Toko Paket Emote Eksklusif</h3>
+                <h3>🛒 Toko Paket Emote Animasi (5.000 Coins)</h3>
                 <span class="close-modal" onclick="tutupModal('modal-emote')">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="item-row-modal">
-                    <div><b>Paket 1: Toxic & Gejek</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🤡, 💩, 🥱</span></div>
-                    <button class="btn-small" onclick="beliPaketEmote('Paket 1', 500000)">500K Coins</button>
+                    <div><b>Paket Api & Petir</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 💥, ⚡, 🔥</span></div>
+                    <button class="btn-small" onclick="beliPaketEmoteShop('Paket Api & Petir', ['💥', '⚡', '🔥'])">Beli (5.000)</button>
                 </div>
                 <div class="item-row-modal">
-                    <div><b>Paket 2: Animasi Keren</b><br><span style="font-size:9px; color:#94a3b8;">Isi: ⚡, 💎, 🚀</span></div>
-                    <button class="btn-small" onclick="beliPaketEmote('Paket 2', 2000000)">2M Coins</button>
+                    <div><b>Paket Raja & Mahkota</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 👑, 💎, 🏆</span></div>
+                    <button class="btn-small" onclick="beliPaketEmoteShop('Paket Raja', ['👑', '💎', '🏆'])">Beli (5.000)</button>
                 </div>
                 <div class="item-row-modal">
-                    <div><b>Paket 3: Elemen Mistik</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🌌, 🔮, ⚡</span></div>
-                    <button class="btn-small" onclick="beliPaketEmote('Paket 3', 10000000)">10M Coins</button>
+                    <div><b>Paket Tengkorak Mistik</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 💀, 👻, 🌌</span></div>
+                    <button class="btn-small" onclick="beliPaketEmoteShop('Paket Mistik', ['💀', '👻', '🌌'])">Beli (5.000)</button>
                 </div>
                 <div class="item-row-modal">
-                    <div><b>Paket 4: Badut Semesta</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🤡, 🐒, 👻</span></div>
-                    <button class="btn-small" onclick="beliPaketEmote('Paket 4', 50000000)">50M Coins</button>
+                    <div><b>Paket Lucu & Senyum</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🐱, 🌸, 🚀</span></div>
+                    <button class="btn-small" onclick="beliPaketEmoteShop('Paket Lucu', ['🐱', '🌸', '🚀'])">Beli (5.000)</button>
                 </div>
                 <div class="item-row-modal">
-                    <div><b>Paket 5: Supreme God</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🌟, ⛩️, 🪐</span></div>
-                    <button class="btn-small" onclick="beliPaketEmote('Paket 5', 250000000)">250M Coins</button>
+                    <div><b>Paket Kosmik Ultimate</b><br><span style="font-size:9px; color:#94a3b8;">Isi: 🪐, 🌠, ⛩️</span></div>
+                    <button class="btn-small" onclick="beliPaketEmoteShop('Paket Kosmik', ['🪐', '🌠', '⛩️'])">Beli (5.000)</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT LOBI ARENA -->
+    <!-- SCRIPT UTAMA ARENA -->
     <script>
+        // Data Basis Item Asli dari Game Utama
+        const baseItemsList = [
+            { id: 10, name: "MBG (My Bini Gwh)", rarity: "common" },
+            { id: 11, name: "Bantal", rarity: "common" },
+            { id: 12, name: "Lampu", rarity: "common" },
+            { id: 13, name: "Semanggi 3", rarity: "common" },
+            { id: 14, name: "Tit tut tit", rarity: "common" },
+            { id: 15, name: "Sawit", rarity: "common" },
+            { id: 100, name: "Kertas Perak Rokok", rarity: "uncommon" },
+            { id: 101, name: "Uang Koin Yasin", rarity: "uncommon" },
+            { id: 200, name: "Keris Souvenir Pernikahan", rarity: "rare" },
+            { id: 300, name: "Sertifikat Tanah Gaib", rarity: "epic" },
+            { id: 400, name: "Keris Kuno Empu Gandring", rarity: "legendary" },
+            { id: 406, name: "SANGLEGEND", rarity: "mythic" },
+            { id: 600, name: "Singgasana Keabadian", rarity: "godly" },
+            { id: 700, name: "XCS Hacked", rarity: "hack" },
+            { id: 800, name: "The Void's Paradox", rarity: "impossible" }
+        ];
+
         const firebaseConfig = { databaseURL: "https://gemgemini-f90ab-default-rtdb.asia-southeast1.firebasedatabase.app/" };
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
 
-        let myUsername = localStorage.getItem("poke_username") || "Trainer";
+        let myUsername = localStorage.getItem("poke_username") || "Trainer" + Math.floor(Math.random()*1000);
+        localStorage.setItem("poke_username", myUsername);
         document.getElementById("ui-username").innerText = `@${myUsername}`;
         document.getElementById("my-lobby-name").innerText = `@${myUsername} (Kamu)`;
 
-        let isMicOn = false;
+        let myKills = 0;
         let playerInventoryData = {};
+        let myGameCoins = 0;
+        let activeAudioStream = null;
 
         window.onload = function() {
-            // Ambil data inventaris dari LocalStorage / Firebase
-            let localGameData = localStorage.getItem('puanyt_jaguar_v6_0');
-            if (localGameData) {
+            // Ambil data dari LocalStorage game utama
+            let savedStr = localStorage.getItem('puanyt_jaguar_v6_0');
+            if (savedStr) {
                 try {
-                    let parsed = JSON.parse(localGameData);
+                    let parsed = JSON.parse(savedStr);
                     playerInventoryData = parsed.inventory || {};
+                    myGameCoins = parsed.coins || 0;
                 } catch(e) {}
             }
+
+            // Daftarkan/Sinkronkan profil pemain aktif secara real-time ke database publik
+            let playerRef = db.ref("arena_players/" + myUsername);
+            playerRef.set({
+                username: myUsername,
+                status: "Online",
+                kills: 0,
+                lastActive: Date.now()
+            });
+            playerRef.onDisconnect().remove();
+
+            // Ambil data kill & update title
+            playerRef.child("kills").on("value", snap => {
+                myKills = snap.val() || 0;
+                document.getElementById("my-kill-count").innerText = myKills;
+                updateTitleByKills(myKills);
+            });
+
+            // Pantau daftar pemain online asli (Leaderboard Kill)
+            muatPemimpinDanPemainOnline();
         };
 
-        function cariTeman() {
-            let target = document.getElementById("input-search-friend").value.trim();
-            if (!target) return alert("Masukkan nama trainer yang ingin dicari!");
-            alert(`🔍 Mencari data Trainer @${target} di database global...`);
+        // Sistem Kalkulasi Title Berdasarkan Kill
+        function updateTitleByKills(kills) {
+            let title = "Pemula";
+            if (kills >= 1000000000) title = "Dewa 🌌";
+            else if (kills >= 100000000) title = "King 👑";
+            else if (kills >= 10000000) title = "Hacker 💻";
+            else if (kills >= 1000000) title = "Ahli 🛡️";
+            else if (kills >= 100000) title = "Profesor 🔬";
+            else if (kills >= 10000) title = "Admin ⚡";
+            else if (kills >= 1000) title = "Pesulap 🔮";
+            else if (kills >= 400) title = "Tetua 🦉";
+            else if (kills >= 300) title = "Pintar 🧠";
+            else if (kills >= 150) title = "Pro ⚔️";
+            else if (kills >= 100) title = "Normal 🎯";
+
+            document.getElementById("ui-title").innerText = `👑 Title: ${title} (${kills} Kills)`;
         }
 
-        function undangTeman(namaTeman) {
+        // Tampilkan Pemain Asli & Papan Peringkat Kill Terbanyak
+        function muatPemimpinDanPemainOnline() {
+            db.ref("arena_players").on("value", snapshot => {
+                let listContainer = document.getElementById("global-players-list");
+                listContainer.innerHTML = "";
+
+                if (!snapshot.exists()) {
+                    listContainer.innerHTML = `<div style="text-align:center; color:#64748b; font-size:10px;">Belum ada pemain aktif online.</div>`;
+                    return;
+                }
+
+                let playersObj = snapshot.val();
+                let playersArr = Object.values(playersObj);
+
+                // Urutkan berdasarkan kill terbanyak (Leaderboard)
+                playersArr.sort((a, b) => b.kills - a.kills);
+
+                playersArr.forEach((p, index) => {
+                    let row = document.createElement("div");
+                    row.className = "friend-row";
+                    row.innerHTML = `
+                        <div>
+                            <span class="status-dot status-online"></span>
+                            <b>#${index+1} @${p.username}</b> <span style="font-size:9px; color:#ffd700;">(${p.kills} Kills)</span>
+                        </div>
+                        ${p.username !== myUsername ? `<button class="btn-invite" onclick="undangPemainAsli('${p.username}')">Undang</button>` : '<span style="font-size:9px; color:#34d399;">(Kamu)</span>'}
+                    `;
+                    listContainer.appendChild(row);
+                });
+            });
+        }
+
+        function cariPemainAsli() {
+            let query = document.getElementById("input-search-friend").value.trim().toLowerCase();
+            if (!query) return alert("Masukkan nama pemain yang ingin dicari!");
+            
+            db.ref("arena_players").once("value").then(snap => {
+                if (snap.exists() && snap.val()[query]) {
+                    alert(`✅ Pemain @${query} ditemukan sedang online di server!`);
+                } else {
+                    alert(`❌ Pemain @${query} tidak ditemukan atau sedang offline.`);
+                }
+            });
+        }
+
+        function undangPemainAsli(targetUser) {
             let slotBox = document.getElementById("friend-slot-box");
             slotBox.innerHTML = `
-                <div class="lobby-avatar">🎮</div>
-                <div class="lobby-name" style="color:#34d399;">@${namaTeman}</div>
-                <div class="lobby-status">Siap Bertempur!</div>
+                <div class="gemoy-avatar-container" style="background-color: #3b82f6;">
+                    <div class="gemoy-face">😎</div>
+                </div>
+                <div class="lobby-name" style="color:#34d399;">@${targetUser}</div>
+                <div class="lobby-status">Bergabung di Lobi!</div>
             `;
-            alert(`✅ Undangan berhasil dikirim ke @${namaTeman}! Dia telah bergabung ke lobi.`);
+            alert(`✅ Undangan berhasil dikirim ke @${targetUser}.`);
         }
 
-        function toggleMic() {
-            isMicOn = !isMicOn;
+        // Mic Real menggunakan MediaStream API browser
+        function toggleMicReal() {
             let btn = document.getElementById("mic-toggle-btn");
-            if (isMicOn) {
-                btn.className = "mic-btn active";
-                btn.innerText = "🎤 Mic: ON (Connected)";
+            if (!activeAudioStream) {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    activeAudioStream = stream;
+                    btn.className = "mic-btn active";
+                    btn.innerText = "🎤 Mic: ON (Live)";
+                }).catch(err => {
+                    alert("Gagal mengaktifkan mikrofon. Izinkan akses mikrofon di browser kamu.");
+                });
             } else {
+                activeAudioStream.getTracks().forEach(track => track.stop());
+                activeAudioStream = null;
                 btn.className = "mic-btn";
                 btn.innerText = "🎤 Mic: OFF";
             }
         }
 
-        function kirimEmote(emoji) {
-            alert(`📢 Emote ${emoji} dikirim ke lobi arena!`);
+        function kirimEmoteAnimasi(emote) {
+            alert(`✨ Emote ${emote} dipancarkan ke seluruh pemain di lobi!`);
         }
 
-        function mulaiModeDuel(mode) {
-            alert(`🚀 Memasuki mode [${mode}]! Menyiapkan arena pertempuran...`);
+        // Simulai Pertandingan (Tambah Kill jika Menang)
+        function mulaiSimulasiPertandingan() {
+            let menang = Math.random() > 0.3; // 70% peluang menang
+            if (menang) {
+                myKills += 1;
+                db.ref("arena_players/" + myUsername).update({ kills: myKills });
+                alert(`🎉 Kemenangan Diraih! Kamu berhasil mengalahkan musuh di arena.\n+1 Kill ditambahkan! (Total Kill: ${myKills})`);
+            } else {
+                alert(`💀 Kamu dikalahkan di arena pertempuran! Coba tingkatkan koleksi itemmu.`);
+            }
         }
 
+        // Modal Inventaris dengan Nama Asli Item
         function bukaModalItemInternal() {
             document.getElementById("modal-items").style.display = "flex";
             let container = document.getElementById("modal-items-list");
@@ -377,33 +514,67 @@
                 let qty = playerInventoryData[id];
                 if (qty > 0) {
                     hasItems = true;
+                    // Cari nama asli berdasarkan ID dari database baseItemsList atau fallback
+                    let foundItem = baseItemsList.find(i => i.id == id);
+                    let realName = foundItem ? foundItem.name : `Artefak Kosmik #${id}`;
+                    let rarity = foundItem ? foundItem.rarity : "rare";
+
                     let div = document.createElement("div");
                     div.className = "item-row-modal";
-                    div.innerHTML = `<div><b>Item ID #${id}</b></div><div style="color:#ffd700;">${qty} Unit</div>`;
+                    div.innerHTML = `<div><b>${realName}</b> <span style="font-size:9px; color:#94a3b8;">(${rarity})</span></div><div style="color:#ffd700;">${qty} Unit</div>`;
                     container.appendChild(div);
                 }
             });
 
             if (!hasItems) {
-                container.innerHTML = `<div style="text-align:center; color:#64748b; font-size:11px; padding:20px;">Belum ada item tersimpan di inventaris internal.</div>`;
+                container.innerHTML = `<div style="text-align:center; color:#64748b; font-size:11px; padding:20px;">Belum ada item tersimpan di inventaris. Gacha dulu di game utama!</div>`;
             }
         }
 
-        function bukaModalSkin() { document.getElementById("modal-skin").style.display = "flex"; }
-        function bukaModalEmote() { document.getElementById("modal-emote").style.display = "flex"; }
+        function bukaModalSkinCustom() { document.getElementById("modal-skin").style.display = "flex"; }
+        function bukaModalEmoteShop() { document.getElementById("modal-emote").style.display = "flex"; }
+        function tutupModal(id) { document.getElementById(id).style.display = "none"; }
 
-        function tutupModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
+        function gantiWarnaKulit(colorHex, el) {
+            document.getElementById("my-gemoy-bg").style.backgroundColor = colorHex;
+            document.querySelectorAll('#modal-skin .customizer-grid')[0].querySelectorAll('.custom-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        function pilihSkin(icon, name) {
-            document.getElementById("my-avatar-icon").innerText = icon;
-            alert(`👕 Skin avatar diubah menjadi [${name}]!`);
-            tutupModal('modal-skin');
+        function gantiAksesoris(accEmoji, el) {
+            document.getElementById("my-gemoy-acc").innerText = accEmoji;
+            document.querySelectorAll('#modal-skin .customizer-grid')[1].querySelectorAll('.custom-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        function beliPaketEmote(namaPaket, harga) {
-            alert(`🛒 Berhasil membeli ${namaPaket} seharga ${harga.toLocaleString('id-ID')} PokéCoins! Emote baru sudah bisa digunakan.`);
+        function beliPaketEmoteShop(namaPaket, emoteArr) {
+            let harga = 5000;
+            if (myGameCoins < harga) {
+                return alert(`❌ PokéCoins kamu kurang! Harga paket ini adalah ${harga.toLocaleString('id-ID')} Coins.`);
+            }
+
+            myGameCoins -= harga;
+            // Update simpanan koin ke localStorage game utama
+            let savedStr = localStorage.getItem('puanyt_jaguar_v6_0');
+            if (savedStr) {
+                try {
+                    let parsed = JSON.parse(savedStr);
+                    parsed.coins = myGameCoins;
+                    localStorage.setItem('puanyt_jaguar_v6_0', JSON.stringify(parsed));
+                } catch(e) {}
+            }
+
+            // Tambahkan tombol emot baru ke bar baris emote lobi
+            let bar = document.getElementById("equipped-emotes-bar");
+            emoteArr.forEach(em => {
+                let btn = document.createElement("button");
+                btn.className = "emote-btn";
+                btn.innerText = em;
+                btn.onclick = () => kirimEmoteAnimasi(em);
+                bar.insertBefore(btn, bar.lastElementChild);
+            });
+
+            alert(`🎉 Berhasil membeli [${namaPaket}] seharga 5.000 PokéCoins! Emote baru sudah terpasang.`);
             tutupModal('modal-emote');
         }
     </script>
