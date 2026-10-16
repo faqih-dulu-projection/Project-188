@@ -2,854 +2,424 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poké Collect - Arena</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena PvP - Kolektor Legendaris</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #060810;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-y: auto; 
+            padding: 10px;
+            justify-content: space-between;
         }
 
-        body.ingame {
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        .screen {
+        .arena-container {
             width: 100%;
             max-width: 600px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            box-sizing: border-box;
-            margin-top: 2vh;
+            flex: 1;
+            gap: 10px;
+            min-height: 0;
         }
 
-        .panel {
-            background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        h2, h3 { margin: 0 0 12px 0; font-weight: 600; }
-        input, button {
-            width: 100%;
+        /* ==================== HEADER ==================== */
+        .arena-header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+            border: 2px solid #ef4444;
+            border-radius: 14px;
             padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        input {
-            background: #0f172a;
-            color: white;
-            border: 1px solid #334155;
-        }
-        input:focus { outline: 1px solid var(--primary); }
-        button {
-            background: var(--primary);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        button:hover { background: var(--primary-hover); }
-        .btn-back { background: #475569; margin-top: 5px; }
-
-        /* Loadout / Item Selector */
-        .loadout-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            background: #0f172a;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-        }
-        .item-card {
-            background: #1e293b;
-            border: 1px solid #475569;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 11px;
             text-align: center;
-            cursor: pointer;
-            user-select: none;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2);
+            flex-shrink: 0;
         }
-        .item-card.selected {
-            border-color: var(--success);
-            background: rgba(34, 197, 94, 0.1);
+        .arena-header h1 {
+            font-size: 20px;
+            color: #f87171;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            letter-spacing: 1px;
+        }
+        .arena-header p {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
         }
 
-        /* Room List */
-        .room-container {
-            max-height: 180px;
-            overflow-y: auto;
+        /* ==================== BATTLE SCREEN ==================== */
+        .battle-screen {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            justify-content: space-between;
+            flex: 1;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            min-height: 0;
         }
-        .room-item {
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 8px;
+
+        .fighters-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #334155;
+            gap: 10px;
         }
-        .room-info { text-align: left; }
-        .room-name { font-weight: bold; font-size: 14px; }
-        .room-status { font-size: 11px; color: var(--text-muted); }
-        .btn-join { width: auto; padding: 6px 12px; margin: 0; font-size: 13px; }
 
-        /* Game Screen */
-        #game-screen { display: none; width: 100%; height: 100vh; position: relative; }
-        .hud {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        .player-card {
-            background: var(--panel-bg);
-            padding: 12px;
+        .fighter-card {
+            background: #0b0f19;
+            border: 1px solid #334155;
             border-radius: 10px;
+            padding: 10px;
             width: 48%;
             text-align: center;
-            border: 1px solid #334155;
         }
-        .hp-bar-bg { background: #334155; height: 16px; border-radius: 8px; margin-top: 8px; overflow: hidden; }
-        .hp-fill { background: var(--success); height: 100%; width: 100%; transition: width 0.1s linear; }
-        #status-msg {
-            position: absolute;
-            top: 130px;
-            width: 100%;
+        .fighter-name { font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 4px; }
+        .hp-bar-bg { width: 100%; height: 10px; background: #1e293b; border-radius: 5px; overflow: hidden; margin-top: 6px; border: 1px solid #475569; }
+        .hp-bar-fill { width: 100%; height: 100%; background: #10b981; transition: width 0.3s ease; }
+        .hp-text { font-size: 10px; color: #cbd5e1; margin-top: 3px; font-weight: 600; }
+
+        /* Battle Arena Log / Visual Action */
+        .battle-arena-center {
             text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #facc15;
-        }
-        
-        #arena-actions {
-            position: absolute;
-            top: 185px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            z-index: 20;
-        }
-        .btn-exit-arena {
-            width: auto;
-            background: var(--danger);
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-
-        #target-btn {
-            position: absolute;
-            background: var(--danger);
-            color: white;
-            border: 3px solid #fff;
-            border-radius: 50%;
-            width: 65px;
-            height: 65px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 15px var(--danger);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            transform: translate(-50%, -50%);
-        }
-
-        /* FITUR BARU: Style untuk Toast Notification Chat Global di Arena */
-        #gameMentionToast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #1e1b4b, #312e81);
-            color: #e0e7ff;
-            padding: 14px 28px;
+            padding: 20px 10px;
+            background: #060810;
             border-radius: 10px;
-            border: 2px solid #4f46e5;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(79, 70, 229, 0.4);
-            z-index: 999999;
-            display: none;
-            font-family: 'Segoe UI', sans-serif;
-            min-width: 300px;
-            animation: gameSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px dashed #334155;
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+        }
+        .battle-log {
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* Action Buttons */
+        .battle-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .arena-btn {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: 10px;
             cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
-        @keyframes gameSlideDown {
-            from { top: -80px; opacity: 0; }
-            to { top: 20px; opacity: 1; }
+        .arena-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .arena-btn:active { transform: scale(0.97); }
+        .arena-btn.secondary {
+            background: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: none;
+            color: #f8fafc;
         }
+        .arena-btn.secondary:hover { background: #334155; border-color: #60a5fa; }
+
+        /* ==================== LOADOUT SELECTION (SETUP) ==================== */
+        .loadout-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .inventory-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 250px;
+            padding: 4px;
+            background: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+        }
+        .mini-card {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mini-card.selected { border-color: #ffd700; background: #334155; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+
+        .nav-back {
+            display: block;
+            text-align: center;
+            background: #1e293b;
+            color: #f8fafc;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #334155;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .nav-back:hover { background: #334155; }
     </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 
-    <div id="gameMentionToast" title="Klik untuk membalas chat"></div>
-
-    <div id="login-screen" class="screen">
-        <div class="panel">
-            <h2>Verifikasi Akun Poké Collect</h2>
-            <input type="text" id="input-username" placeholder="Masukkan Username Anda">
-            <button onclick="verifikasiPemain()">Masuk ke Lobi</button>
+    <div class="arena-container">
+        <div class="arena-header">
+            <h1>⚔️ ARENA PERTARUNGAN KOLEKTOR</h1>
+            <p>Uji Kekuatan Koleksi & Buktikan Siapa Penguasa Semesta!</p>
         </div>
-        <button class="btn-back" onclick="keluarKeGameUtama()">Kembali ke Game</button>
-    </div>
 
-    <div id="lobby-screen" class="screen" style="display: none;">
-      <div class="panel" style="margin-top: 15px;">
-    <h2>🟢 Player Online</h2>
-    <div id="online-players-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; padding: 5px;">
-        <span style="color: var(--text-muted);">Memuat player online...</span>
-    </div>
-
-        <div class="panel">
-            <h3>Pilih Amunisi Bertarung (Maksimal 3)</h3>
-            <div class="loadout-grid" id="loadout-list">
+        <!-- TAMPILAN SEBELUM BERTARUNG (PILIH MUSUH / LOADOUT) -->
+        <div id="panel-setup" class="battle-screen">
+            <div class="loadout-panel">
+                <div style="font-size: 12px; font-weight: 700; color: #ffd700;">🤖 Pilih Lawan Duel (Bot AI):</div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="arena-btn secondary" onclick="selectOpponent('Novice Bot', 100, 15)" style="flex:1;">Novice (Mudah)</button>
+                    <button class="arena-btn secondary" onclick="selectOpponent('Cyber Boss', 300, 45)" style="flex:1;">Cyber Boss (Sedang)</button>
+                    <button class="arena-btn secondary" onclick="selectOpponent('Void Lord', 800, 120)" style="flex:1;">Void Lord (Sulit)</button>
                 </div>
+                <div style="font-size: 11px; color: #34d399; font-weight: bold; margin-top: 4px;" id="selected-opp-text">Lawan Dipilih: Novice Bot (HP: 100)</div>
+
+                <hr style="border-color: #1e293b; margin: 4px 0;">
+
+                <div style="font-size: 12px; font-weight: 700; color: #ffd700;">🎒 Ringkasan Kekuatan (Battle Power):</div>
+                <div style="font-size: 11px; color: #cbd5e1;" id="player-bp-summary">Menghitung data item dari cloud database...</div>
+            </div>
+
+            <button class="arena-btn" onclick="mulaiPertarungan()" style="margin-top: 10px;">MULAI DUEL SEKARANG! ⚔️</button>
         </div>
 
-        <div class="panel">
-            <h3>Buat Room</h3>
-            <input type="text" id="input-room-name" placeholder="Nama Room">
-            <input type="password" id="input-room-pass" placeholder="Kata Sandi (Kosongkan jika publik)">
-            <button onclick="buatRoom()">Buat & Masuk</button>
-        </div>
+        <!-- TAMPILAN SAAT PERTARUNGAN BERLANGSUNG -->
+        <div id="panel-battle" class="battle-screen" style="display: none;">
+            <div class="fighters-row">
+                <!-- Player Box -->
+                <div class="fighter-card">
+                    <div class="fighter-name" id="ui-my-name">@Trainer</div>
+                    <div class="hp-bar-bg"><div class="hp-fill" id="my-hp-fill" style="width: 100%;"></div></div>
+                    <div class="hp-text" id="my-hp-text">100 / 100 HP</div>
+                </div>
+                <div style="font-size: 16px; font-weight: 900; color: #ef4444;">VS</div>
+                <!-- Enemy Box -->
+                <div class="fighter-card">
+                    <div class="fighter-name" id="ui-enemy-name">Bot AI</div>
+                    <div class="hp-bar-bg"><div class="hp-fill" id="enemy-hp-fill" style="width: 100%; background: #ef4444;"></div></div>
+                    <div class="hp-text" id="enemy-hp-text">100 / 100 HP</div>
+                </div>
+            </div>
 
-            <div class="room-container" id="room-list-container">
-                <div style="text-align:center; color:#94a3b8;">Memuat daftar room...</div>
+            <div class="battle-arena-center">
+                <div class="battle-log" id="battle-log-text">Pertarungan dimulai! Silakan pilih aksi menyerang atau bertahan.</div>
+            </div>
+
+            <div class="battle-actions" id="battle-action-buttons">
+                <button class="arena-btn" onclick="aksiSerang()">⚔️ SERANG</button>
+                <button class="arena-btn secondary" onclick="aksiSkillSpecial()">🔮 SPECIAL SKILL</button>
             </div>
         </div>
-        <button class="btn-back" onclick="keluarKeGameUtama()">Kembali ke Menu Utama</button>
+
+        <a href="indexx.html" class="nav-back">⬅️ Kembali ke Menu Utama Game</a>
     </div>
 
-    <div id="game-screen">
-        <div class="hud">
-            <div class="player-card">
-                <div id="txt-p1-name">Player 1</div>
-                <div class="hp-bar-bg"><div id="hp-p1" class="hp-fill"></div></div>
-            </div>
-            <div class="player-card">
-                <div id="txt-p2-name">Player 2</div>
-                <div class="hp-bar-bg"><div id="hp-p2" class="hp-fill"></div></div>
-            </div>
-        </div>
-        <div id="status-msg">Menyiapkan pertandingan...</div>
-        
-        <div id="arena-actions">
-            <button id="btn-emergency-exit" class="btn-exit-arena" onclick="kembaliKeLobby('Anda meninggalkan arena pertarungan.')">Keluar Ke Lobi</button>
-        </div>
-
-        <button id="target-btn" onclick="tembak()">HIT</button>
-    </div>
-
+    <!-- SCRIPT ARENA -->
     <script>
-        const firebaseConfig = { databaseURL: "https://multiplayer-5e98b-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
+        const firebaseConfig = { databaseURL: "https://gemgemini-f90ab-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
-        const roomsRef = db.ref("arena_rooms");
 
-        const rarityStats = {
-            common:     { hp: 20,   dmg: 5 },
-            uncommon:   { hp: 50,   dmg: 12 },
-            rare:       { hp: 120,  dmg: 25 },
-            epic:       { hp: 300,  dmg: 60 },
-            legendary:  { hp: 800,  dmg: 150 },
-            mythic:     { hp: 2000, dmg: 400 },
-            godly:      { hp: 6000, dmg: 1200 },
-            hack:       { hp: 15000,dmg: 3500 },
-            impossible:{ hp: 50000,dmg: 12000 }
+        let myUsername = localStorage.getItem("poke_username") || "Trainer";
+        document.getElementById("ui-my-name").innerText = `@${myUsername}`;
+
+        let playerInventory = {};
+        let playerRebirth = 0;
+        let calculatedBP = 10;
+
+        let currentOpponent = { name: "Novice Bot", maxHp: 100, hp: 100, attack: 15 };
+        let myMaxHp = 150;
+        let myHp = 150;
+        let myAttackPower = 25;
+
+        // Ambil data inventaris & rebirth pemain dari database Firebase saat halaman dibuka
+        window.onload = function() {
+            let localGameData = localStorage.getItem('puanyt_jaguar_v6_0');
+            if (localGameData) {
+                try {
+                    let parsed = JSON.parse(localGameData);
+                    playerInventory = parsed.inventory || {};
+                    playerRebirth = parsed.rebirthLevel || 0;
+                } catch(e) {}
+            }
+
+            // Sinkronisasi cloud database
+            db.ref("players/" + myUsername + "/inventory").once("value").then(snap => {
+                if (snap.exists()) {
+                    playerInventory = snap.val();
+                }
+                hitungBattlePower();
+            });
         };
 
-        const ITEMS_REF = [
-            // common
-            { id: 10, name: "MBG (My Bini Gwh)", rarity: "common" },
-            { id: 11, name: "Bantal", rarity: "common" },
-            { id: 12, name: "Lampu", rarity: "common" },
-            { id: 13, name: "Semanggi 3", rarity: "common" },
-            { id: 14, name: "Tit tut tit", rarity: "common" },
-            { id: 15, name: "Sawit", rarity: "common" },
-            { id: 16, name: "Padi", rarity: "common" },
-            { id: 17, name: "Pulpen temen", rarity: "common" },
-            { id: 18, name: "Permen Karet", rarity: "common" },
-            { id: 19, name: "Permen Kapas", rarity: "common" },
-            // uncommon
-            { id: 100, name: "Kertas Perak Rokok", rarity: "uncommon" },
-            { id: 101, name: "Uang Koin Yasin", rarity: "uncommon" },
-            { id: 102, name: "Cincin Mainan Berhadiah", rarity: "uncommon" },
-            { id: 103, name: "Gantungan Kunci Kura-Kura", rarity: "uncommon" },
-            { id: 104, name: "Kaset Pita Rusak", rarity: "uncommon" },
-            { id: 105, name: "Baterai ABC Berjamur", rarity: "uncommon" },
-            { id: 106, name: "Kelereng Susu Langka", rarity: "uncommon" },
-            { id: 107, name: "Tali Rafia Gulung", rarity: "uncommon" },
-            { id: 108, name: "Sedotan Melingkar", rarity: "uncommon" },
-            { id: 109, name: "Stiker Hologram Chiki", rarity: "uncommon" },
-            // rare
-            { id: 200, name: "Keris Souvenir Pernikahan", rarity: "rare" },
-            { id: 201, name: "Uang Kertas Rp100 Perahu", rarity: "rare" },
-            { id: 202, name: "Kelereng Beling Kristal", rarity: "rare" },
-            { id: 203, name: "Kartu Yu-Gi-Oh Ori Kw", rarity: "rare" },
-            { id: 204, name: "Batu Giok Garut", rarity: "rare" },
-            { id: 205, name: "Uang Koin Kelapa Sawit", rarity: "rare" },
-            { id: 206, name: "Komik Petualangan Tipis", rarity: "rare" },
-            { id: 207, name: "Gigi Hiu Fosil", rarity: "rare" },
-            { id: 208, name: "Kabupaten Banyuwangi", rarity: "rare" },
-            { id: 209, name: "Kabupaten Raja Ampat", rarity: "rare" },
-            { id: 210, name: "Kabupaten Tana Toraja", rarity: "rare" },
-            { id: 211, name: "Kabupaten Sleman", rarity: "rare" },
-            { id: 212, name: "Kabupaten Brebes", rarity: "rare" },
-            { id: 213, name: "Kabupaten Ponorogo", rarity: "rare" },
-            // epic
-            { id: 300, name: "Sertifikat Tanah Gaib", rarity: "epic" },
-            { id: 301, name: "Pedang Katana Pajangan", rarity: "epic" },
-            { id: 302, name: "Piring Retak Seribu", rarity: "epic" },
-            { id: 303, name: "Kitab Stambul Mini", rarity: "epic" },
-            { id: 304, name: "Prangko Edisi Pertama", rarity: "epic" },
-            { id: 305, name: "Batu Meteor Pinggiran", rarity: "epic" },
-            { id: 306, name: "Fosil Daun Purba", rarity: "epic" },
-            { id: 307, name: "Kunci Gembok Kerajaan", rarity: "epic" },
-            { id: 308, name: "Semarang", rarity: "epic" },
-            { id: 309, name: "Bandung", rarity: "epic" },
-            { id: 310, name: "Yogyakarta", rarity: "epic" },
-            { id: 311, name: "Jakarta", rarity: "epic" },
-            // legendary
-            { id: 400, name: "Keris Kuno Empu Gandring", rarity: "legendary" },
-            { id: 401, name: "Mustika Air Alami", rarity: "legendary" },
-            { id: 402, name: "Mahkota Kerajaan Majapahit", rarity: "legendary" },
-            { id: 403, name: "Kitab Mantra Logam", rarity: "legendary" },
-            { id: 404, name: "Tombak Trisula Nyi Roro", rarity: "legendary" },
-            { id: 405, name: "Batu Kalimaya Black Opal", rarity: "legendary" },
-            { id: 604, name: "Manuskrip Voynich", rarity: "legendary" },
-            { id: 605, name: "Belati Meteorit", rarity: "legendary" },
-            { id: 606, name: "Fosil Purba Apex", rarity: "legendary" },
-            { id: 607, name: "Jam Matahari Mesir", rarity: "legendary" },
-            { id: 608, name: "Batu Prasasti", rarity: "legendary" },
-            // mythic
-            { id: 406, name: "SANGLEGEND", rarity: "mythic" },
-            { id: 407, name: "INDONESIA", rarity: "mythic" },
-            { id: 500, name: "Fosil Telur Naga Api", rarity: "mythic" },
-            { id: 501, name: "Air Mata Malaikat", rarity: "mythic" },
-            { id: 502, name: "Serpihan Meteorit Vibranium", rarity: "mythic" },
-            { id: 503, name: "Darah Phoenix Abadi", rarity: "mythic" },
-            { id: 504, name: "Senku", rarity: "mythic" },
-            { id: 505, name: "Harta Karun", rarity: "mythic" },
-            { id: 506, name: "Negara Jepang", rarity: "mythic" },
-            { id: 507, name: "Negara Mesir", rarity: "mythic" },
-            { id: 508, name: "Negara Islandia", rarity: "mythic" },
-            { id: 509, name: "Negara Brasil", rarity: "mythic" },
-            { id: 510, name: "Negara Italia", rarity: "mythic" },
-            { id: 511, name: "Negara Yunani", rarity: "mythic" },
-            { id: 512, name: "Negara Swiss", rarity: "mythic" },
-            { id: 513, name: "Negara India", rarity: "mythic" },
-            { id: 514, name: "Negara Prancis", rarity: "mythic" },
-            { id: 515, name: "Negara Australia", rarity: "mythic" },
-            // godly
-            { id: 600, name: "Singgasana Keabadian", rarity: "godly" },
-            { id: 601, name: "Mata Intuitif Ra", rarity: "godly" },
-            { id: 602, name: "Surat Izin Mengatur Semesta", rarity: "godly" },
-            { id: 603, name: "Turbo Flash", rarity: "godly" },
-            // hack
-            { id: 700, name: "XCS Hacked", rarity: "hack" },
-            { id: 701, name: "Buaya Mutasi Hacked", rarity: "hack" },
-            { id: 702, name: "Cybernetic Glitch", rarity: "hack" },
-            { id: 703, name: "ANOMALY HACK", rarity: "hack" },
-            { id: 704, name: "Badai Solar", rarity: "hack" },
-            { id: 705, name: "Api Abadi Mistik", rarity: "hack" },
-            { id: 706, name: "Aurora Borealis", rarity: "hack" },
-            { id: 707, name: "Pusaran Maelstrom", rarity: "hack" },
-            { id: 708, name: "Gempa Megathrust", rarity: "hack" },
-            // impossible
-            { id: 800, name: "The Void's Paradox", rarity: "impossible" },
-            { id: 801, name: "Zeuzs", rarity: "impossible" },
-            { id: 802, name: "Inti Supernova", rarity: "impossible" },
-            { id: 803, name: "Nebula Kehampaan", rarity: "impossible" },
-            { id: 804, name: "Komet Halley asli", rarity: "impossible" },
-            { id: 805, name: "Pulsar Magnetar", rarity: "impossible" },
-            { id: 806, name: "Debu Bintang Orion", rarity: "impossible" },
-            { id: 807, name: "Singularitas Void", rarity: "impossible" },
-            { id: 808, name: "Radiasi Hawking", rarity: "impossible" },
-            { id: 809, name: "Quasar Energi", rarity: "impossible" },
-            { id: 810, name: "Materi Gelap", rarity: "impossible" },
-            { id: 811, name: "Serpihan Asteroid", rarity: "impossible" }
-        ];
-
-        let username = "";
-        let ownedItems = [];
-        let selectedLoadout = [];
-        let currentRoomId = null;
-        let myRole = null;
-        let gameActive = false;
-        let roomListener = null;
-        let countdownInterval = null;
-
-        let totalMyHp = 100;
-        let totalMyDmg = 10;
-        let currentActiveRoomsData = {};
-
-        // =======================================================
-        // SYSTEM LIVE ONLINE PLAYERS (DENGAN FIREBASE)
-        // =======================================================
-        const onlineRef = firebase.database().ref("online_users");
-        let myOnlineRef = null;
-
-        function aktifkanStatusOnline(myName) {
-            if (!username) return;
-
-            myOnlineRef = onlineRef.push();
-            myOnlineRef.set({
-                username: username,
-                status: "Lobby",
-                last_active: firebase.database.ServerValue.TIMESTAMP
+        function hitungBattlePower() {
+            let totalItemsOwned = 0;
+            Object.keys(playerInventory).forEach(id => {
+                if (playerInventory[id] > 0) totalItemsOwned++;
             });
 
-            myOnlineRef.onDisconnect().remove();
+            // Rumus Battle Power: (Jumlah Item Unik * 5) + (Rebirth Level * 50) + 20 Dasar
+            calculatedBP = (totalItemsOwned * 5) + (playerRebirth * 50) + 20;
+            myAttackPower = Math.floor(calculatedBP * 0.8);
+            myMaxHp = 100 + (playerRebirth * 30) + (totalItemsOwned * 2);
+            myHp = myMaxHp;
 
-            onlineRef.on("value", (snapshot) => {
-                const listContainer = document.getElementById("online-players-list");
-                if (!listContainer) return;
-                
-                listContainer.innerHTML = ""; 
-
-                if (!snapshot.exists()) {
-                    listContainer.innerHTML = `<span style="color: var(--text-muted);">Sepi banget, gak ada orang...</span>`;
-                    return;
-                }
-
-                let totalOnline = 0;
-                snapshot.forEach((childSnapshot) => {
-                    const player = childSnapshot.val();
-                    totalOnline++;
-
-                    const playerRow = document.createElement("div");
-                    playerRow.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px;";
-                    
-                    const isMe = player.username === username ? " (Anda)" : "";
-                    
-                    playerRow.innerHTML = `
-                        <span style="font-weight: bold; color: ${isMe ? '#22c55e' : '#f8fafc'}">👤 ${player.username}${isMe}</span>
-                        <span class="badge" style="background: ${player.status === 'Bertarung' ? 'var(--danger)' : 'var(--success)'}; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
-                            ${player.status}
-                        </span>
-                    `;
-                    listContainer.appendChild(playerRow);
-                });
-            });
+            document.getElementById("player-bp-summary").innerHTML = `
+                Koleksi Unik: <b>${totalItemsOwned} Item</b><br>
+                Rebirth Lv: <b>${playerRebirth}</b><br>
+                Total Battle Power (BP): <b style="color:#ffd700;">${calculatedBP} BP</b> (DMG: ${myAttackPower})
+            `;
         }
 
-        function ubahStatusOnline(statusBaru) {
-            if (myOnlineRef) {
-                myOnlineRef.update({ status: statusBaru });
-            }
+        function selectOpponent(name, hp, atk) {
+            currentOpponent = { name: name, maxHp: hp, hp: hp, attack: atk };
+            document.getElementById("selected-opp-text").innerText = `Lawan Dipilih: ${name} (HP: ${hp}, ATK: ${atk})`;
         }
 
-        if(localStorage.getItem("poke_username")) {
-            document.getElementById("input-username").value = localStorage.getItem("poke_username");
+        function mulaiPertarungan() {
+            document.getElementById("panel-setup").style.display = "none";
+            document.getElementById("panel-battle").style.display = "flex";
+
+            myHp = myMaxHp;
+            currentOpponent.hp = currentOpponent.maxHp;
+
+            updateHpBars();
+            document.getElementById("battle-log-text").innerHTML = `Duel dimulai melawan <b>${currentOpponent.name}</b>!<br>Giliranmu untuk menyerang.`;
         }
 
-        function verifikasiPemain() {
-            let savedUser = localStorage.getItem("arena_username");
-            
-            if (!savedUser) {
-                savedUser = prompt("Masukkan Username Anda:");
-                if (!savedUser) {
-                    alert("Username wajib diisi!");
-                    window.location.reload();
-                    return;
-                }
-                savedUser = savedUser.trim();
-            }
+        function updateHpBars() {
+            let myPct = Math.max(0, (myHp / myMaxHp) * 100);
+            let enemyPct = Math.max(0, (currentOpponent.hp / currentOpponent.maxHp) * 100);
 
-            let myDeviceToken = localStorage.getItem("user_device_token");
-            if (!myDeviceToken) {
-                myDeviceToken = "DEV-" + Math.floor(100000 + Math.random() * 900000) + "-" + Date.now().toString(36);
-                localStorage.setItem("user_device_token", myDeviceToken);
-            }
+            document.getElementById("my-hp-fill").style.width = myPct + "%";
+            document.getElementById("my-hp-text").innerText = `${myHp} / ${myMaxHp} HP`;
 
-            const lockRef = db.ref("account_locks/" + savedUser.toLowerCase());
-            
-            lockRef.once("value").then((snapshot) => {
-                if (snapshot.exists()) {
-                    if (snapshot.val() !== myDeviceToken) {
-                        alert("❌ Username ini sudah dipakai oleh device lain, bre! Silakan pakai nama lain.");
-                        localStorage.removeItem("arena_username");
-                        window.location.reload();
-                        return;
-                    }
-                } else {
-                    lockRef.set(myDeviceToken);
-                }
-
-                username = savedUser;
-                localStorage.setItem("arena_username", username);
-                document.getElementById("txt-p1-name").innerText = username; // Perbaikan agar ID cocok 
-
-                aktifkanStatusOnline(username);
-                
-                loadLoadoutOptions();
-                aktifkanLobbyListener();
-                
-                // Pindah Layar
-                document.getElementById("login-screen").style.display = "none";
-                document.getElementById("lobby-screen").style.display = "flex";
-            });
+            document.getElementById("enemy-hp-fill").style.width = enemyPct + "%";
+            document.getElementById("enemy-hp-text").innerText = `${currentOpponent.hp} / ${currentOpponent.maxHp} HP`;
         }
 
-        function loadLoadoutOptions() {
-            // Baca Inventory Player dari Database Utama
-            db.ref("players/" + username + "/inventory").once("value").then(snapshot => {
-                const myInv = snapshot.val() || {};
-                ownedItems = [];
-                
-                ITEMS_REF.forEach(item => {
-                    if (myInv[item.id] > 0) {
-                        ownedItems.push(item);
-                    }
-                });
-                
-                renderLoadoutSelector();
-            });
-        }
+        function aksiSerang() {
+            let damageToEnemy = myAttackPower + Math.floor(Math.random() * 10);
+            currentOpponent.hp -= damageToEnemy;
 
-        function renderLoadoutSelector() {
-            const container = document.getElementById("loadout-list");
-            container.innerHTML = "";
+            let logHtml = `Kamu menyerang ${currentOpponent.name} dan memberikan <b>-${damageTonal(damageToEnemy)} Damage!</b>`;
 
-            if (ownedItems.length === 0) {
-                container.innerHTML = "<div style='color:#94a3b8; grid-column: span 2; padding: 10px;'>Gacha di game utama dulu untuk membuka item!</div>";
+            if (currentOpponent.hp <= 0) {
+                currentOpponent.hp = 0;
+                updateHpBars();
+                document.getElementById("battle-log-text").innerHTML = `${logHtml}<br><b style="color:#34d399; font-size:14px;">🎉 KAMU MENANG DUEL!</b>`;
+                selesaiPertarungan(true);
                 return;
             }
 
-            ownedItems.forEach(item => {
-                const card = document.createElement("div");
-                card.className = "item-card";
-                card.innerText = `${item.name}\n(${item.rarity.toUpperCase()})`;
-                card.onclick = () => toggleSelectItem(item, card);
-                container.appendChild(card);
-            });
+            updateHpBars();
+            document.getElementById("battle-log-text").innerHTML = logHtml;
+
+            // Giliran Lawan Menyerang setelah 1 detik
+            document.getElementById("battle-action-buttons").style.pointerEvents = "none";
+            setTimeout(() => {
+                giliranLawanSerang();
+            }, 1000);
         }
 
-        function toggleSelectItem(item, element) {
-            const idx = selectedLoadout.findIndex(i => i.id === item.id);
-            if (idx > -1) {
-                selectedLoadout.splice(idx, 1);
-                element.classList.remove("selected");
-            } else {
-                if (selectedLoadout.length >= 3) return alert("Maksimal memilih 3 item!");
-                selectedLoadout.push(item);
-                element.classList.add("selected");
+        function aksiSkillSpecial() {
+            let critDamage = Math.floor(myAttackPower * 2.2);
+            currentOpponent.hp -= critDamage;
+
+            let logHtml = `🔮 Menggunakan Skill Spesial Kosmik! Critical Hit <b>-${critDamage} Damage!</b>`;
+
+            if (currentOpponent.hp <= 0) {
+                currentOpponent.hp = 0;
+                updateHpBars();
+                document.getElementById("battle-log-text").innerHTML = `${logHtml}<br><b style="color:#34d399; font-size:14px;">🎉 KAMU MENANG DUEL!</b>`;
+                selesaiPertarungan(true);
+                return;
             }
 
-            totalMyHp = 100;
-            totalMyDmg = 10;
-            selectedLoadout.forEach(i => {
-                const stat = rarityStats[i.rarity] || { hp: 0, dmg: 0 };
-                totalMyHp += stat.hp;
-                totalMyDmg += stat.dmg;
-            });
+            updateHpBars();
+            document.getElementById("battle-log-text").innerHTML = logHtml;
+
+            document.getElementById("battle-action-buttons").style.pointerEvents = "none";
+            setTimeout(() => {
+                giliranLawanSerang();
+            }, 1000);
         }
 
-        function aktifkanLobbyListener() {
-            roomsRef.on("value", (snapshot) => {
-                if (currentRoomId) return;
-                const container = document.getElementById("room-list-container");
-                container.innerHTML = "";
-                currentActiveRoomsData = snapshot.val() || {};
+        function giliranLawanSerang() {
+            let damageToMe = currentOpponent.attack + Math.floor(Math.random() * 8);
+            myHp -= damageToMe;
 
-                if (Object.keys(currentActiveRoomsData).length === 0) {
-                    container.innerHTML = "<div style='text-align:center; color:#94a3b8;'>Tidak ada room aktif. Silakan buat baru!</div>";
-                    return;
-                }
+            let logHtml = `${currentOpponent.name} menyerang balik dan menghasilkan <b>-${damageToMe} Damage!</b>`;
 
-                for (let id in currentActiveRoomsData) {
-                    const room = currentActiveRoomsData[id];
-                    if (room.p1 && room.p2) continue;
-
-                    const hasPass = room.password && room.password.trim() !== "";
-                    const lockTxt = hasPass ? "🔒 Kunci" : "🌍 Publik";
-
-                    container.innerHTML += `
-                        <div class="room-item">
-                            <div class="room-info">
-                                <span class="room-name">${room.name}</span>
-                                <span class="room-status">${lockTxt} - Host: ${room.p1_name}</span>
-                            </div>
-                            <button class="btn-join" data-id="${id}" onclick="persiapanJoinRoom(this)">Join</button>
-                        </div>
-                    `;
-                }
-            });
-        }
-
-        function persiapanJoinRoom(btnElement) {
-            const id = btnElement.getAttribute("data-id");
-            const room = currentActiveRoomsData[id];
-            if(!room) return;
-
-            const hasPass = room.password && room.password.trim() !== "";
-            joinRoom(id, hasPass, room.password);
-        }
-
-        function buatRoom() {
-            let roomName = document.getElementById("input-room-name").value.trim() || username + "-Room";
-            let roomPass = document.getElementById("input-room-pass").value;
-
-            const newRoomRef = roomsRef.push();
-            currentRoomId = newRoomRef.key;
-            myRole = "p1";
-
-            newRoomRef.set({
-                name: roomName,
-                password: roomPass,
-                p1: true, p2: false,
-                p1_name: username, p2_name: "Menunggu...",
-                max_p1_hp: totalMyHp, max_p2_hp: 100,
-                status: { p1_hp: totalMyHp, p2_hp: 100, targetX: 50, targetY: 50 }
-            });
-            masukArena();
-        }
-
-        function joinRoom(id, hasPass, actualPass) {
-            if (hasPass) {
-                let check = prompt("Masukkan kata sandi room:");
-                if (check !== actualPass) return alert("Kata sandi salah!");
-            }
-            currentRoomId = id;
-            myRole = "p2";
-
-            roomsRef.child(currentRoomId).update({
-                p2: true,
-                p2_name: username,
-                max_p2_hp: totalMyHp,
-                "status/p2_hp": totalMyHp
-            });
-            masukArena();
-        }
-
-        function masukArena() {
-            document.body.classList.add("ingame");
-            document.getElementById("lobby-screen").style.display = "none";
-            document.getElementById("game-screen").style.display = "block";
-            document.getElementById("btn-emergency-exit").style.display = "block"; 
-            mulaiSyncPertandingan();
-            ubahStatusOnline("Bertarung");
-        }
-
-        function mulaiSyncPertandingan() {
-            const currentRoomRef = roomsRef.child(currentRoomId);
-            
-            if (myRole === "p1") {
-                let sisaWaktu = 60;
-                clearInterval(countdownInterval);
-                countdownInterval = setInterval(() => {
-                    if (gameActive) {
-                        clearInterval(countdownInterval);
-                        return;
-                    }
-                    sisaWaktu--;
-                    document.getElementById("status-msg").innerText = `Menunggu lawan bergabung... (${sisaWaktu}s)`;
-                    
-                    if (sisaWaktu <= 0) {
-                        clearInterval(countdownInterval);
-                        currentRoomRef.remove();
-                        kembaliKeLobby("Batas waktu habis. Room dihapus karena tidak ada lawan yang bergabung.");
-                    }
-                }, 1000);
+            if (myHp <= 0) {
+                myHp = 0;
+                updateHpBars();
+                document.getElementById("battle-log-text").innerHTML = `${logHtml}<br><b style="color:#ef4444; font-size:14px;">💀 KAMU KALAH! Coba tingkatkan Rebirth & Koleksimu.</b>`;
+                selesaiPertarungan(false);
+                return;
             }
 
-            roomListener = currentRoomRef.on("value", (snapshot) => {
-                const data = snapshot.val();
-                
-                if (!data) {
-                    clearInterval(countdownInterval);
-                    kembaliKeLobby("Room telah ditutup atau dibubarkan.");
-                    return;
-                }
-
-                const status = data.status;
-                document.getElementById("txt-p1-name").innerText = data.p1_name;
-                document.getElementById("txt-p2-name").innerText = data.p2_name;
-
-                document.getElementById("hp-p1").style.width = ((status.p1_hp / data.max_p1_hp) * 100) + "%";
-                document.getElementById("hp-p2").style.width = ((status.p2_hp / data.max_p2_hp) * 100) + "%";
-
-                if (data.p1 && data.p2 && status.p1_hp > 0 && status.p2_hp > 0) {
-                    gameActive = true;
-                    clearInterval(countdownInterval); 
-                    
-                    document.getElementById("status-msg").innerText = "";
-                    document.getElementById("btn-emergency-exit").style.display = "none"; 
-                    
-                    const btn = document.getElementById("target-btn");
-                    btn.style.display = "flex";
-                    btn.style.left = status.targetX + "vw";
-                    btn.style.top = status.targetY + "vh";
-                } else if (status.p1_hp <= 0 || status.p2_hp <= 0) {
-                    gameActive = false;
-                    document.getElementById("target-btn").style.display = "none";
-                    document.getElementById("status-msg").innerText = (status.p1_hp <= 0) ? `${data.p2_name} MENANG!` : `${data.p1_name} MENANG!`;
-
-                    setTimeout(() => { if (myRole === "p1") currentRoomRef.remove(); }, 3000);
-                }
-            });
+            updateHpBars();
+            document.getElementById("battle-log-text").innerHTML = logHtml;
+            document.getElementById("battle-action-buttons").style.pointerEvents = "auto";
         }
 
-        function tembak() {
-            if (!gameActive) return;
-            const statusRef = roomsRef.child(currentRoomId).child("status");
+        function damageTonal(dmg) { return dmg; }
 
-            statusRef.get().then((snapshot) => {
-                if (!snapshot.exists()) return;
-                let status = snapshot.val();
+        function selesaiPertarungan(isWin) {
+            let btnContainer = document.getElementById("battle-action-buttons");
+            btnContainer.style.pointerEvents = "auto";
+            btnContainer.innerHTML = `
+                <button class="arena-btn" onclick="location.reload()">MAIN LAGI</button>
+                <button class="arena-btn secondary" onclick="window.location.href='indexx.html'">KEMBALI KE GAME</button>
+            `;
 
-                if (myRole === "p1") status.p2_hp = Math.max(0, status.p2_hp - totalMyDmg);
-                if (myRole === "p2") status.p1_hp = Math.max(0, status.p1_hp - totalMyDmg);
-
-                status.targetX = Math.floor(Math.random() * 70) + 15;
-                status.targetY = Math.floor(Math.random() * 55) + 25;
-                statusRef.update(status);
-            });
-        }
-
-        function kembaliKeLobby(msg) {
-            ubahStatusOnline("Lobby");
-            clearInterval(countdownInterval);
-            
-            const roomIdTarget = currentRoomId; 
-
-            if (roomIdTarget) {
-                if(roomListener) { 
-                    roomsRef.child(roomIdTarget).off("value", roomListener); 
-                    roomListener = null; 
-                }
-
-                if (myRole === "p1") {
-                    roomsRef.child(roomIdTarget).remove().catch(e => console.log("Gagal hapus room:", e));
-                } else if (myRole === "p2") {
-                    roomsRef.child(roomIdTarget).update({ p2: false, p2_name: "Menunggu..." }).catch(e => console.log("Gagal update P2:", e));
-                }
+            if (isWin) {
+                // Berikan hadiah atau simpan poin arena ke database jika mau
+                db.ref("players/" + myUsername + "/arena_wins").transaction(current => (current || 0) + 1);
             }
-            
-            gameActive = false; 
-            currentRoomId = null; 
-            myRole = null;
-            
-            document.body.classList.remove("ingame");
-            document.getElementById("game-screen").style.display = "none";
-            document.getElementById("lobby-screen").style.display = "flex";
-            if (msg) alert(msg);
         }
-
-        function keluarKeGameUtama() {
-            if (currentRoomId) {
-                if (myRole === "p1") roomsRef.child(currentRoomId).remove();
-            }
-            // Tambahkan ini biar kalau kembali ke menu utama dari lobi juga disconnect dari daftar online Arena
-            if (myOnlineRef) myOnlineRef.remove();
-            window.location.href = 'index.html'; // atau Poké collect.html sesuai nama asli lu
-        }
-
-        window.addEventListener("beforeunload", () => {
-            if (currentRoomId) {
-                if (myRole === "p1") roomsRef.child(currentRoomId).remove();
-                else roomsRef.child(currentRoomId).update({ p2: false, p2_name: "Menunggu..." });
-            }
-        });
-
-        // ========================================================
-        // FITUR LIVE MONITOR: NOTIFIKASI @MENTION CHAT DI ARENA
-        // ========================================================
-        const chatConfigArena = {
-            databaseURL: "https://database-leatherboard-b4493-default-rtdb.firebaseio.com/"
-        };
-
-        let chatDbArena;
-        try {
-            const appChatArena = firebase.initializeApp(chatConfigArena, "ChatAppArena");
-            chatDbArena = appChatArena.database();
-        } catch (error) {
-            chatDbArena = firebase.app("ChatAppArena").database();
-        }
-
-        function pantauMentionDiArena(usernamePemain) {
-            if (!usernamePemain) return;
-            
-            var mentionRef = chatDbArena.ref('mentions/' + usernamePemain.toLowerCase());
-            
-            mentionRef.on('value', function(snapshot) {
-                if (snapshot.exists()) {
-                    var data = snapshot.val();
-                    var toastElemen = document.getElementById('gameMentionToast');
-                    
-                    if (toastElemen) {
-                        toastElemen.innerHTML = `
-                            <div style="font-size: 11px; color: #ffd700; font-weight: bold; margin-bottom: 2px; letter-spacing: 1px;">💬 PANGGILAN GLOBAL CHAT</div>
-                            <span style="font-weight: bold; color: #fff;">@${data.from}:</span> 
-                            <span style="color: #cbd5e1;">${data.text}</span>
-                            <div style="font-size: 10px; color: #a78bfa; margin-top: 5px; text-align: right; font-style: italic;">Klik untuk membalas ↗️</div>
-                        `;
-                        
-                        toastElemen.onclick = function() {
-                            window.open('chat.html', '_blank'); 
-                            toastElemen.style.display = "none";
-                        };
-                        
-                        toastElemen.style.display = "block";
-
-                        setTimeout(function() {
-                            if (toastElemen.style.display === "block") {
-                                toastElemen.style.display = "none";
-                                mentionRef.remove();
-                            }
-                        }, 8000);
-                    }
-                }
-            });
-        }
-
-        // Jalankan berdasarkan username arena yang dipakai 
-        setTimeout(() => {
-            var namaChatUser = localStorage.getItem('arena_username') || localStorage.getItem('poke_username') || localStorage.getItem('globalChatUsername') || localStorage.getItem('game_username');
-            if (namaChatUser) {
-                pantauMentionDiArena(namaChatUser);
-            }
-        }, 1500);
-
     </script>
 </body>
 </html>
