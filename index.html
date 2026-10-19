@@ -1021,7 +1021,7 @@
 
         function saveProgress() { 
             gameData.lastSavedTime = Date.now();
-            localStorage.setItem('puanyt_jaguar_v6_0', JSON.stringify(gameData)); 
+            localStorage.setItem('kubilang_juga_apa', JSON.stringify(gameData)); 
         }
 
         function loadSavedProgress() {
@@ -1031,7 +1031,7 @@
                 localStorage.setItem("game_username", username.trim());
             }
 
-            let savedStr = localStorage.getItem('puanyt_jaguar_v6_0') || localStorage.getItem('puanyt_jaguar_v5_1');
+            let savedStr = localStorage.getItem('kubilang_juga_apa') || localStorage.getItem('kubilang_juga_apa');
             if (savedStr) {
                 try { gameData = JSON.parse(savedStr); } catch(e) {}
             }
