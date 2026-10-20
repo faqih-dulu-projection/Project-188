@@ -944,12 +944,12 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
 
-        let playerId = localStorage.getItem("poke_username");
+        let playerId = localStorage.getItem("ecekebew");
         if (!playerId) {
             playerId = prompt("Buat Username Arena lu (Tanpa spasi & simbol):\nIni dipakai buat nge-link data item lu ke Arena.");
             if (!playerId) playerId = "Trainer" + Math.floor(Math.random() * 8999 + 1000);
             playerId = playerId.replace(/[^a-zA-Z0-9]/g, "");
-            localStorage.setItem("poke_username", playerId);
+            localStorage.setItem("ecekebew", playerId);
         }
         const myInventoryRef = db.ref("players/" + playerId + "/inventory");
         const redeemsDbRef = db.ref("redeem_codes");
@@ -1021,17 +1021,17 @@
 
         function saveProgress() { 
             gameData.lastSavedTime = Date.now();
-            localStorage.setItem('kubilang_juga_apa', JSON.stringify(gameData)); 
+            localStorage.setItem('season3', JSON.stringify(gameData)); 
         }
 
         function loadSavedProgress() {
-            let username = localStorage.getItem("game_username");
+            let username = localStorage.getItem("ecekebew);
             if (!username || username.trim() === "") {
                 username = prompt("Masukkan nama/username kamu untuk bermain:") || "Player_" + Math.floor(Math.random() * 8999 + 1000);
-                localStorage.setItem("game_username", username.trim());
+                localStorage.setItem("ecekebew", username.trim());
             }
 
-            let savedStr = localStorage.getItem('kubilang_juga_apa') || localStorage.getItem('kubilang_juga_apa');
+            let savedStr = localStorage.getItem('season3') || localStorage.getItem('season3');
             if (savedStr) {
                 try { gameData = JSON.parse(savedStr); } catch(e) {}
             }
@@ -1074,7 +1074,7 @@
                 checkAndRenderAchievements();
             });
 
-            let namaPemain = localStorage.getItem("poke_username") || localStorage.getItem("game_username");
+            let namaPemain = localStorage.getItem("ecekebew") || localStorage.getItem("ecekebew");
             if (namaPemain) pantauMentionSaatMain(namaPemain);
         }
 
